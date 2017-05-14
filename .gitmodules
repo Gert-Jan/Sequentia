@@ -1,6 +1,3 @@
-[submodule "ffmpeg"]
-	path = ffmpeg
-	url = https://git.ffmpeg.org/ffmpeg.git
 [submodule "imgui"]
 	path = imgui
 	url = https://github.com/Gert-Jan/imgui.git

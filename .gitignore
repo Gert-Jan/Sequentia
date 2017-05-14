@@ -21,9 +21,17 @@
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
 *.out
 *.app
+
+#Visual studio
+.vs
+*.sdf
+*.VC.opendb
+
+@Sequentia
+sequentia/Debug
+sequentia/imgui.ini
