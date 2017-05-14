@@ -26,7 +26,7 @@ static bool         g_MousePressed[3] = { false, false, false };
 static float        g_MouseWheel = 0.0f;
 static GLuint       g_FontTexture = 0;
 static int          g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int          g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
+static int          g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0, g_AttribLocationModelViewMtx = 0;
 static int          g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
@@ -81,9 +81,17 @@ void ImGui_ImplGlfwGL3_RenderDrawLists(ImDrawData* draw_data)
 		{ 0.0f,                  0.0f,                  -1.0f, 0.0f },
 		{-1.0f,                  1.0f,                   0.0f, 1.0f },
 	};
+	const float model_view[4][4] =
+	{
+		{ 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 1.0f, 0.0f },
+		{ 0.0f, (io.DisplaySize.y * io.DisplayFramebufferScale.y - io.DisplaySize.y) / io.DisplayFramebufferScale.y, 0.0f, 1.0f },
+	};
 	glUseProgram(g_ShaderHandle);
 	glUniform1i(g_AttribLocationTex, 0);
 	glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
+	glUniformMatrix4fv(g_AttribLocationModelViewMtx, 1, GL_FALSE, &model_view[0][0]);
 	glBindVertexArray(g_VaoHandle);
 
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
@@ -107,7 +115,7 @@ void ImGui_ImplGlfwGL3_RenderDrawLists(ImDrawData* draw_data)
 			else
 			{
 				glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
-				glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
+				glScissor((int)pcmd->ClipRect.x, (int)(io.DisplaySize.y - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
 				glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
 			}
 			idx_buffer_offset += pcmd->ElemCount;
@@ -211,6 +219,7 @@ bool ImGui_ImplGlfwGL3_CreateDeviceObjects()
 	const GLchar *vertex_shader =
 		"#version 330\n"
 		"uniform mat4 ProjMtx;\n"
+		"uniform mat4 ModelViewMtx;\n"
 		"in vec2 Position;\n"
 		"in vec2 UV;\n"
 		"in vec4 Color;\n"
@@ -220,7 +229,7 @@ bool ImGui_ImplGlfwGL3_CreateDeviceObjects()
 		"{\n"
 		"	Frag_UV = UV;\n"
 		"	Frag_Color = Color;\n"
-		"	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
+		"	gl_Position = ProjMtx * ModelViewMtx * vec4(Position.xy,0,1);\n"
 		"}\n";
 
 	const GLchar* fragment_shader =
@@ -247,6 +256,7 @@ bool ImGui_ImplGlfwGL3_CreateDeviceObjects()
 
 	g_AttribLocationTex = glGetUniformLocation(g_ShaderHandle, "Texture");
 	g_AttribLocationProjMtx = glGetUniformLocation(g_ShaderHandle, "ProjMtx");
+	g_AttribLocationModelViewMtx = glGetUniformLocation(g_ShaderHandle, "ModelViewMtx");
 	g_AttribLocationPosition = glGetAttribLocation(g_ShaderHandle, "Position");
 	g_AttribLocationUV = glGetAttribLocation(g_ShaderHandle, "UV");
 	g_AttribLocationColor = glGetAttribLocation(g_ShaderHandle, "Color");
@@ -363,10 +373,16 @@ void ImGui_ImplGlfwGL3_NewFrame()
 	// Setup display size (every frame to accommodate for window resizing)
 	int w, h;
 	int display_w, display_h;
+	int monitor_w, monitor_h;
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 	glfwGetWindowSize(g_Window, &w, &h);
 	glfwGetFramebufferSize(g_Window, &display_w, &display_h);
+	glfwGetMonitorPhysicalSize(monitor, &monitor_w, &monitor_h);
+	double dpi = mode->width / (monitor_w / 25.4);
 	io.DisplaySize = ImVec2((float)w, (float)h);
-	io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
+	io.DisplayFramebufferScale = ImVec2(dpi / 128, dpi / 128);
+	
 
 	// Setup time step
 	double current_time =  glfwGetTime();
@@ -379,7 +395,7 @@ void ImGui_ImplGlfwGL3_NewFrame()
 	{
 		double mouse_x, mouse_y;
 		glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
-		io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+		io.MousePos = ImVec2((float)mouse_x / io.DisplayFramebufferScale.x, (float)mouse_y / io.DisplayFramebufferScale.y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
 	}
 	else
 	{
