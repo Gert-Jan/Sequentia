@@ -379,9 +379,9 @@ void ImGui_ImplGlfwGL3_NewFrame()
 	glfwGetWindowSize(g_Window, &w, &h);
 	glfwGetFramebufferSize(g_Window, &display_w, &display_h);
 	glfwGetMonitorPhysicalSize(monitor, &monitor_w, &monitor_h);
-	double dpi = mode->width / (monitor_w / 25.4);
+	float dpi = mode->width / (monitor_w / 25.4f);
 	io.DisplaySize = ImVec2((float)w, (float)h);
-	io.DisplayFramebufferScale = ImVec2(dpi / 128, dpi / 128);
+	io.DisplayFramebufferScale = ImVec2(dpi / 160, dpi / 160);
 	
 
 	// Setup time step
