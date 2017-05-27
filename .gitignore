@@ -31,7 +31,9 @@
 .vs
 *.sdf
 *.VC.opendb
+*.vcxproj.user
 
 @Sequentia
 sequentia/Debug
 sequentia/imgui.ini
+x64/

@@ -104,16 +104,17 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>libs\glfw\include;libs\gl3w;..\imgui;..\..\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>libs\gl3w;..\imgui;..\..\ffmpeg\include;..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>Cdecl</CallingConvention>
       <PreprocessorDefinitions>_UNICODE;UNICODE;NO_STDIO_REDIRECT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>libs\glfw\lib-vc2010-64;..\..\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>libs\glfw\lib-vc2010-64;..\..\ffmpeg\lib;..\SDL2\VisualC\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
-      <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
       <ShowProgress>NotSet</ShowProgress>
       <LinkStatus>false</LinkStatus>
     </Link>
@@ -160,18 +161,26 @@
     <ClCompile Include="..\imgui\imgui.cpp" />
     <ClCompile Include="..\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="libs\gl3w\GL\gl3w.c" />
-    <ClCompile Include="imgui_impl_glfw_gl3.cpp" />
     <ClCompile Include="main.cpp" />
     <ClInclude Include="..\imgui\imconfig.h" />
     <ClInclude Include="..\imgui\imgui.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
+    <ClInclude Include="imgui_impl_sdl_gl3.h" />
     <ClInclude Include="libs\gl3w\GL\gl3w.h" />
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
-    <ClInclude Include="imgui_impl_glfw_gl3.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SDL2\VisualC\SDLmain\SDLmain.vcxproj">
+      <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SDL2\VisualC\SDL\SDL.vcxproj">
+      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
