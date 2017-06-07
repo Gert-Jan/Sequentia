@@ -91,7 +91,7 @@ static int decode_packet(int *got_frame, int cached)
 				pix_fmt, width, height);
 			
 			/* write to rawvideo file */
-			fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
+			//fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
 		}
 	}
 	else if (pkt.stream_index == audio_stream_idx)
@@ -202,7 +202,8 @@ static int get_format_from_sample_fmt(const char **fmt, enum AVSampleFormat samp
 	struct sample_fmt_entry
 	{
 		enum AVSampleFormat sample_fmt; const char *fmt_be, *fmt_le;
-	} sample_fmt_entries[] = {
+	} sample_fmt_entries[] = 
+	{
 		{ AV_SAMPLE_FMT_U8,  "u8",    "u8" },
 		{ AV_SAMPLE_FMT_S16, "s16be", "s16le" },
 		{ AV_SAMPLE_FMT_S32, "s32be", "s32le" },
@@ -210,9 +211,11 @@ static int get_format_from_sample_fmt(const char **fmt, enum AVSampleFormat samp
 		{ AV_SAMPLE_FMT_DBL, "f64be", "f64le" },
 	};
 	*fmt = NULL;
-	for (i = 0; i < FF_ARRAY_ELEMS(sample_fmt_entries); i++) {
+	for (i = 0; i < FF_ARRAY_ELEMS(sample_fmt_entries); i++)
+	{
 		struct sample_fmt_entry *entry = &sample_fmt_entries[i];
-		if (sample_fmt == entry->sample_fmt) {
+		if (sample_fmt == entry->sample_fmt)
+		{
 			*fmt = AV_NE(entry->fmt_be, entry->fmt_le);
 			return 0;
 		}
@@ -223,7 +226,7 @@ static int get_format_from_sample_fmt(const char **fmt, enum AVSampleFormat samp
 	return -1;
 }
 
-void LoadVideo()
+AVFrame* LoadFrame()
 {
 	/*
 	const char *filename, *outfilename;
@@ -260,19 +263,23 @@ void LoadVideo()
 	/* register all formats and codecs */
 	av_register_all();
 	/* open input file, and allocate format context */
-	if (avformat_open_input(&fmt_ctx, src_filename, NULL, NULL) < 0) {
+	if (avformat_open_input(&fmt_ctx, src_filename, NULL, NULL) < 0)
+	{
 		fprintf(stderr, "Could not open source file %s\n", src_filename);
 		exit(1);
 	}
 	/* retrieve stream information */
-	if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+	if (avformat_find_stream_info(fmt_ctx, NULL) < 0)
+	{
 		fprintf(stderr, "Could not find stream information\n");
 		exit(1);
 	}
-	if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0) {
+	if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0)
+	{
 		video_stream = fmt_ctx->streams[video_stream_idx];
 		video_dst_file = fopen(video_dst_filename, "wb");
-		if (!video_dst_file) {
+		if (!video_dst_file)
+		{
 			fprintf(stderr, "Could not open destination file %s\n", video_dst_filename);
 			ret = 1;
 			goto end;
@@ -283,16 +290,19 @@ void LoadVideo()
 		pix_fmt = video_dec_ctx->pix_fmt;
 		ret = av_image_alloc(video_dst_data, video_dst_linesize,
 			width, height, pix_fmt, 1);
-		if (ret < 0) {
+		if (ret < 0)
+		{
 			fprintf(stderr, "Could not allocate raw video buffer\n");
 			goto end;
 		}
 		video_dst_bufsize = ret;
 	}
-	if (open_codec_context(&audio_stream_idx, &audio_dec_ctx, fmt_ctx, AVMEDIA_TYPE_AUDIO) >= 0) {
+	if (open_codec_context(&audio_stream_idx, &audio_dec_ctx, fmt_ctx, AVMEDIA_TYPE_AUDIO) >= 0)
+	{
 		audio_stream = fmt_ctx->streams[audio_stream_idx];
 		audio_dst_file = fopen(audio_dst_filename, "wb");
-		if (!audio_dst_file) {
+		if (!audio_dst_file)
+		{
 			fprintf(stderr, "Could not open destination file %s\n", audio_dst_filename);
 			ret = 1;
 			goto end;
@@ -300,13 +310,15 @@ void LoadVideo()
 	}
 	/* dump input information to stderr */
 	av_dump_format(fmt_ctx, 0, src_filename, 0);
-	if (!audio_stream && !video_stream) {
+	if (!audio_stream && !video_stream)
+	{
 		fprintf(stderr, "Could not find audio or video stream in the input, aborting\n");
 		ret = 1;
 		goto end;
 	}
 	frame = av_frame_alloc();
-	if (!frame) {
+	if (!frame)
+	{
 		fprintf(stderr, "Could not allocate frame\n");
 		ret = AVERROR(ENOMEM);
 		goto end;
@@ -320,35 +332,47 @@ void LoadVideo()
 	if (audio_stream)
 		printf("Demuxing audio from file '%s' into '%s'\n", src_filename, audio_dst_filename);
 	/* read frames from the file */
-	while (av_read_frame(fmt_ctx, &pkt) >= 0) {
+	while (av_read_frame(fmt_ctx, &pkt) >= 0)
+	{
 		AVPacket orig_pkt = pkt;
-		do {
+		do
+		{
 			ret = decode_packet(&got_frame, 0);
 			if (ret < 0)
 				break;
 			pkt.data += ret;
 			pkt.size -= ret;
 		} while (pkt.size > 0);
+		// GJ: if we want only one frame we want to exit here.
 		av_packet_unref(&orig_pkt);
+		if (ret > 0)
+			break;
 	}
 	/* flush cached frames */
+	// GJ: Let's not flush frames, we need it later...
 	pkt.data = NULL;
 	pkt.size = 0;
-	do {
+	/*
+	do
+	{
 		decode_packet(&got_frame, 1);
 	} while (got_frame);
+	*/
 	printf("Demuxing succeeded.\n");
-	if (video_stream) {
+	if (video_stream)
+	{
 		printf("Play the output video file with the command:\n"
 			"ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
 			av_get_pix_fmt_name(pix_fmt), width, height,
 			video_dst_filename);
 	}
-	if (audio_stream) {
+	if (audio_stream)
+	{
 		enum AVSampleFormat sfmt = audio_dec_ctx->sample_fmt;
 		int n_channels = audio_dec_ctx->channels;
 		const char *fmt;
-		if (av_sample_fmt_is_planar(sfmt)) {
+		if (av_sample_fmt_is_planar(sfmt))
+		{
 			const char *packed = av_get_sample_fmt_name(sfmt);
 			printf("Warning: the sample format the decoder produced is planar "
 				"(%s). This example will output the first channel only.\n",
@@ -364,18 +388,50 @@ void LoadVideo()
 			audio_dst_filename);
 	}
 end:
-	avcodec_free_context(&video_dec_ctx);
+	// GJ: apparantly freeing the video context will also free all AVFrame data... which we still need..
+	//avcodec_free_context(&video_dec_ctx);
 	avcodec_free_context(&audio_dec_ctx);
 	avformat_close_input(&fmt_ctx);
 	if (video_dst_file)
 		fclose(video_dst_file);
 	if (audio_dst_file)
 		fclose(audio_dst_file);
-	av_frame_free(&frame);
-	av_free(video_dst_data[0]);
+	//av_frame_free(&frame);
+	//av_free(video_dst_data[0]);
 	//return ret < 0;
+	return frame;
 }
 
+void CreateFrameTexture(AVFrame* frame, GLuint* texId)
+{
+	// Store current state
+	GLint last_texture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+
+	// Fill the RGB channels for now with the Luminance value of the YUV420P buffer, resulting in a greyscale image.
+	// TODO: add YUV420P to RGB conversion in the fragment shader, bind the chroma data	
+	char* pixels = (char*)malloc(frame->width * frame->height * 4 * sizeof(char));
+	for (int i = 0; i < frame->width * frame->height; i++)
+	{
+		pixels[i * 4 + 0] = (char)frame->data[0][i];
+		pixels[i * 4 + 1] = (char)frame->data[0][i];
+		pixels[i * 4 + 2] = (char)frame->data[0][i];
+		pixels[i * 4 + 3] = 255;
+	}
+
+	// Upload frame to graphics system
+	glGenTextures(1, texId);
+	glBindTexture(GL_TEXTURE_2D, *texId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frame->width, frame->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+	// Restore state
+	glBindTexture(GL_TEXTURE_2D, last_texture);
+
+	//free(pixels);
+}
 
 int main(int, char**)
 {
@@ -399,11 +455,13 @@ int main(int, char**)
 	SDL_Window *window = SDL_CreateWindow("ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 	gl3wInit();
-
+	
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(window);
 
-	//LoadVideo();
+	GLuint display_frame_tex = 2;
+	AVFrame* display_frame = LoadFrame();
+	CreateFrameTexture(display_frame, &display_frame_tex);
 
 	// Load Fonts
 	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -444,9 +502,9 @@ int main(int, char**)
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 			ImVec2 tex_screen_pos = ImGui::GetCursorScreenPos();
-			float tex_w = (float)ImGui::GetIO().Fonts->TexWidth;
-			float tex_h = (float)ImGui::GetIO().Fonts->TexHeight;
-			ImTextureID tex_id = ImGui::GetIO().Fonts->TexID;
+			float tex_w = (float)display_frame->width / 5;
+			float tex_h = (float)display_frame->height / 5;
+			ImTextureID tex_id = (void *)(intptr_t)display_frame_tex;
 			ImGui::Text("%.0fx%.0f", tex_w, tex_h);
 			ImGui::Image(tex_id, ImVec2(tex_w, tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
 			if (ImGui::IsItemHovered())
