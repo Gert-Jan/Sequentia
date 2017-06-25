@@ -18,10 +18,7 @@
 static double       g_Time = 0.0f;
 static bool         g_MousePressed[3] = { false, false, false };
 static float        g_MouseWheel = 0.0f;
-static GLuint       g_FontTexture = 0;
-static int          g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int          g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
-static int          g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
+Material    g_FontMaterial, g_VideoMaterial;
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
@@ -75,10 +72,9 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
 		{ 0.0f,                  0.0f,                  -1.0f, 0.0f },
 		{-1.0f,                  1.0f,                   0.0f, 1.0f },
 	};
-	glUseProgram(g_ShaderHandle);
-	glUniform1i(g_AttribLocationTex, 0);
-	glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
-	glBindVertexArray(g_VaoHandle);
+
+	g_VideoMaterial.Begin(ortho_projection, g_VaoHandle);
+	g_FontMaterial.Begin(ortho_projection, g_VaoHandle);
 
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
 	{
@@ -100,7 +96,8 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
 			}
 			else
 			{
-				glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+				Material* mat = (Material*)pcmd->TextureId;
+				mat->BindTextures();
 				glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
 				glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
 			}
@@ -186,15 +183,16 @@ void ImGui_ImplSdlGL3_CreateFontsTexture()
 	// Upload texture to graphics system
 	GLint last_texture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-	glGenTextures(1, &g_FontTexture);
-	glBindTexture(GL_TEXTURE_2D, g_FontTexture);
+	glGenTextures(1, &g_FontMaterial.textureHandles[0]);
+	glBindTexture(GL_TEXTURE_2D, g_FontMaterial.textureHandles[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 	// Store our identifier
-	io.Fonts->TexID = (void *)(intptr_t)g_FontTexture;
+	g_FontMaterial.textureCount = 1;
+	io.Fonts->TexID = (void *)&g_FontMaterial;
 
 	// Restore state
 	glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -223,33 +221,29 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 		"	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
 		"}\n";
 
-	const GLchar* fragment_shader =
+	const GLchar* fragment_shader_default =
 		"#version 330\n"
-		"uniform sampler2D Texture;\n"
+		"uniform sampler2D Texture0;\n"
 		"in vec2 Frag_UV;\n"
 		"in vec4 Frag_Color;\n"
 		"out vec4 Out_Color;\n"
 		"void main()\n"
 		"{\n"
-		"	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
+		"	Out_Color = Frag_Color * texture( Texture0, Frag_UV.st);\n"
 		"}\n";
 
-	g_ShaderHandle = glCreateProgram();
-	g_VertHandle = glCreateShader(GL_VERTEX_SHADER);
-	g_FragHandle = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(g_VertHandle, 1, &vertex_shader, 0);
-	glShaderSource(g_FragHandle, 1, &fragment_shader, 0);
-	glCompileShader(g_VertHandle);
-	glCompileShader(g_FragHandle);
-	glAttachShader(g_ShaderHandle, g_VertHandle);
-	glAttachShader(g_ShaderHandle, g_FragHandle);
-	glLinkProgram(g_ShaderHandle);
-
-	g_AttribLocationTex = glGetUniformLocation(g_ShaderHandle, "Texture");
-	g_AttribLocationProjMtx = glGetUniformLocation(g_ShaderHandle, "ProjMtx");
-	g_AttribLocationPosition = glGetAttribLocation(g_ShaderHandle, "Position");
-	g_AttribLocationUV = glGetAttribLocation(g_ShaderHandle, "UV");
-	g_AttribLocationColor = glGetAttribLocation(g_ShaderHandle, "Color");
+	const GLchar* fragment_shader_video =
+		"#version 330\n"
+		"uniform sampler2D Texture0;\n"
+		"uniform sampler2D Texture1;\n"
+		"uniform sampler2D Texture2;\n"
+		"in vec2 Frag_UV;\n"
+		"in vec4 Frag_Color;\n"
+		"out vec4 Out_Color;\n"
+		"void main()\n"
+		"{\n"
+		"	Out_Color = Frag_Color * (texture(Texture0, Frag_UV.st).r * vec4(1, 0, 0, 0) + texture(Texture1, Frag_UV.st).r * vec4(0, 1, 0, 0) + texture(Texture2, Frag_UV.st).r * vec4(0, 0, 1, 0) + vec4(0, 0, 0, 1));\n"
+		"}\n";
 
 	glGenBuffers(1, &g_VboHandle);
 	glGenBuffers(1, &g_ElementsHandle);
@@ -257,15 +251,9 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 	glGenVertexArrays(1, &g_VaoHandle);
 	glBindVertexArray(g_VaoHandle);
 	glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
-	glEnableVertexAttribArray(g_AttribLocationPosition);
-	glEnableVertexAttribArray(g_AttribLocationUV);
-	glEnableVertexAttribArray(g_AttribLocationColor);
 
-#define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
-	glVertexAttribPointer(g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, pos));
-	glVertexAttribPointer(g_AttribLocationUV, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, uv));
-	glVertexAttribPointer(g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col));
-#undef OFFSETOF
+	g_FontMaterial.Init(vertex_shader, fragment_shader_default);
+	g_VideoMaterial.Init(vertex_shader, fragment_shader_video);
 
 	ImGui_ImplSdlGL3_CreateFontsTexture();
 
@@ -284,23 +272,8 @@ void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
 	if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
 	g_VaoHandle = g_VboHandle = g_ElementsHandle = 0;
 
-	if (g_ShaderHandle && g_VertHandle) glDetachShader(g_ShaderHandle, g_VertHandle);
-	if (g_VertHandle) glDeleteShader(g_VertHandle);
-	g_VertHandle = 0;
-
-	if (g_ShaderHandle && g_FragHandle) glDetachShader(g_ShaderHandle, g_FragHandle);
-	if (g_FragHandle) glDeleteShader(g_FragHandle);
-	g_FragHandle = 0;
-
-	if (g_ShaderHandle) glDeleteProgram(g_ShaderHandle);
-	g_ShaderHandle = 0;
-
-	if (g_FontTexture)
-	{
-		glDeleteTextures(1, &g_FontTexture);
-		ImGui::GetIO().Fonts->TexID = 0;
-		g_FontTexture = 0;
-	}
+	g_FontMaterial.Dispose();
+	g_VideoMaterial.Dispose();
 }
 
 bool    ImGui_ImplSdlGL3_Init(SDL_Window* window)
@@ -351,7 +324,7 @@ void ImGui_ImplSdlGL3_Shutdown()
 
 void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window)
 {
-	if (!g_FontTexture)
+	if (!g_FontMaterial.programHandle)
 		ImGui_ImplSdlGL3_CreateDeviceObjects();
 
 	ImGuiIO& io = ImGui::GetIO();

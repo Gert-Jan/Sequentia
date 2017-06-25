@@ -23,6 +23,7 @@ extern "C"
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avutil.lib")
 
+extern Material g_VideoMaterial;
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *video_dec_ctx = NULL, *audio_dec_ctx;
 static int width, height;
@@ -402,35 +403,34 @@ end:
 	return frame;
 }
 
-void CreateFrameTexture(AVFrame* frame, GLuint* texId)
+void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 {
 	// Store current state
 	GLint last_texture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 
-	// Fill the RGB channels for now with the Luminance value of the YUV420P buffer, resulting in a greyscale image.
-	// TODO: add YUV420P to RGB conversion in the fragment shader, bind the chroma data	
-	char* pixels = (char*)malloc(frame->width * frame->height * 4 * sizeof(char));
-	for (int i = 0; i < frame->width * frame->height; i++)
-	{
-		pixels[i * 4 + 0] = (char)frame->data[0][i];
-		pixels[i * 4 + 1] = (char)frame->data[0][i];
-		pixels[i * 4 + 2] = (char)frame->data[0][i];
-		pixels[i * 4 + 3] = 255;
-	}
+	glGenTextures(3, &texId[0]);
 
-	// Upload frame to graphics system
-	glGenTextures(1, texId);
-	glBindTexture(GL_TEXTURE_2D, *texId);
+	glBindTexture(GL_TEXTURE_2D, texId[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frame->width, frame->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width, frame->height, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
+
+	glBindTexture(GL_TEXTURE_2D, texId[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
+
+	glBindTexture(GL_TEXTURE_2D, texId[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
 
 	// Restore state
 	glBindTexture(GL_TEXTURE_2D, last_texture);
-
-	//free(pixels);
 }
 
 int main(int, char**)
@@ -459,9 +459,10 @@ int main(int, char**)
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(window);
 
-	GLuint display_frame_tex = 2;
+	//GLuint display_frame_tex = 2;
 	AVFrame* display_frame = LoadFrame();
-	CreateFrameTexture(display_frame, &display_frame_tex);
+	g_VideoMaterial.textureCount = 3;
+	CreateFrameTexture(display_frame, &g_VideoMaterial.textureHandles[0]);
 
 	// Load Fonts
 	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -504,7 +505,7 @@ int main(int, char**)
 			ImVec2 tex_screen_pos = ImGui::GetCursorScreenPos();
 			float tex_w = (float)display_frame->width / 5;
 			float tex_h = (float)display_frame->height / 5;
-			ImTextureID tex_id = (void *)(intptr_t)display_frame_tex;
+			ImTextureID tex_id = (void*)&g_VideoMaterial;
 			ImGui::Text("%.0fx%.0f", tex_w, tex_h);
 			ImGui::Image(tex_id, ImVec2(tex_w, tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
 			if (ImGui::IsItemHovered())
