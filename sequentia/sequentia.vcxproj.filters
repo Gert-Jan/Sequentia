@@ -33,6 +33,7 @@
       <Filter>gl3w</Filter>
     </ClInclude>
     <ClInclude Include="imgui_impl_sdl_gl3.h" />
+    <ClInclude Include="decoder.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
