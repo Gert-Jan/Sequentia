@@ -1,5 +1,4 @@
 // ffmpeg powered video decoder
-
 extern "C"
 {
 	#include "libavformat/avformat.h"
@@ -8,10 +7,6 @@ extern "C"
 	#include "libavutil/samplefmt.h"
 	#include "libavutil/timestamp.h"
 }
-
-#pragma comment(lib, "avformat.lib")
-#pragma comment(lib, "avcodec.lib")
-#pragma comment(lib, "avutil.lib")
 
 /* Enable or disable frame reference counting. You are not supposed to support
 * both paths in your application but pick the one most appropriate to your
@@ -28,10 +23,6 @@ struct Decoder
 	AVStream* video_stream = NULL;
 	AVStream* audio_stream = NULL;
 	const char* src_filename = NULL;
-	const char* video_dst_filename = NULL;
-	const char* audio_dst_filename = NULL;
-	FILE* video_dst_file = NULL;
-	FILE* audio_dst_file = NULL;
 	uint8_t* video_dst_data[4] = { NULL };
 	int      video_dst_linesize[4];
 	int video_dst_bufsize;
@@ -44,42 +35,9 @@ struct Decoder
 	
 	void Open(const char* filename)
 	{
-		
-	}
-
-	AVFrame* NextFrame()
-	{
-		/*
-		const char *filename, *outfilename;
-		filename = "D:/Camera/Video/20170521_032735A.mp4";
-		outfilename = "D:/Dev/C++/Sequentia-test-data/out/test.file";
-
 		int ret = 0, got_frame;
-		if (argc != 4 && argc != 5) {
-		fprintf(stderr, "usage: %s [-refcount] input_file video_output_file audio_output_file\n"
-		"API example program to show how to read frames from an input file.\n"
-		"This program reads frames from a file, decodes them, and writes decoded\n"
-		"video frames to a rawvideo file named video_output_file, and decoded\n"
-		"audio frames to a rawaudio file named audio_output_file.\n\n"
-		"If the -refcount option is specified, the program use the\n"
-		"reference counting frame system which allows keeping a copy of\n"
-		"the data for longer than one decode call.\n"
-		"\n", argv[0]);
-		exit(1);
-		}
-		if (argc == 5 && !strcmp(argv[1], "-refcount")) {
-		refcount = 1;
-		argv++;
-		}
-		src_filename = argv[1];
-		video_dst_filename = argv[2];
-		audio_dst_filename = argv[3];
-		*/
-
-		int ret = 0, got_frame;
-		src_filename = "D:/Camera/Video/20170521_032735A.mp4";
-		video_dst_filename = "D:/Dev/C++/Sequentia-test-data/out/video.out";
-		audio_dst_filename = "D:/Dev/C++/Sequentia-test-data/out/audio.out";
+		//src_filename = "D:/Camera/Video/20170521_032735A.mp4";
+		src_filename = filename;
 
 		/* register all formats and codecs */
 		av_register_all();
@@ -98,13 +56,6 @@ struct Decoder
 		if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0)
 		{
 			video_stream = fmt_ctx->streams[video_stream_idx];
-			video_dst_file = fopen(video_dst_filename, "wb");
-			if (!video_dst_file)
-			{
-				fprintf(stderr, "Could not open destination file %s\n", video_dst_filename);
-				ret = 1;
-				goto end;
-			}
 			/* allocate image where the decoded image will be put */
 			width = video_dec_ctx->width;
 			height = video_dec_ctx->height;
@@ -114,20 +65,14 @@ struct Decoder
 			if (ret < 0)
 			{
 				fprintf(stderr, "Could not allocate raw video buffer\n");
-				goto end;
+				Dispose();
+				return;
 			}
 			video_dst_bufsize = ret;
 		}
 		if (open_codec_context(&audio_stream_idx, &audio_dec_ctx, fmt_ctx, AVMEDIA_TYPE_AUDIO) >= 0)
 		{
 			audio_stream = fmt_ctx->streams[audio_stream_idx];
-			audio_dst_file = fopen(audio_dst_filename, "wb");
-			if (!audio_dst_file)
-			{
-				fprintf(stderr, "Could not open destination file %s\n", audio_dst_filename);
-				ret = 1;
-				goto end;
-			}
 		}
 		/* dump input information to stderr */
 		av_dump_format(fmt_ctx, 0, src_filename, 0);
@@ -135,23 +80,26 @@ struct Decoder
 		{
 			fprintf(stderr, "Could not find audio or video stream in the input, aborting\n");
 			ret = 1;
-			goto end;
+			Dispose();
+			return;
 		}
 		frame = av_frame_alloc();
 		if (!frame)
 		{
 			fprintf(stderr, "Could not allocate frame\n");
 			ret = AVERROR(ENOMEM);
-			goto end;
+			Dispose();
+			return;
 		}
 		/* initialize packet, set data to NULL, let the demuxer fill it */
 		av_init_packet(&pkt);
 		pkt.data = NULL;
 		pkt.size = 0;
-		if (video_stream)
-			printf("Demuxing video from file '%s' into '%s'\n", src_filename, video_dst_filename);
-		if (audio_stream)
-			printf("Demuxing audio from file '%s' into '%s'\n", src_filename, audio_dst_filename);
+	}
+
+	AVFrame* NextFrame()
+	{
+		int ret = 0, got_frame;
 		/* read frames from the file */
 		while (av_read_frame(fmt_ctx, &pkt) >= 0)
 		{
@@ -166,65 +114,23 @@ struct Decoder
 			} while (pkt.size > 0);
 			// GJ: if we want only one frame we want to exit here.
 			av_packet_unref(&orig_pkt);
-			if (ret > 0)
+			if (ret > 0 && frame->coded_picture_number > 0)
 				break;
 		}
 		/* flush cached frames */
-		// GJ: Let's not flush frames, we need it later...
 		pkt.data = NULL;
 		pkt.size = 0;
-		/*
-		do
-		{
-		decode_packet(&got_frame, 1);
-		} while (got_frame);
-		*/
-		printf("Demuxing succeeded.\n");
-		if (video_stream)
-		{
-			printf("Play the output video file with the command:\n"
-				"ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
-				av_get_pix_fmt_name(pix_fmt), width, height,
-				video_dst_filename);
-		}
-		if (audio_stream)
-		{
-			enum AVSampleFormat sfmt = audio_dec_ctx->sample_fmt;
-			int n_channels = audio_dec_ctx->channels;
-			const char *fmt;
-			if (av_sample_fmt_is_planar(sfmt))
-			{
-				const char *packed = av_get_sample_fmt_name(sfmt);
-				printf("Warning: the sample format the decoder produced is planar "
-					"(%s). This example will output the first channel only.\n",
-					packed ? packed : "?");
-				sfmt = av_get_packed_sample_fmt(sfmt);
-				n_channels = 1;
-			}
-			if ((ret = get_format_from_sample_fmt(&fmt, sfmt)) < 0)
-				goto end;
-			printf("Play the output audio file with the command:\n"
-				"ffplay -f %s -ac %d -ar %d %s\n",
-				fmt, n_channels, audio_dec_ctx->sample_rate,
-				audio_dst_filename);
-		}
-	end:
-		// GJ: apparantly freeing the video context will also free all AVFrame data... which we still need..
-		//avcodec_free_context(&video_dec_ctx);
-		avcodec_free_context(&audio_dec_ctx);
-		avformat_close_input(&fmt_ctx);
-		if (video_dst_file)
-			fclose(video_dst_file);
-		if (audio_dst_file)
-			fclose(audio_dst_file);
-		//av_frame_free(&frame);
-		//av_free(video_dst_data[0]);
-		//return ret < 0;
+
 		return frame;
 	}
 
 	void Dispose()
 	{
+		avcodec_free_context(&video_dec_ctx);
+		avcodec_free_context(&audio_dec_ctx);
+		avformat_close_input(&fmt_ctx);
+		av_frame_free(&frame);
+		av_free(video_dst_data[0]);
 	}
 
 	int decode_packet(int *got_frame, int cached)
@@ -263,15 +169,6 @@ struct Decoder
 				printf("video_frame%s n:%d coded_n:%d\n",
 					cached ? "(cached)" : "",
 					video_frame_count++, frame->coded_picture_number);
-
-				/* copy decoded frame to destination buffer:
-				* this is required since rawvideo expects non aligned data */
-				av_image_copy(video_dst_data, video_dst_linesize,
-					(const uint8_t **)(frame->data), frame->linesize,
-					pix_fmt, width, height);
-
-				/* write to rawvideo file */
-				//fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
 			}
 		}
 		else if (pkt.stream_index == audio_stream_idx)
@@ -299,15 +196,6 @@ struct Decoder
 				printf("audio_frame%s n:%d nb_samples:%d pts:%s\n",
 					cached ? "(cached)" : "",
 					audio_frame_count++, frame->nb_samples, buff);
-				/* Write the raw audio data samples of the first plane. This works
-				* fine for packed formats (e.g. AV_SAMPLE_FMT_S16). However,
-				* most audio decoders output planar audio, which uses a separate
-				* plane of audio samples for each channel (e.g. AV_SAMPLE_FMT_S16P).
-				* In other words, this code will write only the first audio channel
-				* in these cases.
-				* You should use libswresample or libavfilter to convert the frame
-				* to packed data. */
-				fwrite(frame->extended_data[0], 1, unpadded_linesize, audio_dst_file);
 			}
 		}
 

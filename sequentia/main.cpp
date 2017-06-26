@@ -24,6 +24,7 @@ void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 	GLint last_texture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 
+	glDeleteTextures(3, &texId[0]);
 	glGenTextures(3, &texId[0]);
 
 	glBindTexture(GL_TEXTURE_2D, texId[0]);
@@ -74,10 +75,10 @@ int main(int, char**)
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(window);
 	
-	// Get video frame
-	AVFrame* display_frame = decoder.NextFrame();
+	// Setup the video decoder and prepare the video material
+	decoder.Open("D:/Camera/Video/20170521_032735A.mp4");
+	AVFrame* display_frame;
 	g_VideoMaterial.textureCount = 3;
-	CreateFrameTexture(display_frame, &g_VideoMaterial.textureHandles[0]);
 
 	// Load Fonts
 	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -97,6 +98,11 @@ int main(int, char**)
 	bool done = false;
 	while (!done)
 	{
+		// get the next video frame
+		display_frame = decoder.NextFrame();
+		CreateFrameTexture(display_frame, &g_VideoMaterial.textureHandles[0]);
+		
+		// handle sdl events
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
