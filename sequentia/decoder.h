@@ -11,7 +11,8 @@ extern "C"
 /* Enable or disable frame reference counting. You are not supposed to support
 * both paths in your application but pick the one most appropriate to your
 * needs. */
-static int ffmpeg_refcount = 0;
+static const int ffmpeg_refcount = 1;
+static const int frame_buffer_size = 10;
 
 struct Decoder
 {
@@ -20,42 +21,53 @@ struct Decoder
 	AVCodecContext* audio_dec_ctx = NULL;
 	int width, height;
 	AVPixelFormat pix_fmt;
-	AVStream* video_stream = NULL;
-	AVStream* audio_stream = NULL;
 	const char* src_filename = NULL;
 	uint8_t* video_dst_data[4] = { NULL };
 	int      video_dst_linesize[4];
 	int video_dst_bufsize;
 	int video_stream_idx = -1;
 	int audio_stream_idx = -1;
-	AVFrame* frame = NULL;
+	AVFrame* audioFrame = NULL;
+	SDL_mutex* frameMutex = NULL;
+	int frame_cursor = frame_buffer_size - 1;
+	int buffer_cursor = 0;
+	AVFrame* buffer[frame_buffer_size];
 	AVPacket pkt;
 	int video_frame_count = 0;
 	int audio_frame_count = 0;
+
+	static int ThreadProxy(void* instance)
+	{
+		return ((Decoder*)instance)->decode();
+	}
 	
 	void Open(const char* filename)
 	{
-		int ret = 0, got_frame;
-		//src_filename = "D:/Camera/Video/20170521_032735A.mp4";
 		src_filename = filename;
+		frameMutex = SDL_CreateMutex();
 
+		SDL_Thread* thread = SDL_CreateThread(ThreadProxy, "Decoder", this);
+	}
+
+	int decode()
+	{
+		int ret = 0, got_frame;
 		/* register all formats and codecs */
 		av_register_all();
 		/* open input file, and allocate format context */
 		if (avformat_open_input(&fmt_ctx, src_filename, NULL, NULL) < 0)
 		{
 			fprintf(stderr, "Could not open source file %s\n", src_filename);
-			exit(1);
+			return 1;
 		}
 		/* retrieve stream information */
 		if (avformat_find_stream_info(fmt_ctx, NULL) < 0)
 		{
 			fprintf(stderr, "Could not find stream information\n");
-			exit(1);
+			return 1;
 		}
 		if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0)
 		{
-			video_stream = fmt_ctx->streams[video_stream_idx];
 			/* allocate image where the decoded image will be put */
 			width = video_dec_ctx->width;
 			height = video_dec_ctx->height;
@@ -66,62 +78,103 @@ struct Decoder
 			{
 				fprintf(stderr, "Could not allocate raw video buffer\n");
 				Dispose();
-				return;
+				return 1;
 			}
 			video_dst_bufsize = ret;
 		}
 		if (open_codec_context(&audio_stream_idx, &audio_dec_ctx, fmt_ctx, AVMEDIA_TYPE_AUDIO) >= 0)
 		{
-			audio_stream = fmt_ctx->streams[audio_stream_idx];
 		}
 		/* dump input information to stderr */
 		av_dump_format(fmt_ctx, 0, src_filename, 0);
-		if (!audio_stream && !video_stream)
+		for (int i = 0; i < frame_buffer_size; i++)
 		{
-			fprintf(stderr, "Could not find audio or video stream in the input, aborting\n");
-			ret = 1;
-			Dispose();
-			return;
+			buffer[i] = av_frame_alloc();
+			if (!buffer[i])
+			{
+				fprintf(stderr, "Could not allocate frame\n");
+				ret = AVERROR(ENOMEM);
+				Dispose();
+				return 1;
+			}
 		}
-		frame = av_frame_alloc();
-		if (!frame)
+		audioFrame = av_frame_alloc();
+		if (!audioFrame)
 		{
-			fprintf(stderr, "Could not allocate frame\n");
+			fprintf(stderr, "Could not allocate audio frame\n");
 			ret = AVERROR(ENOMEM);
 			Dispose();
-			return;
+			return 1;
 		}
+		
 		/* initialize packet, set data to NULL, let the demuxer fill it */
 		av_init_packet(&pkt);
 		pkt.data = NULL;
 		pkt.size = 0;
-	}
 
-	AVFrame* NextFrame()
+		/* start decoding frames... */
+		return decode_frames();
+	}
+	
+	// for now just decode frames as quickly as possible, overwriting the oldest frame
+	// TODO: do actual time synchronization
+	int decode_frames()
 	{
 		int ret = 0, got_frame;
+		//av_frame_unref(frame);
 		/* read frames from the file */
 		while (av_read_frame(fmt_ctx, &pkt) >= 0)
 		{
 			AVPacket orig_pkt = pkt;
 			do
 			{
-				ret = decode_packet(&got_frame, 0);
+				// skip audio stream packets
+				while (pkt.stream_index == audio_stream_idx || pkt.size == 0)
+				{
+					while(pkt.size > 0)
+					{
+						ret = decode_packet(audioFrame, &got_frame, 0);
+						if (ret < 0)
+							break;
+						pkt.data += ret;
+						pkt.size -= ret;
+					} 
+					av_packet_unref(&orig_pkt);
+					av_read_frame(fmt_ctx, &pkt);
+					orig_pkt = pkt;
+				}
+				// wait until we have room to buffer
+				int next_buffer_cursor = (buffer_cursor + 1) % frame_buffer_size;
+				while (next_buffer_cursor == frame_cursor)
+					SDL_Delay(10);
+				// decode the next video frame
+				ret = decode_packet(buffer[buffer_cursor], &got_frame, 0);
 				if (ret < 0)
 					break;
+				buffer_cursor = next_buffer_cursor;
 				pkt.data += ret;
 				pkt.size -= ret;
 			} while (pkt.size > 0);
 			// GJ: if we want only one frame we want to exit here.
 			av_packet_unref(&orig_pkt);
-			if (ret > 0 && frame->coded_picture_number > 0)
-				break;
 		}
 		/* flush cached frames */
 		pkt.data = NULL;
 		pkt.size = 0;
 
-		return frame;
+		Dispose();
+		
+		return 0;
+	}
+
+	AVFrame* NextFrame()
+	{
+		int next_frame_cursor = (frame_cursor + 1) % frame_buffer_size;
+		if (next_frame_cursor != buffer_cursor)
+		{
+			frame_cursor = next_frame_cursor;
+		}
+		return buffer[frame_cursor];
 	}
 
 	void Dispose()
@@ -129,11 +182,12 @@ struct Decoder
 		avcodec_free_context(&video_dec_ctx);
 		avcodec_free_context(&audio_dec_ctx);
 		avformat_close_input(&fmt_ctx);
-		av_frame_free(&frame);
+		for (int i = 0; i < frame_buffer_size; i++)
+			av_frame_free(&buffer[i]);
 		av_free(video_dst_data[0]);
 	}
 
-	int decode_packet(int *got_frame, int cached)
+	int decode_packet(AVFrame* targetFrame, int *got_frame, int cached)
 	{
 		int ret = 0;
 		int decoded = pkt.size;
@@ -141,7 +195,7 @@ struct Decoder
 		if (pkt.stream_index == video_stream_idx)
 		{
 			/* decode video frame */
-			ret = avcodec_decode_video2(video_dec_ctx, frame, got_frame, &pkt);
+			ret = avcodec_decode_video2(video_dec_ctx, targetFrame, got_frame, &pkt);
 			if (ret < 0)
 			{
 				char buff[256];
@@ -151,7 +205,7 @@ struct Decoder
 			}
 			if (*got_frame)
 			{
-				if (frame->width != width || frame->height != height || frame->format != pix_fmt)
+				if (targetFrame->width != width || targetFrame->height != height || targetFrame->format != pix_fmt)
 				{
 					/* To handle this change, one could call av_image_alloc again and
 					* decode the following frames into another rawvideo file. */
@@ -161,20 +215,20 @@ struct Decoder
 						"old: width = %d, height = %d, format = %s\n"
 						"new: width = %d, height = %d, format = %s\n",
 						width, height, av_get_pix_fmt_name(pix_fmt),
-						frame->width, frame->height,
-						av_get_pix_fmt_name((AVPixelFormat)frame->format));
+						targetFrame->width, targetFrame->height,
+						av_get_pix_fmt_name((AVPixelFormat)targetFrame->format));
 					return -1;
 				}
 
 				printf("video_frame%s n:%d coded_n:%d\n",
 					cached ? "(cached)" : "",
-					video_frame_count++, frame->coded_picture_number);
+					video_frame_count++, targetFrame->coded_picture_number);
 			}
 		}
 		else if (pkt.stream_index == audio_stream_idx)
 		{
 			/* decode audio frame */
-			ret = avcodec_decode_audio4(audio_dec_ctx, frame, got_frame, &pkt);
+			ret = avcodec_decode_audio4(audio_dec_ctx, targetFrame, got_frame, &pkt);
 			if (ret < 0)
 			{
 				char buff[256];
@@ -182,7 +236,6 @@ struct Decoder
 				fprintf(stderr, "Error decoding audio frame (%s)\n", buff);
 				return ret;
 			}
-
 			/* Some audio decoders decode only part of the packet, and have to be
 			* called again with the remainder of the packet data.
 			* Sample: fate-suite/lossless-audio/luckynight-partial.shn
@@ -190,19 +243,14 @@ struct Decoder
 			decoded = FFMIN(ret, pkt.size);
 			if (*got_frame)
 			{
-				size_t unpadded_linesize = frame->nb_samples * av_get_bytes_per_sample((AVSampleFormat)frame->format);
+				size_t unpadded_linesize = targetFrame->nb_samples * av_get_bytes_per_sample((AVSampleFormat)targetFrame->format);
 				char buff[256];
-				av_ts_make_time_string(buff, frame->pts, &audio_dec_ctx->time_base);
+				av_ts_make_time_string(buff, targetFrame->pts, &audio_dec_ctx->time_base);
 				printf("audio_frame%s n:%d nb_samples:%d pts:%s\n",
 					cached ? "(cached)" : "",
-					audio_frame_count++, frame->nb_samples, buff);
+					audio_frame_count++, targetFrame->nb_samples, buff);
 			}
 		}
-
-		/* If we use frame reference counting, we own the data and need
-		* to de-reference it when we don't use it anymore */
-		if (*got_frame && ffmpeg_refcount)
-			av_frame_unref(frame);
 		return decoded;
 	}
 	

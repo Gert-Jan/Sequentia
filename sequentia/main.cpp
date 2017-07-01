@@ -77,7 +77,6 @@ int main(int, char**)
 	
 	// Setup the video decoder and prepare the video material
 	decoder.Open("D:/Camera/Video/20170521_032735A.mp4");
-	AVFrame* display_frame;
 	g_VideoMaterial.textureCount = 3;
 
 	// Load Fonts
@@ -99,9 +98,10 @@ int main(int, char**)
 	while (!done)
 	{
 		// get the next video frame
-		display_frame = decoder.NextFrame();
-		CreateFrameTexture(display_frame, &g_VideoMaterial.textureHandles[0]);
-		
+		AVFrame* display_frame = decoder.NextFrame();
+		if (display_frame)
+			CreateFrameTexture(display_frame, &g_VideoMaterial.textureHandles[0]);
+
 		// handle sdl events
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -123,24 +123,27 @@ int main(int, char**)
 			if (ImGui::Button("Another Window")) show_another_window ^= 1;
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-			ImVec2 tex_screen_pos = ImGui::GetCursorScreenPos();
-			float tex_w = (float)display_frame->width / 5;
-			float tex_h = (float)display_frame->height / 5;
-			ImTextureID tex_id = (void*)&g_VideoMaterial;
-			ImGui::Text("%.0fx%.0f", tex_w, tex_h);
-			ImGui::Image(tex_id, ImVec2(tex_w, tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-			if (ImGui::IsItemHovered())
+			if (display_frame)
 			{
-				ImGui::BeginTooltip();
-				float focus_sz = 32.0f;
-				float focus_x = ImGui::GetMousePos().x - tex_screen_pos.x - focus_sz * 0.5f; if (focus_x < 0.0f) focus_x = 0.0f; else if (focus_x > tex_w - focus_sz) focus_x = tex_w - focus_sz;
-				float focus_y = ImGui::GetMousePos().y - tex_screen_pos.y - focus_sz * 0.5f; if (focus_y < 0.0f) focus_y = 0.0f; else if (focus_y > tex_h - focus_sz) focus_y = tex_h - focus_sz;
-				ImGui::Text("Min: (%.2f, %.2f)", focus_x, focus_y);
-				ImGui::Text("Max: (%.2f, %.2f)", focus_x + focus_sz, focus_y + focus_sz);
-				ImVec2 uv0 = ImVec2((focus_x) / tex_w, (focus_y) / tex_h);
-				ImVec2 uv1 = ImVec2((focus_x + focus_sz) / tex_w, (focus_y + focus_sz) / tex_h);
-				ImGui::Image(tex_id, ImVec2(128, 128), uv0, uv1, ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-				ImGui::EndTooltip();
+				ImVec2 tex_screen_pos = ImGui::GetCursorScreenPos();
+				float tex_w = (float)display_frame->width / 5;
+				float tex_h = (float)display_frame->height / 5;
+				ImTextureID tex_id = (void*)&g_VideoMaterial;
+				ImGui::Text("%.0fx%.0f", tex_w, tex_h);
+				ImGui::Image(tex_id, ImVec2(tex_w, tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::BeginTooltip();
+					float focus_sz = 32.0f;
+					float focus_x = ImGui::GetMousePos().x - tex_screen_pos.x - focus_sz * 0.5f; if (focus_x < 0.0f) focus_x = 0.0f; else if (focus_x > tex_w - focus_sz) focus_x = tex_w - focus_sz;
+					float focus_y = ImGui::GetMousePos().y - tex_screen_pos.y - focus_sz * 0.5f; if (focus_y < 0.0f) focus_y = 0.0f; else if (focus_y > tex_h - focus_sz) focus_y = tex_h - focus_sz;
+					ImGui::Text("Min: (%.2f, %.2f)", focus_x, focus_y);
+					ImGui::Text("Max: (%.2f, %.2f)", focus_x + focus_sz, focus_y + focus_sz);
+					ImVec2 uv0 = ImVec2((focus_x) / tex_w, (focus_y) / tex_h);
+					ImVec2 uv1 = ImVec2((focus_x + focus_sz) / tex_w, (focus_y + focus_sz) / tex_h);
+					ImGui::Image(tex_id, ImVec2(128, 128), uv0, uv1, ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
+					ImGui::EndTooltip();
+				}
 			}
 		}
 
