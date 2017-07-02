@@ -182,8 +182,8 @@ struct Decoder
 		avcodec_free_context(&video_dec_ctx);
 		avcodec_free_context(&audio_dec_ctx);
 		avformat_close_input(&fmt_ctx);
-		for (int i = 0; i < frame_buffer_size; i++)
-			av_frame_free(&buffer[i]);
+		//for (int i = 0; i < frame_buffer_size; i++)
+		//	av_frame_free(&buffer[i]);
 		av_free(video_dst_data[0]);
 	}
 
