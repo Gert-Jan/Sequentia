@@ -18,7 +18,8 @@
 static double       g_Time = 0.0f;
 static bool         g_MousePressed[3] = { false, false, false };
 static float        g_MouseWheel = 0.0f;
-Material    g_FontMaterial, g_VideoMaterial;
+static const int    video_count = 4;
+Material            g_FontMaterial, g_VideoMaterial[video_count];
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
@@ -73,7 +74,8 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
 		{-1.0f,                  1.0f,                   0.0f, 1.0f },
 	};
 
-	g_VideoMaterial.Begin(ortho_projection, g_VaoHandle);
+	for (int i = 0; i < video_count; i++)
+		g_VideoMaterial[i].Begin(ortho_projection, g_VaoHandle);
 	g_FontMaterial.Begin(ortho_projection, g_VaoHandle);
 
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
@@ -291,7 +293,10 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 	glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
 
 	g_FontMaterial.Init(vertex_shader, fragment_shader_default);
-	g_VideoMaterial.Init(vertex_shader, fragment_shader_video);
+	g_VideoMaterial[0].Init(vertex_shader, fragment_shader_video);
+	g_VideoMaterial[1] = g_VideoMaterial[0];
+	g_VideoMaterial[2] = g_VideoMaterial[0];
+	g_VideoMaterial[3] = g_VideoMaterial[0];
 
 	ImGui_ImplSdlGL3_CreateFontsTexture();
 
@@ -311,7 +316,8 @@ void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
 	g_VaoHandle = g_VboHandle = g_ElementsHandle = 0;
 
 	g_FontMaterial.Dispose();
-	g_VideoMaterial.Dispose();
+	for (int i = 0; i < video_count; i++)
+		g_VideoMaterial[i].Dispose();
 }
 
 bool    ImGui_ImplSdlGL3_Init(SDL_Window* window)
