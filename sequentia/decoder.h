@@ -169,13 +169,15 @@ struct Decoder
 		return 0;
 	}
 
-	AVFrame* NextFrame()
+	AVFrame* NextFrame(int64_t time)
 	{
-		int next_frame_cursor = (frame_cursor + 1) % frame_buffer_size;
-		if (next_frame_cursor != buffer_cursor)
+		int candidate_frame_cursor = frame_cursor;
+		while (candidate_frame_cursor != buffer_cursor - 1 && 
+			av_frame_get_best_effort_timestamp(buffer[candidate_frame_cursor]) < time)
 		{
-			frame_cursor = next_frame_cursor;
+			candidate_frame_cursor = (candidate_frame_cursor + 1) % frame_buffer_size;
 		}
+		frame_cursor = candidate_frame_cursor;
 		return buffer[frame_cursor];
 	}
 

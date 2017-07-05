@@ -140,7 +140,7 @@ int main(int, char**)
 				if (video_start_time[i] != 0)
 					video_time = SDL_GetTicks() - video_start_time[i];
 				// get the next video frame
-				AVFrame* display_frame = decoder[i].NextFrame();
+				AVFrame* display_frame = decoder[i].NextFrame(video_time);
 
 				if (display_frame)
 				{
