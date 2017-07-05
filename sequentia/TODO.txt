@@ -1,7 +1,7 @@
 Ah quick doc to keep track of things that should be done later.
 
 Video
-- Video time syncing
+* Video time syncing
 	- Returning a later frame when the GUI thread is slow
 	- Start to skip decoding frames when the decoder thread is slow
 - Find a color calibration video, check which YUV420p fragment shader matrix should be used.
@@ -14,3 +14,6 @@ Code
 - Explore a more C-like way of doing things as opposed to how C++-like the Material and Decoder are done now. Not sure if that will make me happy but I got to try...
 - Settle for a code style, it's all over the place now.
 - Figure out what to do with imgui_impl_sdl_gl3, at the very least rename it.
+
+Development
+- Test dev environment on another machine, write a setup guide in the README.txt

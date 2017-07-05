@@ -15,7 +15,7 @@
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avutil.lib")
 
-static const int video_count = 4;
+static const int video_count = 1;
 extern Material g_VideoMaterial[video_count];
 static Decoder decoder[video_count];
 
@@ -77,23 +77,23 @@ int main(int, char**)
 	ImGui_ImplSdlGL3_Init(window);
 	
 	// Setup the video decoder and prepare the video material
-	/*
 	// long videos
-	decoder[0].Open("D:/Camera/Video/20170521_032735A.mp4");
-	decoder[1].Open("D:/Camera/Video/20170521_032933A.mp4");
-	decoder[2].Open("D:/Camera/Video/20170602_084013A.mp4");
-	decoder[3].Open("D:/Camera/Video/20170509_195301A.mp4");
-	*/
+	decoder[0].Open("D:/Camera/QuickDecodeTest.mkv");
+	//decoder[0].Open("D:/Camera/Video/20170521_032735A.mp4");
+	//decoder[1].Open("D:/Camera/Video/20170521_032933A.mp4");
+	//decoder[2].Open("D:/Camera/Video/20170602_084013A.mp4");
+	//decoder[3].Open("D:/Camera/Video/20170509_195301A.mp4");
 	// short videos
-	decoder[0].Open("D:/Camera/Video/20170602_085418A.mp4");
-	decoder[1].Open("D:/Camera/Video/20170524_035547A.mp4");
-	decoder[2].Open("D:/Camera/Video/20170602_080143A.mp4");
-	decoder[3].Open("D:/Camera/Video/20170602_084612A.mp4");
+	//decoder[0].Open("D:/Camera/Video/20170602_085418A.mp4");
+	//decoder[1].Open("D:/Camera/Video/20170524_035547A.mp4");
+	//decoder[2].Open("D:/Camera/Video/20170602_080143A.mp4");
+	//decoder[3].Open("D:/Camera/Video/20170602_084612A.mp4");
 	for (int i = 0; i < video_count; i++)
 		g_VideoMaterial[i].textureCount = 3;
-	ImVec2 vid_size = ImVec2(500, 500.0 * (9.0 / 16.0));
+	ImVec2 vid_size = ImVec2(1000, 1000.0 * (9.0 / 16.0));
 	float margin = 10;
 	AVFrame* prev_frame[video_count];
+	Uint32 video_start_time[video_count] = { 0 };
 
 	// Load Fonts
 	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -136,11 +136,17 @@ int main(int, char**)
 
 			for (int i = 0; i < video_count; i++)
 			{
+				Uint32 video_time = 0;
+				if (video_start_time[i] != 0)
+					video_time = SDL_GetTicks() - video_start_time[i];
 				// get the next video frame
 				AVFrame* display_frame = decoder[i].NextFrame();
 
 				if (display_frame)
 				{
+					if (video_start_time[i] == 0)
+						video_start_time[i] = SDL_GetTicks();
+
 					ImGui::Begin(decoder[i].src_filename);
 					if (display_frame != prev_frame[i])
 						CreateFrameTexture(display_frame, &g_VideoMaterial[i].textureHandles[0]);
@@ -150,6 +156,9 @@ int main(int, char**)
 
 					ImTextureID tex_id = (void*)&g_VideoMaterial[i];
 					ImGui::Text("%.0fx%.0f", vid_size.x, vid_size.y);
+					float decoder_time = av_frame_get_best_effort_timestamp(display_frame) / 1000.0;
+					float video_real_time = (SDL_GetTicks() - video_start_time[i]) / 1000.0;
+					ImGui::Text("%.3f - %.3f = %.3f", decoder_time, video_real_time, (decoder_time - video_real_time));
 					ImGui::Image(tex_id, vid_size, ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
 					if (ImGui::IsItemHovered())
 					{
