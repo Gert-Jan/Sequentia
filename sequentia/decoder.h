@@ -125,12 +125,12 @@ struct Decoder
 		/* read frames from the file */
 		while (av_read_frame(fmt_ctx, &pkt) >= 0)
 		{
-			AVPacket orig_pkt = pkt;
-			do
+			while (pkt.size > 0)
 			{
-				// skip audio stream packets
+				// skip 0 sized and audio packets for now
 				while (pkt.stream_index == audio_stream_idx || pkt.size == 0)
 				{
+					// decode audio packets
 					while(pkt.size > 0)
 					{
 						ret = decode_packet(audioFrame, &got_frame, 0);
@@ -139,24 +139,26 @@ struct Decoder
 						pkt.data += ret;
 						pkt.size -= ret;
 					} 
-					av_packet_unref(&orig_pkt);
+					av_packet_unref(&pkt);
+					// read next packet
 					av_read_frame(fmt_ctx, &pkt);
-					orig_pkt = pkt;
 				}
 				// wait until we have room to buffer
 				int next_buffer_cursor = (buffer_cursor + 1) % frame_buffer_size;
 				while (next_buffer_cursor == frame_cursor)
-					SDL_Delay(10);
-				// decode the next video frame
+					SDL_Delay(5);
+				// decode and buffer the next video frame
 				ret = decode_packet(buffer[buffer_cursor], &got_frame, 0);
 				if (ret < 0)
 					break;
+				// move the buffer cursor
 				buffer_cursor = next_buffer_cursor;
+				// move the packet cursor
 				pkt.data += ret;
 				pkt.size -= ret;
-			} while (pkt.size > 0);
+			}
+			av_packet_unref(&pkt);
 			// GJ: if we want only one frame we want to exit here.
-			av_packet_unref(&orig_pkt);
 		}
 		/* flush cached frames */
 		pkt.data = NULL;
