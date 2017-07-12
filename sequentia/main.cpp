@@ -78,13 +78,14 @@ int main(int, char**)
 	
 	// Setup the video decoder and prepare the video material
 	// long videos
-	decoder[0].Open("D:/Camera/QuickDecodeTest.mkv");
+	//decoder[0].Open("D:/Camera/QuickDecodeTest.mkv");
 	//decoder[0].Open("D:/Camera/Video/20170521_032735A.mp4");
+	decoder[0].skip_frames_if_slow = true;
 	//decoder[1].Open("D:/Camera/Video/20170521_032933A.mp4");
 	//decoder[2].Open("D:/Camera/Video/20170602_084013A.mp4");
 	//decoder[3].Open("D:/Camera/Video/20170509_195301A.mp4");
 	// short videos
-	//decoder[0].Open("D:/Camera/Video/20170602_085418A.mp4");
+	decoder[0].Open("D:/Camera/Video/20170602_085418A.mp4");
 	//decoder[1].Open("D:/Camera/Video/20170524_035547A.mp4");
 	//decoder[2].Open("D:/Camera/Video/20170602_080143A.mp4");
 	//decoder[3].Open("D:/Camera/Video/20170602_084612A.mp4");
@@ -136,46 +137,52 @@ int main(int, char**)
 
 			for (int i = 0; i < video_count; i++)
 			{
-				Uint32 video_time = 0;
-				if (video_start_time[i] != 0)
-					video_time = SDL_GetTicks() - video_start_time[i];
-				// get the next video frame
-				AVFrame* display_frame = decoder[i].NextFrame(video_time);
-
-				if (display_frame)
+				if (decoder[i].status == DecoderStatus::Ready)
 				{
-					if (video_start_time[i] == 0)
-						video_start_time[i] = SDL_GetTicks();
+					Uint32 video_time = 0;
+					if (video_start_time[i] != 0)
+						video_time = SDL_GetTicks() - video_start_time[i];
+					// get the next video frame
+					AVFrame* display_frame = decoder[i].NextFrame(video_time);
 
-					ImGui::Begin(decoder[i].src_filename);
-					if (display_frame != prev_frame[i])
-						CreateFrameTexture(display_frame, &g_VideoMaterial[i].textureHandles[0]);
-					prev_frame[i] = display_frame;
-					float tex_w = (float)display_frame->width;
-					float tex_h = (float)display_frame->height;
-
-					ImTextureID tex_id = (void*)&g_VideoMaterial[i];
-					ImGui::Text("%.0fx%.0f", vid_size.x, vid_size.y);
-					float decoder_time = av_frame_get_best_effort_timestamp(display_frame) / 1000.0;
-					float video_real_time = (SDL_GetTicks() - video_start_time[i]) / 1000.0;
-					ImGui::Text("%.3f - %.3f = %.3f", decoder_time, video_real_time, (decoder_time - video_real_time));
-					ImGui::Image(tex_id, vid_size, ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-					if (ImGui::IsItemHovered())
+					if (display_frame)
 					{
-						ImVec2 tex_screen_pos = ImGui::GetCursorScreenPos();
-						tex_screen_pos.y -= vid_size.y;
-						ImGui::BeginTooltip();
-						float focus_sz = 64.0f;
-						float focus_x = ImGui::GetMousePos().x - tex_screen_pos.x - focus_sz * 0.5f; if (focus_x < 0.0f) focus_x = 0.0f; else if (focus_x > vid_size.x - focus_sz) focus_x = vid_size.x - focus_sz;
-						float focus_y = ImGui::GetMousePos().y - tex_screen_pos.y - focus_sz * 0.5f; if (focus_y < 0.0f) focus_y = 0.0f; else if (focus_y > vid_size.y - focus_sz) focus_y = vid_size.y - focus_sz;
-						ImVec2 uv0 = ImVec2((focus_x) / vid_size.x, (focus_y) / vid_size.y);
-						ImVec2 uv1 = ImVec2((focus_x + focus_sz) / vid_size.x, (focus_y + focus_sz) / vid_size.y);
-						ImGui::Text("Min: (%.2f, %.2f)", focus_x, focus_y);
-						ImGui::Text("Max: (%.2f, %.2f)", focus_x + focus_sz, focus_y + focus_sz);
-						ImGui::Image(tex_id, ImVec2(256, 256), uv0, uv1, ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-						ImGui::EndTooltip();
+						if (video_start_time[i] == 0)
+							video_start_time[i] = SDL_GetTicks();
+
+						ImGui::Begin(decoder[i].src_filename);
+						if (display_frame != prev_frame[i])
+						{
+							//printf("%d%s\n", display_frame->coded_picture_number, display_frame->key_frame ? "I" : "p");
+							CreateFrameTexture(display_frame, &g_VideoMaterial[i].textureHandles[0]);
+						}
+						prev_frame[i] = display_frame;
+						float tex_w = (float)display_frame->width;
+						float tex_h = (float)display_frame->height;
+
+						ImTextureID tex_id = (void*)&g_VideoMaterial[i];
+						ImGui::Text("%.0fx%.0f", vid_size.x, vid_size.y);
+						float decoder_time = display_frame->pts / 1000.0;
+						float video_real_time = (SDL_GetTicks() - video_start_time[i]) / 1000.0;
+						ImGui::Text("%.3f (%.3f)", video_real_time, (decoder->buffer_punctuality / 1000.0));
+						ImGui::Image(tex_id, vid_size, ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
+						if (ImGui::IsItemHovered())
+						{
+							ImVec2 tex_screen_pos = ImGui::GetCursorScreenPos();
+							tex_screen_pos.y -= vid_size.y;
+							ImGui::BeginTooltip();
+							float focus_sz = 64.0f;
+							float focus_x = ImGui::GetMousePos().x - tex_screen_pos.x - focus_sz * 0.5f; if (focus_x < 0.0f) focus_x = 0.0f; else if (focus_x > vid_size.x - focus_sz) focus_x = vid_size.x - focus_sz;
+							float focus_y = ImGui::GetMousePos().y - tex_screen_pos.y - focus_sz * 0.5f; if (focus_y < 0.0f) focus_y = 0.0f; else if (focus_y > vid_size.y - focus_sz) focus_y = vid_size.y - focus_sz;
+							ImVec2 uv0 = ImVec2((focus_x) / vid_size.x, (focus_y) / vid_size.y);
+							ImVec2 uv1 = ImVec2((focus_x + focus_sz) / vid_size.x, (focus_y + focus_sz) / vid_size.y);
+							ImGui::Text("Min: (%.2f, %.2f)", focus_x, focus_y);
+							ImGui::Text("Max: (%.2f, %.2f)", focus_x + focus_sz, focus_y + focus_sz);
+							ImGui::Image(tex_id, ImVec2(256, 256), uv0, uv1, ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
+							ImGui::EndTooltip();
+						}
+						ImGui::End();
 					}
-					ImGui::End();
 				}
 			}
 		}

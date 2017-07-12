@@ -1,9 +1,12 @@
 Ah quick doc to keep track of things that should be done later.
 
 Video
+- Handle decoder disposing properly
+	- Make sure to not ready null packets by the end
+	- Unref packages
 * Video time syncing
-	- Returning a later frame when the GUI thread is slow
 	- Start to skip decoding frames when the decoder thread is slow
+		- Make batter skipping decisions baded on the packet buffer key frame prospect
 - Find a color calibration video, check which YUV420p fragment shader matrix should be used.
 - Figure out if we can do gpu/spu accalerated decoding with ffmpeg.
 
