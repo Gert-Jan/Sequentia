@@ -1,9 +1,6 @@
 Ah quick doc to keep track of things that should be done later.
 
 Video
-- Handle decoder disposing properly
-	- Make sure to not ready null packets by the end
-	- Unref packages
 * Video time syncing
 	- Start to skip decoding frames when the decoder thread is slow
 		- Make batter skipping decisions baded on the packet buffer key frame prospect

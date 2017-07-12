@@ -161,7 +161,8 @@ struct Decoder
 		{
 			pkt_buffer_cursor = next_pkt_buffer_cursor;
 			ret = av_read_frame(fmt_ctx, &pkt_buffer[pkt_buffer_cursor]);
-			next_pkt_buffer_cursor = (pkt_buffer_cursor + 1) % pkt_buffer_size;;
+			if (ret >= 0)
+				next_pkt_buffer_cursor = (pkt_buffer_cursor + 1) % pkt_buffer_size;
 		}
 	}
 	
@@ -181,13 +182,13 @@ struct Decoder
 			AVPacket pkt = pkt_buffer[display_pkt_cursor];
 			got_video_frame = 0;
 			got_audio_frame = 0;
-			while (pkt.size > 0)
+			while (pkt.buf != nullptr && pkt.size > 0)
 			{
 				// skip 0 sized and audio packets for now
-				while (pkt.stream_index == audio_stream_idx || pkt.size == 0 || pkt.dts < 0 ||
+				while (pkt.buf != nullptr && (pkt.stream_index == audio_stream_idx || pkt.size == 0 || pkt.dts < 0 ||
 					// keep reading if the video is decoded too slow, skip all non-keyframes until we found a keyframe that's should be presented past the last requested frame time
 					(skip_frames_if_slow && buffer_punctuality < 0 && ((pkt.flags & AV_PKT_FLAG_KEY) == 0 || pkt.pts < last_requested_frame_time)) || 
-					(got_video_frame > 0 && temp_frame->pts < 0))
+					(got_video_frame > 0 && temp_frame->pts < 0)))
 				{
 					got_video_frame = 0;
 					got_audio_frame = 0;
@@ -230,10 +231,9 @@ struct Decoder
 					SDL_Delay(5);
 				}
 				// we may have accidentally already decoded a frame during frame skipping, otherwise decode a frame now
-				if (got_video_frame == 0)
+				if (pkt.buf != nullptr && got_video_frame == 0)
 					ret = decode_packet(pkt, temp_frame, &got_video_frame, 0);
-				else
-					printf("whut?");
+
 				if (ret < 0)
 					break;
 				// if we decoded a video frame
@@ -250,7 +250,7 @@ struct Decoder
 				pkt.size -= ret;
 
 				// move the buffer cursor
-				if (pkt.size <= 0)
+				if (pkt.buf != nullptr && pkt.size <= 0)
 					frame_buffer_cursor = next_frame_buffer_cursor;
 			}
 			// move up the packet buffer
@@ -261,13 +261,6 @@ struct Decoder
 		}
 		
 		// disposing...
-		// flush cached frames
-		//!!!!!!!!!!!!!!!!!!!!!
-		// TODO: unref all pkts
-		//!!!!!!!!!!!!!!!!!!!!!
-		//pkt.data = NULL;
-		//pkt.size = 0;
-
 		Dispose();
 		
 		return 0;
@@ -310,12 +303,19 @@ struct Decoder
 
 	void Dispose()
 	{
-		avcodec_free_context(&video_dec_ctx);
-		avcodec_free_context(&audio_dec_ctx);
-		avformat_close_input(&fmt_ctx);
-		//for (int i = 0; i < frame_buffer_size; i++)
-		//	av_frame_free(&buffer[i]);
-		av_free(video_dst_data[0]);
+		if (status != DecoderStatus::Disposing && status != DecoderStatus::Inactive)
+		{
+			status = DecoderStatus::Disposing;
+			avcodec_free_context(&video_dec_ctx);
+			avcodec_free_context(&audio_dec_ctx);
+			avformat_close_input(&fmt_ctx);
+			for (int i = 0; i < pkt_buffer_size; ++i)
+				av_packet_unref(&pkt_buffer[i]);
+			for (int i = 0; i < frame_buffer_size; ++i)
+				av_frame_free(&frame_buffer[i]);
+			av_free(video_dst_data[0]);
+			status = DecoderStatus::Inactive;
+		}
 	}
 
 	int decode_packet(AVPacket pkt, AVFrame* targetFrame, int *got_frame, int cached)
