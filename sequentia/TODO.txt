@@ -1,16 +1,21 @@
 Ah quick doc to keep track of things that should be done later.
 
 Video
-* Video time syncing
-	- Start to skip decoding frames when the decoder thread is slow
-		- Make batter skipping decisions baded on the packet buffer key frame prospect
+- Experiment with seeking
+- Add a pause function
 - Find a color calibration video, check which YUV420p fragment shader matrix should be used.
 - Figure out if we can do gpu/spu accalerated decoding with ffmpeg.
+
+Audio
+- Decode audio in a separate thread, so frame skipping doesn't influence audio performance
+- Buffer audio data
+- Feed audio data to SDL2
 
 Graphics
 - Divide the Material struct up in a Material and MaterialInstance struct.
 
 Code
+- Remove the inner skip loop in decoder::loop(), I don't think we need that anymore...
 - Explore a more C-like way of doing things as opposed to how C++-like the Material and Decoder are done now. Not sure if that will make me happy but I got to try...
 - Settle for a code style, it's all over the place now.
 - Figure out what to do with imgui_impl_sdl_gl3, at the very least rename it.

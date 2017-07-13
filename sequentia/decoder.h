@@ -43,6 +43,7 @@ struct Decoder
 	bool skip_frames_if_slow = false;
 	int64_t last_requested_frame_time = 0;
 	int64_t buffer_punctuality = 0;
+	int64_t lowest_key_frame_decode_time = 0;
 	AVFrame* temp_frame = NULL;
 	AVFrame* audio_frame = NULL;
 	int display_frame_cursor = frame_buffer_size - 1;
@@ -182,14 +183,31 @@ struct Decoder
 			AVPacket pkt = pkt_buffer[display_pkt_cursor];
 			got_video_frame = 0;
 			got_audio_frame = 0;
+			// read or skip the packet until we found a 
 			while (pkt.buf != nullptr && pkt.size > 0)
 			{
 				// skip 0 sized and audio packets for now
-				while (pkt.buf != nullptr && (pkt.stream_index == audio_stream_idx || pkt.size == 0 || pkt.dts < 0 ||
-					// keep reading if the video is decoded too slow, skip all non-keyframes until we found a keyframe that's should be presented past the last requested frame time
-					(skip_frames_if_slow && buffer_punctuality < 0 && ((pkt.flags & AV_PKT_FLAG_KEY) == 0 || pkt.pts < last_requested_frame_time)) || 
-					(got_video_frame > 0 && temp_frame->pts < 0)))
+				while
+					(
+						// exit at if we have no futher packets to decode
+						pkt.buf != nullptr && 
+						// otherwise, keep reading or skipping frames when:
+						(
+							// it's an audio packet, we don't use these yet
+							pkt.stream_index == audio_stream_idx || 
+							// the pkt is empty
+							pkt.size == 0 || 
+							// the pkt should be decoded before playback
+							pkt.dts < 0 ||
+							// the video is decoded too slow, skip all non-keyframes until we found a keyframe that's should be presented past the last requested frame time
+							(skip_frames_if_slow && is_slow_and_should_skip() && ((pkt.flags & AV_PKT_FLAG_KEY) == 0 || pkt.pts < last_requested_frame_time)) ||
+							// weird frame: found this case in certain videos where a frame is gotten that should apparently not be presented...
+							(got_video_frame > 0 && temp_frame->pts < 0)
+						)
+					)
 				{
+					bool decoded = false;
+					bool failed = false;
 					got_video_frame = 0;
 					got_audio_frame = 0;
 					// decode audio packets
@@ -197,7 +215,11 @@ struct Decoder
 					{
 						ret = decode_packet(pkt, audio_frame, &got_audio_frame, 0);
 						if (ret < 0)
+						{
+							failed = true;
 							break;
+						}
+						decoded = true;
 						pkt.data += ret;
 						pkt.size -= ret;
 					} 
@@ -206,14 +228,26 @@ struct Decoder
 					{
 						ret = decode_packet(pkt, temp_frame, &got_video_frame, 0);
 						if (ret < 0)
+						{
+							failed = true;
 							break;
+						}
+						decoded = true;
 						pkt.data += ret;
 						pkt.size -= ret;
 					}
 					// if we're skipping the frame for synchronization reasons
 					if (pkt.dts < 0 && pkt.size > 0)
 					{
-						printf("skipping frame...\n");
+						printf("skipping frame to keep up with real time...\n");
+					}
+					if (!decoded)
+					{
+						printf("frame skipped because of a bug!...\n");
+					}
+					if (failed)
+					{
+						printf("failed to decode...\n");
 					}
 					// move up the packet buffer
 					av_packet_unref(&pkt);
@@ -255,15 +289,29 @@ struct Decoder
 			}
 			// move up the packet buffer
 			av_packet_unref(&pkt);
-			//display_pkt_cursor = (display_pkt_cursor + 1) % pkt_buffer_size;
-			//fill_pkt_buffer();
-			//pkt = pkt_buffer[display_pkt_cursor];
 		}
 		
 		// disposing...
 		Dispose();
 		
 		return 0;
+	}
+
+	bool is_slow_and_should_skip()
+	{
+		return buffer_punctuality < max(0, frame_buffer[display_frame_cursor]->pts) - next_key_frame_pts() + lowest_key_frame_decode_time;
+	}
+
+	int64_t next_key_frame_pts()
+	{
+		for (int i = 1; i < pkt_buffer_size; ++i)
+		{
+			AVPacket* pkt = &pkt_buffer[(display_pkt_cursor + i) % pkt_buffer_size];
+			if (pkt->stream_index == video_stream_idx && pkt->flags & AV_PKT_FLAG_KEY > 0)
+				return pkt->pts;
+		}
+		// if we can't find a keyframe, return a really long time, if someone has a longer video than so be it, too bad...
+		return 360000000000;
 	}
 
 	AVFrame* NextFrame(int64_t time)
@@ -325,7 +373,9 @@ struct Decoder
 		*got_frame = 0;
 		if (pkt.stream_index == video_stream_idx)
 		{
-			/* decode video frame */
+			// keep track of frame decoding performance
+			Uint32 decoding_start_time = SDL_GetTicks();
+			// decode video frame
 			ret = avcodec_decode_video2(video_dec_ctx, targetFrame, got_frame, &pkt);
 			if (ret < 0)
 			{
@@ -338,8 +388,8 @@ struct Decoder
 			{
 				if (targetFrame->width != width || targetFrame->height != height || targetFrame->format != pix_fmt)
 				{
-					/* To handle this change, one could call av_image_alloc again and
-					* decode the following frames into another rawvideo file. */
+					// To handle this change, one could call av_image_alloc again and
+					// decode the following frames into another rawvideo file.
 					fprintf(stderr, "Error: Width, height and pixel format have to be "
 						"constant in a rawvideo file, but the width, height or "
 						"pixel format of the input video changed:\n"
@@ -351,6 +401,15 @@ struct Decoder
 					return -1;
 				}
 
+				// store the lowest keyframe decoding time, which we can use as estimate for timely skipping to
+				// a next keyframe later.
+				if (targetFrame->key_frame)
+				{
+					Uint32 decoding_time = SDL_GetTicks() - decoding_start_time;
+					if (lowest_key_frame_decode_time == 0 || decoding_time < lowest_key_frame_decode_time)
+						lowest_key_frame_decode_time = decoding_time;
+				}
+
 				printf("video_frame%s n:%d coded_n:%d isKey:%d dts:%.3f pts:%.3f\n",
 					cached ? "(cached)" : "",
 					video_frame_count++, targetFrame->coded_picture_number, 
@@ -359,7 +418,7 @@ struct Decoder
 		}
 		else if (pkt.stream_index == audio_stream_idx)
 		{
-			/* decode audio frame */
+			// decode audio frame
 			ret = avcodec_decode_audio4(audio_dec_ctx, targetFrame, got_frame, &pkt);
 			if (ret < 0)
 			{
@@ -368,10 +427,10 @@ struct Decoder
 				fprintf(stderr, "Error decoding audio frame (%s)\n", buff);
 				return ret;
 			}
-			/* Some audio decoders decode only part of the packet, and have to be
-			* called again with the remainder of the packet data.
-			* Sample: fate-suite/lossless-audio/luckynight-partial.shn
-			* Also, some decoders might over-read the packet. */
+			// Some audio decoders decode only part of the packet, and have to be
+			// called again with the remainder of the packet data.
+			// Sample: fate-suite/lossless-audio/luckynight-partial.shn
+			// Also, some decoders might over-read the packet.
 			decoded = FFMIN(ret, pkt.size);
 			if (*got_frame)
 			{
