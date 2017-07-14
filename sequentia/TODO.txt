@@ -15,7 +15,6 @@ Graphics
 - Divide the Material struct up in a Material and MaterialInstance struct.
 
 Code
-- Remove the inner skip loop in decoder::loop(), I don't think we need that anymore...
 - Explore a more C-like way of doing things as opposed to how C++-like the Material and Decoder are done now. Not sure if that will make me happy but I got to try...
 - Settle for a code style, it's all over the place now.
 - Figure out what to do with imgui_impl_sdl_gl3, at the very least rename it.

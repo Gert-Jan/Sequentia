@@ -44,7 +44,6 @@ struct Decoder
 	int64_t last_requested_frame_time = 0;
 	int64_t buffer_punctuality = 0;
 	int64_t lowest_key_frame_decode_time = 0;
-	AVFrame* temp_frame = NULL;
 	AVFrame* audio_frame = NULL;
 	int display_frame_cursor = frame_buffer_size - 1;
 	int frame_buffer_cursor = 0;
@@ -114,14 +113,6 @@ struct Decoder
 				return 1;
 			}
 		}
-		temp_frame = av_frame_alloc();
-		if (!temp_frame)
-		{
-			fprintf(stderr, "Could not allocate temp frame\n");
-			ret = AVERROR(ENOMEM);
-			Dispose();
-			return 1;
-		}
 		audio_frame = av_frame_alloc();
 		if (!audio_frame)
 		{
@@ -170,8 +161,18 @@ struct Decoder
 	// for now just decode frames as quickly as possible, overwriting until the last read frame
 	int loop()
 	{
-		int ret = 0, got_video_frame, got_audio_frame;
-		//av_frame_unref(frame);
+		// allocate temp frame
+		AVFrame* temp_frame = NULL;
+		temp_frame = av_frame_alloc();
+		if (!temp_frame)
+		{
+			fprintf(stderr, "Could not allocate temp frame\n");
+			Dispose();
+			return AVERROR(ENOMEM);
+		}
+		// allocate temp packet
+		AVPacket pkt;
+		av_init_packet(&pkt);
 		// read frames from the file
 		while (status == DecoderStatus::Loading || status == DecoderStatus::Ready)
 		{
@@ -180,118 +181,71 @@ struct Decoder
 
 			// decode the next packet
 			display_pkt_cursor = (display_pkt_cursor + 1) % pkt_buffer_size;
-			AVPacket pkt = pkt_buffer[display_pkt_cursor];
-			got_video_frame = 0;
-			got_audio_frame = 0;
-			// read or skip the packet until we found a 
-			while (pkt.buf != nullptr && pkt.size > 0)
-			{
-				// skip 0 sized and audio packets for now
-				while
-					(
-						// exit at if we have no futher packets to decode
-						pkt.buf != nullptr && 
-						// otherwise, keep reading or skipping frames when:
-						(
-							// it's an audio packet, we don't use these yet
-							pkt.stream_index == audio_stream_idx || 
-							// the pkt is empty
-							pkt.size == 0 || 
-							// the pkt should be decoded before playback
-							pkt.dts < 0 ||
-							// the video is decoded too slow, skip all non-keyframes until we found a keyframe that's should be presented past the last requested frame time
-							(skip_frames_if_slow && is_slow_and_should_skip() && ((pkt.flags & AV_PKT_FLAG_KEY) == 0 || pkt.pts < last_requested_frame_time)) ||
-							// weird frame: found this case in certain videos where a frame is gotten that should apparently not be presented...
-							(got_video_frame > 0 && temp_frame->pts < 0)
-						)
-					)
-				{
-					bool decoded = false;
-					bool failed = false;
-					got_video_frame = 0;
-					got_audio_frame = 0;
-					// decode audio packets
-					while(pkt.stream_index == audio_stream_idx && pkt.size > 0)
-					{
-						ret = decode_packet(pkt, audio_frame, &got_audio_frame, 0);
-						if (ret < 0)
-						{
-							failed = true;
-							break;
-						}
-						decoded = true;
-						pkt.data += ret;
-						pkt.size -= ret;
-					} 
-					// decode video packets that do not contain a picture
-					while (pkt.dts < 0 && pkt.size > 0)
-					{
-						ret = decode_packet(pkt, temp_frame, &got_video_frame, 0);
-						if (ret < 0)
-						{
-							failed = true;
-							break;
-						}
-						decoded = true;
-						pkt.data += ret;
-						pkt.size -= ret;
-					}
-					// if we're skipping the frame for synchronization reasons
-					if (pkt.dts < 0 && pkt.size > 0)
-					{
-						printf("skipping frame to keep up with real time...\n");
-					}
-					if (!decoded)
-					{
-						printf("frame skipped because of a bug!...\n");
-					}
-					if (failed)
-					{
-						printf("failed to decode...\n");
-					}
-					// move up the packet buffer
-					av_packet_unref(&pkt);
-					fill_pkt_buffer();
-					display_pkt_cursor = (display_pkt_cursor + 1) % pkt_buffer_size;
-					pkt = pkt_buffer[display_pkt_cursor];
-				}
-				// wait until we have room to buffer
-				int next_frame_buffer_cursor = (frame_buffer_cursor + 1) % frame_buffer_size;
-				while (next_frame_buffer_cursor == display_frame_cursor)
-				{
-					if (status == DecoderStatus::Loading)
-						status = DecoderStatus::Ready;
-					//printf("waiting....\n");
-					SDL_Delay(5);
-				}
-				// we may have accidentally already decoded a frame during frame skipping, otherwise decode a frame now
-				if (pkt.buf != nullptr && got_video_frame == 0)
-					ret = decode_packet(pkt, temp_frame, &got_video_frame, 0);
+			av_packet_unref(&pkt);
+			pkt = pkt_buffer[display_pkt_cursor];
 
+			// skip the packet if:
+			if (
+				pkt.buf == nullptr || // there is no data in the packet
+				pkt.stream_index != video_stream_idx || // it's from the wrong stream
+				(skip_frames_if_slow && is_slow_and_should_skip() && (pkt.flags & AV_PKT_FLAG_KEY) == 0) // we need to skip to keep up and it's not a key frame
+				)
+			{
+				if (pkt.stream_index == video_stream_idx)
+					printf("skipping frame. pts:%d flags:%d size:%d\n", pkt.pts, pkt.flags, pkt.size);
+				continue;
+			}
+
+			// decode packet
+			int ret = 0;
+			int got_frame = 0;
+
+			// read all data in the packet 
+			while (pkt.size > 0)
+			{
+				ret = decode_packet(pkt, temp_frame, &got_frame, 0);
 				if (ret < 0)
-					break;
-				// if we decoded a video frame
-				if (got_video_frame > 0)
 				{
-					AVFrame* swap_frame = frame_buffer[frame_buffer_cursor];
-					frame_buffer[frame_buffer_cursor] = temp_frame;
-					temp_frame = swap_frame;
-					buffer_punctuality = frame_buffer[frame_buffer_cursor]->pts - last_requested_frame_time;
+					char error[256];
+					av_strerror(ret, error, 256);
+					printf("error decoding frame: %s\n", error);
+					break;
 				}
-				
-				// move the packet cursor
 				pkt.data += ret;
 				pkt.size -= ret;
-
-				// move the buffer cursor
-				if (pkt.buf != nullptr && pkt.size <= 0)
-					frame_buffer_cursor = next_frame_buffer_cursor;
 			}
-			// move up the packet buffer
-			av_packet_unref(&pkt);
+
+			// skip the frame if:
+			if (
+				got_frame <= 0 || // the packet did not contain a frame
+				temp_frame->pts < 0 // the frame should not be presented
+				)
+			{
+				continue;
+			}
+
+			// wait until we have room in the buffer
+			int next_frame_buffer_cursor = (frame_buffer_cursor + 1) % frame_buffer_size;
+			while (next_frame_buffer_cursor == display_frame_cursor)
+			{
+				if (status == DecoderStatus::Loading)
+					status = DecoderStatus::Ready;
+				SDL_Delay(5);
+			}
+
+			// put the new frame in the buffer
+			AVFrame* swap_frame = frame_buffer[frame_buffer_cursor];
+			frame_buffer[frame_buffer_cursor] = temp_frame;
+			temp_frame = swap_frame;
+			buffer_punctuality = frame_buffer[frame_buffer_cursor]->pts - last_requested_frame_time;
+
+			// move the buffer cursor
+			frame_buffer_cursor = next_frame_buffer_cursor;
 		}
 		
 		// disposing...
+		av_frame_free(&temp_frame);
+		av_packet_unref(&pkt);
 		Dispose();
 		
 		return 0;
