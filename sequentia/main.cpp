@@ -112,6 +112,7 @@ int main(int, char**)
 
 	// Main loop
 	bool done = false;
+	int seek_video_time = 0;
 	while (!done)
 	{
 		// handle sdl events
@@ -180,6 +181,46 @@ int main(int, char**)
 							ImGui::Text("Max: (%.2f, %.2f)", focus_x + focus_sz, focus_y + focus_sz);
 							ImGui::Image(tex_id, ImVec2(256, 256), uv0, uv1, ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
 							ImGui::EndTooltip();
+						}
+						
+						static bool isSeeking = false;
+						if (isSeeking && ImGui::IsMouseReleased(0))
+						{
+							printf("seek: %d\n", seek_video_time);
+							decoder[i].Seek(seek_video_time);
+							video_start_time[i] += video_time - seek_video_time;
+							video_time = seek_video_time;
+							isSeeking = false;
+						}
+						seek_video_time = video_time;
+						if (ImGui::SliderInt("seek", &seek_video_time, 0, decoder[i].fmt_ctx->duration / 1000))
+							isSeeking = true;
+						ImGui::SameLine();
+						if (ImGui::Button("Skip 1s"))
+						{
+							seek_video_time = video_time + 1000;
+							printf("skip 1s: %d\n", seek_video_time);
+							decoder[i].Seek(seek_video_time);
+							video_start_time[i] += video_time - seek_video_time;
+							video_time = seek_video_time;
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Skip 10s"))
+						{
+							seek_video_time = video_time + 10000;
+							printf("skip 10s: %d\n", seek_video_time);
+							decoder[i].Seek(seek_video_time);
+							video_start_time[i] += video_time - seek_video_time;
+							video_time = seek_video_time;
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Skip 60s"))
+						{
+							seek_video_time = video_time + 60000;
+							printf("skip 60s: %d\n", seek_video_time);
+							decoder[i].Seek(seek_video_time);
+							video_start_time[i] += video_time - seek_video_time;
+							video_time = seek_video_time;
 						}
 						ImGui::End();
 					}

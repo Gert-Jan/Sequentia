@@ -161,6 +161,7 @@ struct Decoder
 	// for now just decode frames as quickly as possible, overwriting until the last read frame
 	int loop()
 	{
+		bool has_skipped_video_frame = false;
 		// allocate temp frame
 		AVFrame* temp_frame = NULL;
 		temp_frame = av_frame_alloc();
@@ -185,16 +186,38 @@ struct Decoder
 			pkt = pkt_buffer[display_pkt_cursor];
 
 			// skip the packet if:
-			if (
-				pkt.buf == nullptr || // there is no data in the packet
-				pkt.stream_index != video_stream_idx || // it's from the wrong stream
-				(skip_frames_if_slow && is_slow_and_should_skip() && (pkt.flags & AV_PKT_FLAG_KEY) == 0) // we need to skip to keep up and it's not a key frame
-				)
+			// - there is no data in the packet
+			if (pkt.buf == nullptr) 
 			{
-				if (pkt.stream_index == video_stream_idx)
-					printf("skipping frame. pts:%d flags:%d size:%d\n", pkt.pts, pkt.flags, pkt.size);
+				printf("skipping frame. pts:%d flags:%d size:%d NO DATA!\n", pkt.pts, pkt.flags, pkt.size);
 				continue;
 			}
+			// - it's from the wrong stream
+			if (pkt.stream_index != video_stream_idx) 
+			{
+				//printf("skipping frame. pts:%d flags:%d size:%d AUDIO PACKET!\n", pkt.pts, pkt.flags, pkt.size);
+				continue;
+			}
+			// - we need to skip to keep up and it's not the yet the next key frame
+			if (skip_frames_if_slow && (is_slow_and_should_skip() || has_skipped_video_frame) && ((pkt.flags & AV_PKT_FLAG_KEY) == 0 || pkt.pts < last_requested_frame_time))
+			{
+				printf("skipping frame. pts:%d flags:%d size:%d SLOW!\n", pkt.pts, pkt.flags, pkt.size);
+				//printf("  sfis=%d && (isass=%d || hskf=%d) && (isNotKey=%d || isLate=%d)\n",
+				//	skip_frames_if_slow, is_slow_and_should_skip(), has_skipped_video_frame,
+				//	(pkt.flags & AV_PKT_FLAG_KEY) == 0, pkt.pts < last_requested_frame_time);
+				has_skipped_video_frame = true;
+				continue;
+			}
+			else
+			{
+				//printf("DECODING frame. pts:%d flags:%d size:%d\n", pkt.pts, pkt.flags, pkt.size);
+				//printf("  sfis=%d && (isass=%d || hskf=%d) && (isNotKey=%d || isLate=%d)\n",
+				//	skip_frames_if_slow, is_slow_and_should_skip(), has_skipped_video_frame,
+				//	(pkt.flags & AV_PKT_FLAG_KEY) == 0, pkt.pts < last_requested_frame_time);
+			}
+
+			// reset has_skipped_video_frame
+			has_skipped_video_frame = false;
 
 			// decode packet
 			int ret = 0;
@@ -253,19 +276,56 @@ struct Decoder
 
 	bool is_slow_and_should_skip()
 	{
-		return buffer_punctuality < max(0, frame_buffer[display_frame_cursor]->pts) - next_key_frame_pts() + lowest_key_frame_decode_time;
+		int64_t next_key_frame;
+		if (next_key_frame_pts(&next_key_frame))
+			return buffer_punctuality < max(0, frame_buffer[display_frame_cursor]->pts) - next_key_frame + lowest_key_frame_decode_time;
+		else if (buffer_punctuality < 0)
+			return true;
+		else
+			return false;
 	}
 
-	int64_t next_key_frame_pts()
+	bool next_key_frame_pts(int64_t* result)
 	{
 		for (int i = 1; i < pkt_buffer_size; ++i)
 		{
 			AVPacket* pkt = &pkt_buffer[(display_pkt_cursor + i) % pkt_buffer_size];
 			if (pkt->stream_index == video_stream_idx && pkt->flags & AV_PKT_FLAG_KEY > 0)
-				return pkt->pts;
+			{
+				*result = pkt->pts;
+				return true;
+			}
 		}
-		// if we can't find a keyframe, return a really long time, if someone has a longer video than so be it, too bad...
-		return 360000000000;
+		// didn't find a suitable keyframe
+		return false;
+	}
+
+	// ****************b---------d*************
+	void Seek(int64_t time)
+	{
+		// first check if the location we're seeking for is already buffered
+		int next_display_frame_cursor = (display_frame_cursor + 1) % frame_buffer_size;
+		while (next_display_frame_cursor != frame_buffer_cursor &&
+			frame_buffer[display_frame_cursor]->pts < time)
+		{
+			display_frame_cursor = next_display_frame_cursor;
+			next_display_frame_cursor = (display_frame_cursor + 1) % frame_buffer_size;
+		}
+		// did we find the requested frame in the buffer?
+		if (frame_buffer[display_frame_cursor]->pts < time &&
+			frame_buffer[next_display_frame_cursor]->pts > time)
+		{
+			// the frame was in the buffer! we're done here!
+			return;
+		}
+		else
+		{
+			// TODO:
+			// ffmpeg seek
+			// clear and refill the packet buffer
+			// invalidate the frame buffer
+			// set state to 'loading'
+		}
 	}
 
 	AVFrame* NextFrame(int64_t time)
@@ -364,10 +424,10 @@ struct Decoder
 						lowest_key_frame_decode_time = decoding_time;
 				}
 
-				printf("video_frame%s n:%d coded_n:%d isKey:%d dts:%.3f pts:%.3f\n",
+				printf("video_frame%s n:%d coded_n:%d isKey:%d flags:%d dts:%.3f pts:%.3f lrft:%.3f\n",
 					cached ? "(cached)" : "",
 					video_frame_count++, targetFrame->coded_picture_number, 
-					targetFrame->key_frame, pkt.dts / 1000.0, pkt.pts / 1000.0);
+					targetFrame->key_frame, pkt.flags, pkt.dts / 1000.0, pkt.pts / 1000.0, last_requested_frame_time / 1000.0);
 			}
 		}
 		else if (pkt.stream_index == audio_stream_idx)
