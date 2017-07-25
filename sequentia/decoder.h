@@ -44,6 +44,9 @@ struct Decoder
 	int64_t last_requested_frame_time = 0;
 	int64_t buffer_punctuality = 0;
 	int64_t lowest_key_frame_decode_time = 0;
+	bool should_seek = false;
+	int64_t seek_time = 0;
+	SDL_mutex* seek_mutex;
 	AVFrame* audio_frame = NULL;
 	int display_frame_cursor = frame_buffer_size - 1;
 	int frame_buffer_cursor = 0;
@@ -60,6 +63,7 @@ struct Decoder
 	void Open(const char* filename)
 	{
 		src_filename = filename;
+		seek_mutex = SDL_CreateMutex();
 		SDL_Thread* thread = SDL_CreateThread(ThreadProxy, "Decoder", this);
 	}
 
@@ -177,6 +181,24 @@ struct Decoder
 		// read frames from the file
 		while (status == DecoderStatus::Loading || status == DecoderStatus::Ready)
 		{
+			// seeking
+			if (should_seek)
+			{
+				SDL_LockMutex(seek_mutex);
+				should_seek = false;
+				int64_t temp_seek_time = seek_time;
+				SDL_UnlockMutex(seek_mutex);
+				// ffmpeg seek
+				av_seek_frame(fmt_ctx, video_stream_idx, temp_seek_time, 0);
+				// set state to 'loading' as the complete buffer is now invalid
+				status = DecoderStatus::Loading;
+				// reset the packet and frame buffer so it will completely be refilled
+				display_pkt_cursor = 0;
+				pkt_buffer_cursor = 0;
+				frame_buffer_cursor = (display_frame_cursor + 1) % frame_buffer_size;
+				last_requested_frame_time = temp_seek_time;
+				printf("SEEKING disp_pkt:%d pkt_cur:%d disp_frm:%d frm_cur:%d\n", display_pkt_cursor, pkt_buffer_cursor, display_frame_cursor, frame_buffer_cursor);
+			}
 			// fill the packet buffer
 			fill_pkt_buffer();
 
@@ -254,7 +276,14 @@ struct Decoder
 				if (status == DecoderStatus::Loading)
 					status = DecoderStatus::Ready;
 				SDL_Delay(5);
+
+				if (should_seek)
+					break;
 			}
+
+			// if we're going to seek we can forget about the current frame buffer
+			if (should_seek)
+				continue;
 
 			// put the new frame in the buffer
 			AVFrame* swap_frame = frame_buffer[frame_buffer_cursor];
@@ -300,32 +329,40 @@ struct Decoder
 		return false;
 	}
 
-	// ****************b---------d*************
 	void Seek(int64_t time)
 	{
-		// first check if the location we're seeking for is already buffered
-		int next_display_frame_cursor = (display_frame_cursor + 1) % frame_buffer_size;
-		while (next_display_frame_cursor != frame_buffer_cursor &&
-			frame_buffer[display_frame_cursor]->pts < time)
+		// if searching forwards
+		if (time > frame_buffer[display_frame_cursor]->pts)
 		{
-			display_frame_cursor = next_display_frame_cursor;
-			next_display_frame_cursor = (display_frame_cursor + 1) % frame_buffer_size;
+			// first check if the location we're seeking for is already buffered
+			int next_display_frame_cursor = (display_frame_cursor + 1) % frame_buffer_size;
+			int latest_frame = display_frame_cursor;
+			int64_t latest_pts = -1;
+			while (next_display_frame_cursor != frame_buffer_cursor &&
+				frame_buffer[display_frame_cursor]->pts < time)
+			{
+				if (frame_buffer[next_display_frame_cursor]->pts > latest_pts)
+				{
+					latest_pts = frame_buffer[next_display_frame_cursor]->pts;
+					latest_frame = next_display_frame_cursor;
+				}
+				next_display_frame_cursor = (next_display_frame_cursor + 1) % frame_buffer_size;
+			}
+			// did we find the requested frame in the buffer?
+			if (frame_buffer[display_frame_cursor]->pts < time &&
+				frame_buffer[next_display_frame_cursor]->pts > time)
+			{
+				// the frame was in the buffer! we're done here!
+				return;
+			}
 		}
-		// did we find the requested frame in the buffer?
-		if (frame_buffer[display_frame_cursor]->pts < time &&
-			frame_buffer[next_display_frame_cursor]->pts > time)
-		{
-			// the frame was in the buffer! we're done here!
-			return;
-		}
-		else
-		{
-			// TODO:
-			// ffmpeg seek
-			// clear and refill the packet buffer
-			// invalidate the frame buffer
-			// set state to 'loading'
-		}
+		
+		// if the seek time was not in the buffer:
+		// schedule a ffmpeg seek which will later be done in loop()
+		SDL_LockMutex(seek_mutex);
+		should_seek = true;
+		seek_time = time;
+		SDL_UnlockMutex(seek_mutex);
 	}
 
 	AVFrame* NextFrame(int64_t time)
@@ -337,18 +374,23 @@ struct Decoder
 		// start looking from the last frame we displayed
 		int candidate_frame_cursor = display_frame_cursor;
 		// figure out the first candidate's frame time
-		int64_t candidate_frame_time = 0;
+		int64_t candidate_frame_delta_time = 0;
 		if (frame_buffer[candidate_frame_cursor])
-			candidate_frame_time = frame_buffer[candidate_frame_cursor]->pts;
+			candidate_frame_delta_time = abs(frame_buffer[candidate_frame_cursor]->pts - time);
+		int64_t lowest_delta_time = candidate_frame_delta_time;
 		// go through all frame in the buffer until we found one where the requested time is smaller than the frame time
-		while (candidate_frame_cursor != one_before_frame_buffer_cursor  &&
-			time > candidate_frame_time)
+		while (candidate_frame_cursor != one_before_frame_buffer_cursor)
 		{
+			if (lowest_delta_time < 0 || 
+				candidate_frame_delta_time < lowest_delta_time)
+			{
+				lowest_delta_time = candidate_frame_delta_time;
+				display_frame_cursor = candidate_frame_cursor;
+			}
 			candidate_frame_cursor = (candidate_frame_cursor + 1) % frame_buffer_size;
-			candidate_frame_time = frame_buffer[candidate_frame_cursor]->pts;
+			candidate_frame_delta_time = abs(frame_buffer[candidate_frame_cursor]->pts - time);
 		}
-		// we found the best suited display frame
-		display_frame_cursor = candidate_frame_cursor;
+		// return the best suited display frame
 		return frame_buffer[display_frame_cursor];
 	}
 
@@ -376,6 +418,7 @@ struct Decoder
 			for (int i = 0; i < frame_buffer_size; ++i)
 				av_frame_free(&frame_buffer[i]);
 			av_free(video_dst_data[0]);
+			SDL_DestroyMutex(seek_mutex);
 			status = DecoderStatus::Inactive;
 		}
 	}
