@@ -7,6 +7,7 @@
 #include <GL/gl3w.h>    // This example is using gl3w to access OpenGL functions (because it is small). You may use glew/glad/glLoadGen/etc. whatever already works for you.
 #include <SDL.h>
 #include "decoder.h";
+#include "SeqProject.h";
 
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
@@ -18,6 +19,7 @@
 static const int video_count = 1;
 extern Material g_VideoMaterial[video_count];
 static Decoder decoder[video_count];
+static SeqProject *project;
 
 void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 {
@@ -52,6 +54,12 @@ void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 
 int main(int, char**)
 {
+	project = new SeqProject();
+	project->AddChannel(SeqChannelType::Video, "Video01");
+	project->AddChannel(SeqChannelType::Audio, "Audio01");
+	project->AddChannel(SeqChannelType::Video, "Video02");
+	project->AddChannel(SeqChannelType::Audio, "Audio02");
+
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
 	{

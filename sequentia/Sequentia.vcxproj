@@ -164,6 +164,8 @@
     <ClCompile Include="imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="libs\gl3w\GL\gl3w.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SeqChannel.cpp" />
+    <ClCompile Include="SeqProject.cpp" />
     <ClInclude Include="..\imgui\imconfig.h" />
     <ClInclude Include="..\imgui\imgui.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
@@ -171,6 +173,10 @@
     <ClInclude Include="imgui_impl_sdl_gl3.h" />
     <ClInclude Include="libs\gl3w\GL\gl3w.h" />
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
+    <ClInclude Include="SeqList.h" />
+    <ClInclude Include="SeqListImpl.h" />
+    <ClInclude Include="SeqChannel.h" />
+    <ClInclude Include="SeqProject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
@@ -182,6 +188,9 @@
     <ProjectReference Include="..\SDL2\VisualC\SDL\SDL.vcxproj">
       <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

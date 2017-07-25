@@ -15,6 +15,12 @@
       <Filter>gl3w</Filter>
     </ClCompile>
     <ClCompile Include="imgui_impl_sdl_gl3.cpp" />
+    <ClCompile Include="SeqProject.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqChannel.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -34,6 +40,18 @@
     </ClInclude>
     <ClInclude Include="imgui_impl_sdl_gl3.h" />
     <ClInclude Include="decoder.h" />
+    <ClInclude Include="SeqProject.h">
+      <Filter>data</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqChannel.h">
+      <Filter>data</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqList.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqListImpl.h">
+      <Filter>util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
@@ -45,5 +63,14 @@
     <Filter Include="gl3w">
       <UniqueIdentifier>{d0ec9ead-f8ba-4975-8b72-48db4c1ec821}</UniqueIdentifier>
     </Filter>
+    <Filter Include="data">
+      <UniqueIdentifier>{417cdf94-0cdf-4885-bdcc-48cc4f21ec0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{9877d9cc-4a79-445f-8d13-50e4c9c692d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,6 @@
-Ah quick doc to keep track of things that should be done later.
+A quick doc to keep track of tasks that should be done later.
 
 Video
-- Experiment with seeking
 - Add a pause function
 - Find a color calibration video, check which YUV420p fragment shader matrix should be used.
 - Figure out if we can do gpu/spu accalerated decoding with ffmpeg.
@@ -15,8 +14,8 @@ Graphics
 - Divide the Material struct up in a Material and MaterialInstance struct.
 
 Code
-- Explore a more C-like way of doing things as opposed to how C++-like the Material and Decoder are done now. Not sure if that will make me happy but I got to try...
-- Settle for a code style, it's all over the place now.
+- I decided that I really like having funtions acting on data and the data itself in one place especially in inherently stateful code
+    Therefor: todo: transform the decoder class to a more c++-like format using the same style as used in SeqProject/SeqChannel/SeqList
 - Figure out what to do with imgui_impl_sdl_gl3, at the very least rename it.
 
 Development
