@@ -10,6 +10,8 @@ SeqList<T>::SeqList(int initialCapacity) :
 	capacity(initialCapacity),
 	count(0)
 {
+	if (capacity < 1)
+		capacity = 1;
 	data = new T[capacity];
 }
 
