@@ -8,6 +8,7 @@
 #include <SDL.h>
 #include "decoder.h";
 #include "SeqProject.h";
+#include "SeqUISequencer.h";
 
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
@@ -55,11 +56,16 @@ void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 int main(int, char**)
 {
 	project = new SeqProject();
-	project->AddChannel(SeqChannelType::Video, "Video01");
-	project->AddChannel(SeqChannelType::Audio, "Audio01");
-	project->AddChannel(SeqChannelType::Video, "Video02");
-	project->AddChannel(SeqChannelType::Audio, "Audio02");
-
+	for (int i = 0; i < 20; i++)
+	{
+		project->AddAction(
+			SeqAction(SeqActionType::AddChannel,
+				new SeqActionAddChannel(SeqChannelType::Video, "Video")));
+		project->AddAction(
+			SeqAction(SeqActionType::AddChannel,
+				new SeqActionAddChannel(SeqChannelType::Audio, "Audio")));
+	}
+	
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
 	{
@@ -136,6 +142,7 @@ int main(int, char**)
 		// 1. Show a simple window
 		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 		{
+			ImGui::Begin("Debug");
 			static float f = 0.0f;
 			ImGui::Text("Hello, world!");
 			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
@@ -143,10 +150,16 @@ int main(int, char**)
 			if (ImGui::Button("Test Window")) show_test_window ^= 1;
 			if (ImGui::Button("Another Window")) show_another_window ^= 1;
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::End();
 
+
+			project->Draw();
+
+
+			// show video windows
 			for (int i = 0; i < video_count; i++)
 			{
-				if (decoder[i].status == DecoderStatus::Ready)
+				if (decoder[i].status == DecoderStatus::Ready || decoder[i].status == DecoderStatus::Loading)
 				{
 					Uint32 video_time = 0;
 					if (video_start_time[i] != 0)

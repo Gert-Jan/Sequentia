@@ -21,6 +21,9 @@
     <ClCompile Include="SeqChannel.cpp">
       <Filter>data</Filter>
     </ClCompile>
+    <ClCompile Include="SeqUISequencer.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -52,6 +55,12 @@
     <ClInclude Include="SeqListImpl.h">
       <Filter>util</Filter>
     </ClInclude>
+    <ClInclude Include="SeqUISequencer.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqAction.h">
+      <Filter>action</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
@@ -68,6 +77,12 @@
     </Filter>
     <Filter Include="util">
       <UniqueIdentifier>{9877d9cc-4a79-445f-8d13-50e4c9c692d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{2988c913-3f6c-47d0-b0e3-c012df5ed5c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="action">
+      <UniqueIdentifier>{9885789e-b076-422c-8ed3-4dd7ffe64a66}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

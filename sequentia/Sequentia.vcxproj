@@ -166,6 +166,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SeqChannel.cpp" />
     <ClCompile Include="SeqProject.cpp" />
+    <ClCompile Include="SeqUISequencer.cpp" />
     <ClInclude Include="..\imgui\imconfig.h" />
     <ClInclude Include="..\imgui\imgui.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
@@ -173,10 +174,12 @@
     <ClInclude Include="imgui_impl_sdl_gl3.h" />
     <ClInclude Include="libs\gl3w\GL\gl3w.h" />
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
+    <ClInclude Include="SeqAction.h" />
     <ClInclude Include="SeqList.h" />
     <ClInclude Include="SeqListImpl.h" />
     <ClInclude Include="SeqChannel.h" />
     <ClInclude Include="SeqProject.h" />
+    <ClInclude Include="SeqUISequencer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
