@@ -108,6 +108,11 @@ int SeqProject::GetChannelCount()
 	return channels->Count();
 }
 
+SeqChannel SeqProject::GetChannel(const int index)
+{
+	return channels->Get(index);
+}
+
 double SeqProject::GetLength()
 {
 	return 60.54321;
