@@ -20,8 +20,8 @@ struct SeqAction
 class SeqActionHandler
 {
 public:
-	virtual void ActionDone(SeqAction action) = 0;
-	virtual void ActionUndone(SeqAction action) = 0;
+	virtual void ActionDone(const SeqAction action) = 0;
+	virtual void ActionUndone(const SeqAction action) = 0;
 };
 
 struct SeqActionAddChannel

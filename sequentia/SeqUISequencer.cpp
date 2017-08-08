@@ -18,7 +18,7 @@ SeqUISequencer::~SeqUISequencer()
 	delete channelHeights; 
 }
 
-void SeqUISequencer::ActionDone(SeqAction action)
+void SeqUISequencer::ActionDone(const SeqAction action)
 {
 	switch (action.type)
 	{
@@ -28,7 +28,7 @@ void SeqUISequencer::ActionDone(SeqAction action)
 	}
 }
 
-void SeqUISequencer::ActionUndone(SeqAction action)
+void SeqUISequencer::ActionUndone(const SeqAction action)
 {
 	switch (action.type)
 	{

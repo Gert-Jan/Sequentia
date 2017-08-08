@@ -11,13 +11,13 @@ public:
 	SeqProject();
 	~SeqProject();
 
-	void AddAction(SeqAction action);
+	void AddAction(const SeqAction action);
 	void AddActionHandler(SeqActionHandler *handler);
 	int GetActionCount();
 	int GetActionCursor();
 	SeqAction GetAction(const int index);
-	void DoAction(SeqAction action);
-	void UndoAction(SeqAction action);
+	void DoAction(const SeqAction action);
+	void UndoAction(const SeqAction action);
 
 	int GetChannelCount();
 	SeqChannel GetChannel(const int index);

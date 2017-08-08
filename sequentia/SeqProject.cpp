@@ -16,7 +16,7 @@ SeqProject::~SeqProject()
 	delete uiSequencer;
 }
 
-void SeqProject::AddAction(SeqAction action)
+void SeqProject::AddAction(const SeqAction action)
 {
 	// overwrite redo list
 	while (actionCursor < actions->Count())
@@ -52,7 +52,7 @@ SeqAction SeqProject::GetAction(const int index)
 	return actions->Get(index);
 }
 
-void SeqProject::DoAction(SeqAction action)
+void SeqProject::DoAction(const SeqAction action)
 {
 	switch (action.type)
 	{
@@ -73,7 +73,7 @@ void SeqProject::DoAction(SeqAction action)
 	}
 }
 
-void SeqProject::UndoAction(SeqAction action)
+void SeqProject::UndoAction(const SeqAction action)
 {
 	switch (action.type)
 	{

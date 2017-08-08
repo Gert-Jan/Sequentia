@@ -10,8 +10,8 @@ public:
 	SeqUISequencer(SeqProject *project);
 	~SeqUISequencer();
 
-	void ActionDone(SeqAction action);
-	void ActionUndone(SeqAction action);
+	void ActionDone(const SeqAction action);
+	void ActionUndone(const SeqAction action);
 	void Draw();
 
 private:
