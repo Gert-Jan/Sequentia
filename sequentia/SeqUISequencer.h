@@ -22,6 +22,8 @@ private:
 
 private:
 	const float pixelsPerSecond = 100;
+	const float minChannelHeight = 20;
+	const float maxChannelHeight = 300;
 	const int initialChannelHeight = 50;
 	const int channelVerticalSpacing = -1;
 	const float collapsedSettingsPanelWidth = 10;

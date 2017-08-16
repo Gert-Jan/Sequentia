@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include "SeqProject.h";
 #include "SeqUISequencer.h";
 
@@ -40,14 +41,25 @@ void SeqUISequencer::ActionUndone(const SeqAction action)
 
 void SeqUISequencer::Draw()
 {
+	bool window_is_new = false;
+	if (!ImGui::FindWindowByName("Sequencer"))
+		window_is_new = true;
 	bool *isOpen = false;
 	if (ImGui::Begin("Sequencer", isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
 		const static ImVec2 textSize = ImGui::CalcTextSize("01234567889:.");
 		const float headerHeight = textSize.y + 3;
+		ImGui::Columns(2, "uniqueId");
+		if (window_is_new)
+			ImGui::SetColumnOffset(1, settingsPanelWidth + 7);
+		else
+			settingsPanelWidth = ImGui::GetColumnOffset(1) - 7;
 		DrawChannelSettings(headerHeight);
+		ImGui::NextColumn();
+		ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX() - 4, ImGui::GetCursorPosY() + 1));
 		DrawSequencerRuler(headerHeight);
 		DrawChannels();
+		ImGui::Columns(1);
 	}
 	ImGui::End();
 }
@@ -59,13 +71,14 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight)
 	const ImVec2 size = ImVec2(settingsPanelWidth, ImGui::GetContentRegionAvail().y);
 	
 	// draw channel settings
-	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	const ImU32 color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
 	const ImU32 bgColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_ComboBg]);
 
 	ImVec2 cursor = origin;
-	cursor.y += rulerHeight;
+	cursor.y += rulerHeight + 1;
 	ImGui::PushClipRect(cursor, ImVec2(cursor.x + size.x, cursor.y + size.y - rulerHeight - style.ScrollbarSize), false);
+	// draw settings panels
 	for (int i = 0; i < project->GetChannelCount(); i++)
 	{
 		float channelHeight = channelHeights->Get(i);
@@ -73,17 +86,52 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight)
 		if (cursor.y - origin.y + channelHeight >= scrollY &&
 			cursor.y - origin.y < scrollY + size.y)
 		{
-			draw_list->AddRectFilled(ImVec2(cursor.x, cursor.y - scrollY), ImVec2(cursor.x + size.x, cursor.y - scrollY + channelHeight), bgColor, rounding, 0x1 | 0x8);
-			draw_list->AddRect(ImVec2(cursor.x, cursor.y - scrollY), ImVec2(cursor.x + size.x, cursor.y - scrollY + channelHeight), color, rounding, 0x1 | 0x8, lineThickness);
+			drawList->AddRectFilled(ImVec2(cursor.x, cursor.y - scrollY), ImVec2(cursor.x + size.x, cursor.y - scrollY + channelHeight), bgColor, rounding, 0x1 | 0x8);
+			drawList->AddRect(ImVec2(cursor.x, cursor.y - scrollY), ImVec2(cursor.x + size.x, cursor.y - scrollY + channelHeight), color, rounding, 0x1 | 0x8, lineThickness);
 			ImGui::SetCursorScreenPos(ImVec2(cursor.x + 4, cursor.y - scrollY + 4));
 			ImGui::Text("%s %d", project->GetChannel(i).name, i);
 		}
 		cursor.y += channelHeight + channelVerticalSpacing;
 	}
-	ImGui::PopClipRect();
+	// draw and handle row resizing
+	// code based on ImGui::Column()
+	cursor = origin;
+	cursor.y += rulerHeight;
+	ImGuiContext* g = ImGui::GetCurrentContext();
+	for (int i = 0; i < project->GetChannelCount(); i++)
+	{
+		float channelHeight = channelHeights->Get(i);
+		cursor.y += channelHeight;
+		// if visible
+		if (cursor.y - origin.y >= scrollY && 
+			cursor.y - origin.y < scrollY + size.y)
+		{
+			const ImGuiID row_id = ImGui::GetID("row") + ImGuiID(i);
+			ImGui::KeepAliveID(row_id);
+			const ImRect row_rect(ImVec2(cursor.x, cursor.y - scrollY - 4), ImVec2(cursor.x + size.x, cursor.y - scrollY + 4));
 
-	// setup the position for ruler drawing
-	ImGui::SetCursorScreenPos(ImVec2(origin.x + settingsPanelWidth, origin.y));
+			bool hovered, held;
+			ImGui::ButtonBehavior(row_rect, row_id, &hovered, &held);
+			if (hovered || held)
+				g->MouseCursor = ImGuiMouseCursor_ResizeNS;
+
+			// Draw before resize so our items positioning are in sync with the line being drawn
+			const ImU32 col = ImGui::GetColorU32(held ? ImGuiCol_ColumnActive : hovered ? ImGuiCol_ColumnHovered : ImGuiCol_Column);
+			drawList->AddLine(ImVec2(cursor.x + rounding, cursor.y - scrollY), ImVec2(cursor.x + size.x, cursor.y - scrollY), col);
+
+			if (held)
+			{
+				if (g->ActiveIdIsJustActivated)
+					g->ActiveIdClickOffset.y -= 4;   // Store from center of row line (we used a 8 high rect for row clicking)
+				
+				ImGuiWindow* window = ImGui::GetCurrentWindowRead();
+				float newHeight = ImClamp(g->IO.MousePos.y - (cursor.y - channelHeight - scrollY) - g->ActiveIdClickOffset.y, minChannelHeight, maxChannelHeight);
+				channelHeights->Set(i, newHeight);
+			}
+		}
+		cursor.y += channelVerticalSpacing;
+	}
+	ImGui::PopClipRect();
 }
 
 void SeqUISequencer::DrawSequencerRuler(float height)
@@ -98,9 +146,9 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	// clip so we won't draw on top of the settings panel
 	ImGui::PushClipRect(origin, ImVec2(origin.x + width, origin.y + height), false);
 
-	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	// underline
-	draw_list->AddLine(ImVec2(origin.x, origin.y + height - 2), ImVec2(origin.x + width, origin.y + height - 2), color, thickness);
+	drawList->AddLine(ImVec2(origin.x, origin.y + height - 2), ImVec2(origin.x + width, origin.y + height - 2), color, thickness);
 
 	// seconds lines
 	int seconds = ceil(position);
@@ -109,7 +157,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	float scaledStep = pixelsPerSecond / zoom;
 	for (float x = origin.x + firstOffset; x < origin.x + scaledWidth; x += scaledStep)
 	{
-		draw_list->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + height - 1), color, thickness);
+		drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + height - 1), color, thickness);
 		ImGui::SetCursorScreenPos(ImVec2(x + style.FramePadding.x, origin.y));
 		ImGui::Text("%02d\:%02d\.%d", (seconds - (seconds % 60)), seconds % 60, 0);
 		seconds++;
@@ -123,7 +171,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 void SeqUISequencer::DrawChannels()
 {
 	const ImGuiStyle style = ImGui::GetStyle();
-	const ImVec2 contentSize = ImVec2(project->GetLength() * pixelsPerSecond / zoom, TotalChannelHeight());
+	const ImVec2 contentSize = ImVec2(project->GetLength() * pixelsPerSecond / zoom, TotalChannelHeight() + 100);
 	const ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x - style.ScrollbarSize, ImGui::GetContentRegionAvail().y - style.ScrollbarSize);
 	ImGui::SetNextWindowContentSize(contentSize);
 	ImGui::BeginChild("channels", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
@@ -133,7 +181,7 @@ void SeqUISequencer::DrawChannels()
 
 		const ImVec2 origin = ImGui::GetCursorScreenPos();
 
-		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
 
 		const ImU32 color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
 		const ImU32 bgColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_ComboBg]);
@@ -146,8 +194,8 @@ void SeqUISequencer::DrawChannels()
 			if (cursor.y - origin.y + channelHeight >= scrollY && 
 				cursor.y - origin.y < scrollY + size.y)
 			{
-				draw_list->AddRectFilled(ImVec2(cursor.x + ImGui::GetScrollX(), cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + channelHeight), bgColor, rounding, 0x2 | 0x4);
-				draw_list->AddRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + channelHeight), color, rounding, 0x2 | 0x4, lineThickness);
+				drawList->AddRectFilled(ImVec2(cursor.x + ImGui::GetScrollX(), cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + channelHeight), bgColor, rounding, 0x2 | 0x4);
+				drawList->AddRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + channelHeight), color, rounding, 0x2 | 0x4, lineThickness);
 				//ImGui::SetCursorScreenPos(ImVec2(cursor.x + ImGui::GetScrollX() + 4, cursor.y + 4));
 				//ImGui::Text("%s %d", project->GetChannel(i).name, i);
 			}
