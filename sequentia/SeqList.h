@@ -12,6 +12,7 @@ public:
 	void InsertAt(T item, const int index);
 	void RemoveAt(const int index);
 	T Get(const int index);
+	void Set(const int index, T item);
 	int Count();
 
 private:

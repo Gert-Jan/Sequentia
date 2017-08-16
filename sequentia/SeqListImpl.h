@@ -75,6 +75,12 @@ T SeqList<T>::Get(const int index)
 }
 
 template<class T>
+void SeqList<T>::Set(const int index, T value)
+{
+	data[index] = value;
+}
+
+template<class T>
 int SeqList<T>::Count()
 {
 	return count;
