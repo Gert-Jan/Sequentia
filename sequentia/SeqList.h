@@ -9,6 +9,7 @@ public:
 	~SeqList();
 
 	void Add(T item);
+	int Remove(T item);
 	void InsertAt(T item, const int index);
 	void RemoveAt(const int index);
 	T Get(const int index);

@@ -30,6 +30,20 @@ void SeqList<T>::Add(T item)
 }
 
 template<class T>
+int SeqList<T>::Remove(T item)
+{
+	for (int i = 0; i < count; i++)
+	{
+		if (data[i] == item)
+		{
+			RemoveAt(i);
+			return i;
+		}
+	}
+	return -1;
+}
+
+template<class T>
 void SeqList<T>::InsertAt(T item, const int index)
 {
 	if (index <= count)
