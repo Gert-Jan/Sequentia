@@ -7,6 +7,7 @@ class SeqList;
 class SeqUISequencer : SeqActionHandler
 {
 public:
+	SeqUISequencer(SeqProject *project, int windowId);
 	SeqUISequencer(SeqProject *project);
 	~SeqUISequencer();
 
@@ -15,13 +16,16 @@ public:
 	void Draw();
 
 private:
-	void DrawChannelSettings(float rulerHeight);
+	void Init();
+	void DrawChannelSettings(float rulerHeight, bool isWindowNew);
 	void DrawSequencerRuler(float height);
 	void DrawChannels();
 	int TotalChannelHeight();
 
 private:
 	const float pixelsPerSecond = 100;
+	const float minSettingsPanelWidth = 40;
+	const float maxSettingsPanelWidth = 300;
 	const float minChannelHeight = 20;
 	const float maxChannelHeight = 300;
 	const int initialChannelHeight = 50;
@@ -29,6 +33,9 @@ private:
 	const float collapsedSettingsPanelWidth = 10;
 	const float lineThickness = 1.0f;
 	const float rounding = 6.0f;
+	static int nextWindowId;
+	int windowId = 0;
+	char *name;
 	SeqProject *project;
 	SeqList<int> *channelHeights;
 	double position;

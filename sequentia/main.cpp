@@ -83,7 +83,7 @@ int main(int, char**)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	SDL_Window *window = SDL_CreateWindow("ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+	SDL_Window *window = SDL_CreateWindow("Sequentia", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 	gl3wInit();
 	
@@ -142,6 +142,7 @@ int main(int, char**)
 		// 1. Show a simple window
 		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 		{
+			/*
 			ImGui::Begin("Debug");
 			static float f = 0.0f;
 			ImGui::Text("Hello, world!");
@@ -151,7 +152,40 @@ int main(int, char**)
 			if (ImGui::Button("Another Window")) show_another_window ^= 1;
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::End();
+			*/
 
+			if (ImGui::BeginMainMenuBar())
+			{
+				if (ImGui::BeginMenu("Project"))
+				{
+					if (ImGui::MenuItem("New", "Ctrl+N", false, false)) {}
+					if (ImGui::MenuItem("Open", "Ctrl+O", false, false)) {}
+					ImGui::Separator();
+					if (ImGui::MenuItem("Save", "Ctrl+S", false, false)) {}
+					if (ImGui::MenuItem("Save As", "", false, false)) {}
+					ImGui::Separator();
+					if (ImGui::MenuItem("Exit", "", false, false)) {}
+					ImGui::EndMenu();
+				}
+				if (ImGui::BeginMenu("Edit"))
+				{
+					if (ImGui::MenuItem("Undo", "Ctrl+Z", false, false)) {}
+					if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false)) {}
+					ImGui::Separator();
+					if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {}
+					if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {}
+					if (ImGui::MenuItem("Paste", "CTRL+V", false, false)) {}
+					ImGui::EndMenu();
+				}
+				if (ImGui::BeginMenu("Window"))
+				{
+					if (ImGui::MenuItem("Video", "", false, false)) {}
+					if (ImGui::MenuItem("Sequencer", "")) { project->AddSequencer(); }
+					if (ImGui::MenuItem("Library", "", false, false)) {}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMainMenuBar();
+			}
 
 			project->Draw();
 

@@ -5,18 +5,42 @@
 #include "SeqProject.h";
 #include "SeqUISequencer.h";
 
+int SeqUISequencer::nextWindowId = 0;
+
 SeqUISequencer::SeqUISequencer(SeqProject *project) :
-	project(project)
+	project(project),
+	windowId(nextWindowId)
 {
-	channelHeights = new SeqList<int>();
-	for (int i = 0; i < project->GetChannelCount(); i++)
-		channelHeights->Add(initialChannelHeight);
-	project->AddActionHandler(this);
+	nextWindowId++;
+	Init();
+}
+
+SeqUISequencer::SeqUISequencer(SeqProject *project, int windowId) :
+	project(project),
+	windowId(windowId)
+{
+	nextWindowId = ImMax(nextWindowId, windowId + 1);
+	Init();
 }
 
 SeqUISequencer::~SeqUISequencer()
 {
+	delete[] name;
 	delete channelHeights; 
+}
+
+void SeqUISequencer::Init()
+{
+	// set name
+	ImGuiContext *g = ImGui::GetCurrentContext();
+	int size = ImFormatString(g->TempBuffer, IM_ARRAYSIZE(g->TempBuffer), "Sequencer##%d", windowId);
+	name = new char[size + 1];
+	strcpy(name, g->TempBuffer);
+	// initialise
+	channelHeights = new SeqList<int>();
+	for (int i = 0; i < project->GetChannelCount(); i++)
+		channelHeights->Add(initialChannelHeight);
+	project->AddActionHandler(this);
 }
 
 void SeqUISequencer::ActionDone(const SeqAction action)
@@ -41,20 +65,17 @@ void SeqUISequencer::ActionUndone(const SeqAction action)
 
 void SeqUISequencer::Draw()
 {
-	bool window_is_new = false;
-	if (!ImGui::FindWindowByName("Sequencer"))
-		window_is_new = true;
-	bool *isOpen = false;
-	if (ImGui::Begin("Sequencer", isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
+	bool isWindowNew = false;
+	if (!ImGui::FindWindowByName(name))
+		isWindowNew = true;
+	bool isOpen = true;
+	
+	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
 		const static ImVec2 textSize = ImGui::CalcTextSize("01234567889:.");
 		const float headerHeight = textSize.y + 3;
-		ImGui::Columns(2, "uniqueId");
-		if (window_is_new)
-			ImGui::SetColumnOffset(1, settingsPanelWidth + 7);
-		else
-			settingsPanelWidth = ImGui::GetColumnOffset(1) - 7;
-		DrawChannelSettings(headerHeight);
+		ImGui::Columns(2, "panel");
+		DrawChannelSettings(headerHeight, isWindowNew);
 		ImGui::NextColumn();
 		ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX() - 4, ImGui::GetCursorPosY() + 1));
 		DrawSequencerRuler(headerHeight);
@@ -62,9 +83,11 @@ void SeqUISequencer::Draw()
 		ImGui::Columns(1);
 	}
 	ImGui::End();
+	if (!isOpen)
+		project->RemoveSequencer(this);
 }
 
-void SeqUISequencer::DrawChannelSettings(float rulerHeight)
+void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 {
 	const ImGuiStyle style = ImGui::GetStyle();
 	const ImVec2 origin = ImGui::GetCursorScreenPos();
@@ -74,6 +97,13 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight)
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	const ImU32 color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
 	const ImU32 bgColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_ComboBg]);
+	
+	// default panel width
+	if (isWindowNew)
+		ImGui::SetColumnOffset(1, settingsPanelWidth + 7);
+
+	// debug text
+	//ImGui::Text("%s", name);
 
 	ImVec2 cursor = origin;
 	cursor.y += rulerHeight + 1;
@@ -132,6 +162,18 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight)
 		cursor.y += channelVerticalSpacing;
 	}
 	ImGui::PopClipRect();
+	// clamp width
+	settingsPanelWidth = ImGui::GetColumnOffset(1) - 7;
+	if (settingsPanelWidth < minSettingsPanelWidth)
+	{
+		settingsPanelWidth = minSettingsPanelWidth;
+		ImGui::SetColumnOffset(1, settingsPanelWidth);
+	}
+	if (settingsPanelWidth > maxSettingsPanelWidth)
+	{
+		settingsPanelWidth = maxSettingsPanelWidth;
+		ImGui::SetColumnOffset(1, settingsPanelWidth);
+	}
 }
 
 void SeqUISequencer::DrawSequencerRuler(float height)

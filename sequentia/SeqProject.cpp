@@ -5,7 +5,9 @@ SeqProject::SeqProject()
 	actionHandlers = new SeqList<SeqActionHandler*>();
 	actions = new SeqList<SeqAction>();
 	channels = new SeqList<SeqChannel>();
-	uiSequencer = new SeqUISequencer(this);
+	uiSequencers = new SeqList<SeqUISequencer*>();
+	// test window
+	uiSequencers->Add(new SeqUISequencer(this));
 }
 
 SeqProject::~SeqProject()
@@ -13,7 +15,9 @@ SeqProject::~SeqProject()
 	delete actionHandlers;
 	delete actions;
 	delete channels;
-	delete uiSequencer;
+	for (int i = 0; i < uiSequencers->Count(); i++)
+		delete uiSequencers->Get(i);
+	delete uiSequencers;
 }
 
 void SeqProject::AddAction(const SeqAction action)
@@ -113,6 +117,17 @@ SeqChannel SeqProject::GetChannel(const int index)
 	return channels->Get(index);
 }
 
+void SeqProject::AddSequencer()
+{
+	uiSequencers->Add(new SeqUISequencer(this));
+}
+
+void SeqProject::RemoveSequencer(SeqUISequencer *sequencer)
+{
+	uiSequencers->Remove(sequencer);
+	delete sequencer;
+}
+
 double SeqProject::GetLength()
 {
 	return 60.54321;
@@ -120,5 +135,8 @@ double SeqProject::GetLength()
 
 void SeqProject::Draw()
 {
-	uiSequencer->Draw();
+	for (int i = 0; i < uiSequencers->Count(); i++)
+	{
+		uiSequencers->Get(i)->Draw();
+	}
 }

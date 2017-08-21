@@ -22,6 +22,9 @@ public:
 	int GetChannelCount();
 	SeqChannel GetChannel(const int index);
 
+	void AddSequencer();
+	void RemoveSequencer(SeqUISequencer *sequencer);
+
 	double GetLength();
 
 	void Draw();
@@ -35,5 +38,5 @@ private:
 	SeqList<SeqAction> *actions;
 	int actionCursor = 0;
 	SeqList<SeqChannel> *channels;
-	SeqUISequencer *uiSequencer;
+	SeqList<SeqUISequencer*> *uiSequencers;
 };
