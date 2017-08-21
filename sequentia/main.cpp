@@ -181,7 +181,7 @@ int main(int, char**)
 				{
 					if (ImGui::MenuItem("Video", "", false, false)) {}
 					if (ImGui::MenuItem("Sequencer", "")) { project->AddSequencer(); }
-					if (ImGui::MenuItem("Library", "", false, false)) {}
+					if (ImGui::MenuItem("Library", "")) { project->AddLibrary(); }
 					ImGui::EndMenu();
 				}
 				ImGui::EndMainMenuBar();

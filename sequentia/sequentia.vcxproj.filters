@@ -24,6 +24,9 @@
     <ClCompile Include="SeqUISequencer.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="SeqUILibrary.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -63,6 +66,9 @@
     </ClInclude>
     <ClInclude Include="libs\dirent\dirent.h">
       <Filter>libs\dirent</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqUILibrary.h">
+      <Filter>ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

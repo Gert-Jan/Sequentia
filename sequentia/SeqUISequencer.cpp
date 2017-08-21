@@ -40,6 +40,7 @@ void SeqUISequencer::Init()
 	channelHeights = new SeqList<int>();
 	for (int i = 0; i < project->GetChannelCount(); i++)
 		channelHeights->Add(initialChannelHeight);
+	// start listening for project changes
 	project->AddActionHandler(this);
 }
 

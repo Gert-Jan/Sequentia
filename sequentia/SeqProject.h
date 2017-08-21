@@ -4,6 +4,7 @@
 #include "SeqChannel.h";
 #include "SeqAction.h";
 #include "SeqUISequencer.h";
+#include "SeqUILibrary.h";
 
 class SeqProject
 {
@@ -24,6 +25,8 @@ public:
 
 	void AddSequencer();
 	void RemoveSequencer(SeqUISequencer *sequencer);
+	void AddLibrary();
+	void RemoveLibrary(SeqUILibrary *library);
 
 	double GetLength();
 
@@ -39,4 +42,5 @@ private:
 	int actionCursor = 0;
 	SeqList<SeqChannel> *channels;
 	SeqList<SeqUISequencer*> *uiSequencers;
+	SeqList<SeqUILibrary*> *uiLibraries;
 };
