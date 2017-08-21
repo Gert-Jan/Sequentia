@@ -3,16 +3,16 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="..\imgui\imgui.cpp">
-      <Filter>imgui</Filter>
+      <Filter>libs\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
+      <Filter>libs\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
+      <Filter>libs\imgui</Filter>
     </ClCompile>
     <ClCompile Include="libs\gl3w\GL\gl3w.c">
-      <Filter>gl3w</Filter>
+      <Filter>libs\gl3w</Filter>
     </ClCompile>
     <ClCompile Include="imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="SeqProject.cpp">
@@ -27,19 +27,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
-      <Filter>imgui</Filter>
+      <Filter>libs\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui\imgui.h">
-      <Filter>imgui</Filter>
+      <Filter>libs\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
+      <Filter>libs\imgui</Filter>
     </ClInclude>
     <ClInclude Include="libs\gl3w\GL\gl3w.h">
-      <Filter>gl3w</Filter>
+      <Filter>libs\gl3w</Filter>
     </ClInclude>
     <ClInclude Include="libs\gl3w\GL\glcorearb.h">
-      <Filter>gl3w</Filter>
+      <Filter>libs\gl3w</Filter>
     </ClInclude>
     <ClInclude Include="imgui_impl_sdl_gl3.h" />
     <ClInclude Include="decoder.h" />
@@ -61,17 +61,14 @@
     <ClInclude Include="SeqAction.h">
       <Filter>action</Filter>
     </ClInclude>
+    <ClInclude Include="libs\dirent\dirent.h">
+      <Filter>libs\dirent</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{4223db68-66f8-4b64-b297-46ec6e87d3ab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gl3w">
-      <UniqueIdentifier>{d0ec9ead-f8ba-4975-8b72-48db4c1ec821}</UniqueIdentifier>
-    </Filter>
     <Filter Include="data">
       <UniqueIdentifier>{417cdf94-0cdf-4885-bdcc-48cc4f21ec0c}</UniqueIdentifier>
     </Filter>
@@ -83,6 +80,18 @@
     </Filter>
     <Filter Include="action">
       <UniqueIdentifier>{9885789e-b076-422c-8ed3-4dd7ffe64a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs">
+      <UniqueIdentifier>{cce33654-f44c-4866-9469-1ed945854e05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs\dirent">
+      <UniqueIdentifier>{836603e7-a634-4aa2-92df-1932b590584f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs\imgui">
+      <UniqueIdentifier>{4223db68-66f8-4b64-b297-46ec6e87d3ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs\gl3w">
+      <UniqueIdentifier>{d0ec9ead-f8ba-4975-8b72-48db4c1ec821}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
