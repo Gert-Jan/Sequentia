@@ -24,9 +24,17 @@ SeqList<T>::~SeqList()
 template<class T>
 void SeqList<T>::Add(T item)
 {
-	ensureCapacity(count + 1);
+	EnsureCapacity(count + 1);
 	data[count] = item;
 	count += 1;
+}
+
+template<class T>
+void SeqList<T>::AddCopy(T *source, int addCount, int sourceOffset)
+{
+	EnsureCapacity(count + addCount);
+	memcpy(&data[count], &source[sourceOffset], sizeof(T) * addCount);
+	count += addCount;
 }
 
 template<class T>
@@ -48,9 +56,9 @@ void SeqList<T>::InsertAt(T item, const int index)
 {
 	if (index <= count)
 	{
-		ensureCapacity(count + 1);
+		EnsureCapacity(count + 1);
 		memcpy(data[index + 1], data[index], sizeof(T) * (count - index));
-		data[index] = itme;
+		data[index] = item;
 		count += 1;
 	}
 }
@@ -66,7 +74,7 @@ void SeqList<T>::RemoveAt(const int index)
 }
 
 template<class T>
-void SeqList<T>::ensureCapacity(const int requiredCapacity)
+void SeqList<T>::EnsureCapacity(const int requiredCapacity)
 {
 	if (requiredCapacity > capacity)
 	{
@@ -98,4 +106,10 @@ template<class T>
 int SeqList<T>::Count()
 {
 	return count;
+}
+
+template<class T>
+void SeqList<T>::Clear()
+{
+	count = 0;
 }
