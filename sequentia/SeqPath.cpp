@@ -6,6 +6,13 @@
 #include <direct.h>
 #include <errno.h>
 
+char* SeqPath::Normalize(char *path)
+{
+	SeqString::SetBuffer(path, strlen(path));
+	SeqString::Replace("\\", "/");
+	return SeqString::CopyBuffer();
+}
+
 int SeqPath::CreateDir(char *path)
 {
 	int error = 0;

@@ -109,6 +109,25 @@ int SeqString::FindReverse(char *string, char *phrase, int startAt)
 	return -1;
 }
 
+void SeqString::Replace(char* phrase, char *with)
+{
+	int pos = Find(Buffer, phrase, 0);
+	int phraseLen = strlen(phrase);
+	int withLen = strlen(with);
+	int delta = withLen - phraseLen;
+	int len = strlen(Buffer) + 1;
+
+	while (pos > -1)
+	{
+		if (delta != 0)
+		{
+			memcpy(&Buffer[pos + phraseLen + delta], &Buffer[pos + phraseLen], len - (pos + phraseLen));
+		}
+		memcpy(&Buffer[pos], with, withLen);
+		pos = Find(Buffer, phrase, pos + withLen);
+	}
+}
+
 SeqList<SeqList<char>*>* SeqString::Split(char *string, char *separator)
 {
 	int previousSplit = 0;

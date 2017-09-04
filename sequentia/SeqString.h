@@ -22,5 +22,6 @@ public:
 	static bool EqualsBuffer(char *string);
 	static int Find(char *string, char *phrase, int startAt = 0);
 	static int FindReverse(char *string, char *phrase, int startAt = -1);
+	static void Replace(char* phrase, char *with);
 	static SeqList<SeqList<char>*>* Split(char *string, char *separator);
 };
