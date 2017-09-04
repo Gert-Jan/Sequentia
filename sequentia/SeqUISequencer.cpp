@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "SeqProject.h";
-#include "SeqUISequencer.h";
+#include "SeqString.h";
 
 int SeqUISequencer::nextWindowId = 0;
 
@@ -23,25 +23,24 @@ SeqUISequencer::SeqUISequencer(SeqProject *project, int windowId) :
 	Init();
 }
 
-SeqUISequencer::~SeqUISequencer()
-{
-	delete[] name;
-	delete channelHeights; 
-}
-
 void SeqUISequencer::Init()
 {
-	// set name
-	ImGuiContext *g = ImGui::GetCurrentContext();
-	int size = ImFormatString(g->TempBuffer, IM_ARRAYSIZE(g->TempBuffer), "Sequencer##%d", windowId);
-	name = new char[size + 1];
-	strcpy(name, g->TempBuffer);
-	// initialise
+	// alloc memory
+	name = SeqString::Format("Sequencer##%d", windowId);
 	channelHeights = new SeqList<int>();
 	for (int i = 0; i < project->GetChannelCount(); i++)
 		channelHeights->Add(initialChannelHeight);
 	// start listening for project changes
 	project->AddActionHandler(this);
+}
+
+SeqUISequencer::~SeqUISequencer()
+{
+	// stop listening for project changes
+	project->RemoveActionHandler(this);
+	// free memory
+	delete[] name;
+	delete channelHeights; 
 }
 
 void SeqUISequencer::ActionDone(const SeqAction action)
@@ -104,7 +103,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 		ImGui::SetColumnOffset(1, settingsPanelWidth + 7);
 
 	// debug text
-	//ImGui::Text("%s", name);
+	ImGui::Text("%s", name);
 
 	ImVec2 cursor = origin;
 	cursor.y += rulerHeight + 1;

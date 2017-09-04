@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SeqList.h";
+#include "SeqLibrary.h";
 #include "SeqChannel.h";
 #include "SeqAction.h";
 #include "SeqUISequencer.h";
@@ -12,8 +13,16 @@ public:
 	SeqProject();
 	~SeqProject();
 
+	void Open();
+	void Save();
+	void SaveAs();
+
+	char* GetPath();
+	void SetPath(char *fullPath);
+
 	void AddAction(const SeqAction action);
 	void AddActionHandler(SeqActionHandler *handler);
+	void RemoveActionHandler(SeqActionHandler *handler);
 	int GetActionCount();
 	int GetActionCursor();
 	SeqAction GetAction(const int index);
@@ -31,12 +40,19 @@ public:
 	double GetLength();
 
 	void Draw();
+	void DrawDialogs();
 
 private:
 	void AddChannel(SeqChannelType type, char *name);
 	void RemoveChannel(const int index);
 
+	int Serialize();
+	int Deserialize();
+
 private:
+	const int version = 1;
+	char *fullPath;
+	SeqLibrary *library;
 	SeqList<SeqActionHandler*> *actionHandlers;
 	SeqList<SeqAction> *actions;
 	int actionCursor = 0;

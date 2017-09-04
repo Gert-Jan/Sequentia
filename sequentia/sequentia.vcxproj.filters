@@ -27,6 +27,18 @@
     <ClCompile Include="SeqUILibrary.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="SeqLibrary.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqString.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqPath.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqDialogs.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -68,6 +80,21 @@
       <Filter>libs\dirent</Filter>
     </ClInclude>
     <ClInclude Include="SeqUILibrary.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqLibrary.h">
+      <Filter>data</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqString.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqUtils.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqPath.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqDialogs.h">
       <Filter>ui</Filter>
     </ClInclude>
   </ItemGroup>

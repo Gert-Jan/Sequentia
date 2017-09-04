@@ -165,7 +165,11 @@
     <ClCompile Include="libs\gl3w\GL\gl3w.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SeqChannel.cpp" />
+    <ClCompile Include="SeqDialogs.cpp" />
+    <ClCompile Include="SeqLibrary.cpp" />
+    <ClCompile Include="SeqPath.cpp" />
     <ClCompile Include="SeqProject.cpp" />
+    <ClCompile Include="SeqString.cpp" />
     <ClCompile Include="SeqUILibrary.cpp" />
     <ClCompile Include="SeqUISequencer.cpp" />
     <ClInclude Include="..\imgui\imconfig.h" />
@@ -177,12 +181,17 @@
     <ClInclude Include="libs\gl3w\GL\gl3w.h" />
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
     <ClInclude Include="SeqAction.h" />
+    <ClInclude Include="SeqDialogs.h" />
+    <ClInclude Include="SeqLibrary.h" />
     <ClInclude Include="SeqList.h" />
     <ClInclude Include="SeqListImpl.h" />
     <ClInclude Include="SeqChannel.h" />
+    <ClInclude Include="SeqPath.h" />
     <ClInclude Include="SeqProject.h" />
+    <ClInclude Include="SeqString.h" />
     <ClInclude Include="SeqUILibrary.h" />
     <ClInclude Include="SeqUISequencer.h" />
+    <ClInclude Include="SeqUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />

@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "SeqString.h";
 #include "SeqProject.h";
 #include "SeqUILibrary.h";
 
@@ -23,20 +24,20 @@ SeqUILibrary::SeqUILibrary(SeqProject *project, int windowId) :
 	Init();
 }
 
-SeqUILibrary::~SeqUILibrary()
-{
-	delete[] name;
-}
-
 void SeqUILibrary::Init()
 {
-	// set name
-	ImGuiContext *g = ImGui::GetCurrentContext();
-	int size = ImFormatString(g->TempBuffer, IM_ARRAYSIZE(g->TempBuffer), "Library##%d", windowId);
-	name = new char[size + 1];
-	strcpy(name, g->TempBuffer);
+	// alloc memory
+	name = SeqString::Format("Library##%d", windowId);
 	// start listening for project changes
 	project->AddActionHandler(this);
+}
+
+SeqUILibrary::~SeqUILibrary()
+{
+	// stop listening for project changes
+	project->RemoveActionHandler(this);
+	// free memory
+	delete[] name;
 }
 
 void SeqUILibrary::ActionDone(const SeqAction action)

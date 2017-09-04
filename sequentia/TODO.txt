@@ -1,5 +1,19 @@
 A quick doc to keep track of tasks that should be done later.
 
+UI
+- Library - video collection
+	- Allow dragging folders and files to library windows
+		- Add 'filter' virtual folders
+		- Add 'links', linking to files or folders on the filesystem
+		- Let's start out with only file links
+- Video - video or audio player
+	- Allow targeting different contexts or channels to be displayed
+	- Handle resizing better
+- Sequencer - video/audio arrangement
+	- Allow dragging videos from the library to the sequencer channels
+	- Add channel collapsing
+	- Add clearer channel selection color
+
 Video
 - Add a pause function
 - Find a color calibration video, check which YUV420p fragment shader matrix should be used.

@@ -29,5 +29,5 @@ struct SeqActionAddChannel
 	SeqChannelType type;
 	char *name;
 	SeqActionAddChannel(SeqChannelType type, char *name): type(type), name(name) { }
-	~SeqActionAddChannel() { delete name; }
+	~SeqActionAddChannel() { delete[] name; }
 };

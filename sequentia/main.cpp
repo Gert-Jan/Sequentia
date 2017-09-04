@@ -123,6 +123,7 @@ int main(int, char**)
 	bool show_test_window = true;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImColor(114, 144, 154);
+	ImGui::GetIO().MouseDrawCursor = true;
 
 	// Main loop
 	bool done = false;
@@ -161,8 +162,8 @@ int main(int, char**)
 					if (ImGui::MenuItem("New", "Ctrl+N", false, false)) {}
 					if (ImGui::MenuItem("Open", "Ctrl+O", false, false)) {}
 					ImGui::Separator();
-					if (ImGui::MenuItem("Save", "Ctrl+S", false, false)) {}
-					if (ImGui::MenuItem("Save As", "", false, false)) {}
+					if (ImGui::MenuItem("Save", "Ctrl+S")) { project->Save(); }
+					if (ImGui::MenuItem("Save As", "")) { project->SaveAs(); }
 					ImGui::Separator();
 					if (ImGui::MenuItem("Exit", "", false, false)) {}
 					ImGui::EndMenu();
