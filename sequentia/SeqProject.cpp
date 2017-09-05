@@ -1,10 +1,11 @@
 #include <imgui.h>
 #include <SDL.h>
-#include "SeqProject.h";
+#include "SeqProjectHeaders.h";
 #include "SeqDialogs.h";
 #include "SeqPath.h";
 #include "SeqUtils.h";
 #include "SeqString.h";
+#include "SeqList.h";
 
 SeqProject::SeqProject()
 {

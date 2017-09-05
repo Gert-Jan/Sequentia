@@ -1,5 +1,7 @@
 #include <dirent.h>
+#include "SeqLibrary.h";
 #include "SeqProject.h";
+#include "SeqList.h";
 
 SeqLibrary::SeqLibrary(SeqProject *project) :
 	project(project)

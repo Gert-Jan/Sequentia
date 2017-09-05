@@ -1,5 +1,6 @@
 #pragma once
 
+class SeqActionHandler;
 class SeqProject;
 template<class T>
 class SeqList;

@@ -182,6 +182,7 @@
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
     <ClInclude Include="SeqAction.h" />
     <ClInclude Include="SeqDialogs.h" />
+    <ClInclude Include="SeqProjectHeaders.h" />
     <ClInclude Include="SeqLibrary.h" />
     <ClInclude Include="SeqList.h" />
     <ClInclude Include="SeqListImpl.h" />

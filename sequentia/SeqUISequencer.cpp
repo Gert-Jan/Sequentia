@@ -1,9 +1,8 @@
-#pragma once
-
 #include <imgui.h>
 #include <imgui_internal.h>
-#include "SeqProject.h";
+#include "SeqProjectHeaders.h";
 #include "SeqString.h";
+#include "SeqList.h";
 
 int SeqUISequencer::nextWindowId = 0;
 

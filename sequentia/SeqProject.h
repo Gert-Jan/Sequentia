@@ -1,11 +1,18 @@
 #pragma once
 
-#include "SeqList.h";
-#include "SeqLibrary.h";
-#include "SeqChannel.h";
-#include "SeqAction.h";
-#include "SeqUISequencer.h";
-#include "SeqUILibrary.h";
+
+class SeqLibrary;
+class SeqChannel;
+enum SeqChannelType;
+
+class SeqAction;
+class SeqActionHandler;
+
+class SeqUILibrary;
+class SeqUISequencer;
+
+template<class T>
+class SeqList;
 
 class SeqProject
 {

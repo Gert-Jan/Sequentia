@@ -97,6 +97,9 @@
     <ClInclude Include="SeqDialogs.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="SeqProjectHeaders.h">
+      <Filter>data</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
