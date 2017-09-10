@@ -1,114 +1,175 @@
+#include <imgui.h>
+//#include <cstdarg>
+
 #include "SeqDialogs.h";
 #include "SeqProject.h";
 #include "SeqString.h";
 #include "SeqPath.h";
 #include "SeqUtils.h";
-#include <imgui.h>
 
 bool SeqDialogs::showError = false;
 bool SeqDialogs::showRequestProjectPath = false;
 bool SeqDialogs::showWarningOverwrite = false;
 
-char *SeqDialogs::projectPath = nullptr;
-char *SeqDialogs::errorMessage = nullptr;
-int SeqDialogs::errorNumber = 0;
+SeqDialogOption SeqDialogs::result = OK;
+RequestPathAction SeqDialogs::requestPathAction = Open;
+char *SeqDialogs::path = nullptr;
+char *SeqDialogs::message = nullptr;
+
+void SeqDialogs::ShowError(char *errorMessage, ...)
+{
+	va_list args;
+	va_start(args, errorMessage);
+	message = SeqString::Format(errorMessage, args);
+	va_end(args);
+	showError = true;
+}
+
+void SeqDialogs::ShowRequestProjectPath(char *currentPath, RequestPathAction action)
+{
+	SeqString::SetBuffer(currentPath, strlen(currentPath));
+	path = currentPath;
+	requestPathAction = action;
+	showRequestProjectPath = true;
+}
 
 void SeqDialogs::Draw(SeqProject *project)
 {
 	if (showError)
 	{
-		// draw error dialog
-		ImGui::OpenPopup("Error##General");
-		if (ImGui::BeginPopupModal("Error##General", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ShowMessage("Error##General", OK))
 		{
-			ImGui::Text(errorMessage, strerror(errorNumber));
-
-			if (ImGui::Button("OK", ImVec2(120, 0)))
-			{
-				showError = false;
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
+			showError = false;
 		}
 	}
 
 	if (showRequestProjectPath)
 	{
-		// draw Save As dialog
-		ImGui::OpenPopup("Save As");
-		if (ImGui::BeginPopupModal("Save As", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		switch (requestPathAction)
 		{
-			ImGui::Text("Paste the full path to the new project file.");
-			ImGui::Separator();
-
-			ImGui::Text("Filepath");
-			ImGui::PushItemWidth(-1);
-			ImGui::InputText("", SeqString::Buffer, SEQ_COUNT(SeqString::Buffer));
-			ImGui::PopItemWidth();
-			if (ImGui::Button("OK", ImVec2(120, 0)))
+		case Save:
+			if (ShowFileBrowseDialog("Save As"))
 			{
-				// TODO: validate input
-				if (SeqPath::FileExists(projectPath))
+				if (result == OK)
 				{
-					showWarningOverwrite = true;
-				}
-				else
-				{
-					project->SetPath(SeqPath::Normalize(SeqString::CopyBuffer()));
-					project->Save();
+					if (SeqPath::FileExists(path))
+					{
+						message = SeqString::Format("You are about to overwrite %s\nAre you sure?", path);
+						showWarningOverwrite = true;
+					}
+					else
+					{
+						project->SetPath(path);
+						project->Save();
+					}
 				}
 				showRequestProjectPath = false;
-				ImGui::CloseCurrentPopup();
 			}
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			break;
+		case Open:
+			if (ShowFileBrowseDialog("Open"))
 			{
+				if (result == OK)
+				{
+					if (SeqPath::FileExists(path))
+					{
+						project->SetPath(path);
+						project->Open();
+					}
+					else
+					{
+						ShowError("File not found.");
+					}
+				}
 				showRequestProjectPath = false;
-				ImGui::CloseCurrentPopup();
 			}
-			ImGui::EndPopup();
+			break;
+		default:
+			showRequestProjectPath = false;
+			break;
 		}
 	}
-
+	
 	if (showWarningOverwrite)
 	{
-		// draw overwrite warning dialog
-		ImGui::OpenPopup("Warning##Overwrite");
-		if (ImGui::BeginPopupModal("Warning##Overwrite", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ShowMessage("Warning##Overwrite", Yes | No))
 		{
-			ImGui::Text("You are about to overwrite the following project file:");
-			ImGui::Text("%s", projectPath);
-
-			if (ImGui::Button("OK", ImVec2(120, 0)))
+			if (result == Yes)
 			{
-				project->SetPath(projectPath);
+				project->SetPath(path);
 				project->Save();
-
 				showWarningOverwrite = false;
-				ImGui::CloseCurrentPopup();
 			}
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			else if (result = No)
 			{
-				delete project;
 				showWarningOverwrite = false;
-				ImGui::CloseCurrentPopup();
 			}
-			ImGui::EndPopup();
 		}
 	}
 }
 
-void SeqDialogs::ShowRequestProjectPath(char *currentPath)
+bool SeqDialogs::ShowFileBrowseDialog(const char *title)
 {
-	SeqString::SetBuffer(currentPath, strlen(currentPath));
-	projectPath = currentPath;
-	showRequestProjectPath = true;
+	// draw browse dialog
+	bool isDone = false;
+	ImGui::OpenPopup(title);
+	if (ImGui::BeginPopupModal(title, NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Paste the full path to the project file.");
+		ImGui::Separator();
+
+		ImGui::Text("Filepath");
+		ImGui::PushItemWidth(-1);
+		ImGui::InputText("", SeqString::Buffer, SEQ_COUNT(SeqString::Buffer));
+		ImGui::PopItemWidth();
+		if (ImGui::Button("OK", ImVec2(120, 0)))
+		{
+			path = SeqPath::Normalize(SeqString::CopyBuffer());
+			result = OK;
+			isDone = true;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			result = Cancel;
+			isDone = true;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+	return isDone;
 }
 
-void SeqDialogs::ShowError(char *message, int error)
+bool SeqDialogs::ShowMessage(const char *title, int options)
 {
-	errorMessage = message;
-	errorNumber = error;
-	showError = true;
+	// draw message dialog
+	bool isDone = false;
+	ImGui::OpenPopup(title);
+	if (ImGui::BeginPopupModal(title, NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text(message);
+		isDone = isDone || ShowMessageButton("OK", options, OK);
+		isDone = isDone || ShowMessageButton("Cancel", options, Cancel);
+		isDone = isDone || ShowMessageButton("Yes", options, Yes);
+		isDone = isDone || ShowMessageButton("No", options, No);
+		ImGui::EndPopup();
+	}
+	return isDone;
+}
+
+bool SeqDialogs::ShowMessageButton(const char *label, int options, SeqDialogOption option)
+{
+	bool isClicked = false;
+	if (options & option)
+	{
+		if (ImGui::Button(label, ImVec2(120, 0)))
+		{
+			isClicked = true;
+			result = option;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+	}
+	return isClicked;
 }

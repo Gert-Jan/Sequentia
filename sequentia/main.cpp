@@ -158,13 +158,13 @@ int main(int, char**)
 			{
 				if (ImGui::BeginMenu("Project"))
 				{
-					if (ImGui::MenuItem("New", "Ctrl+N", false, false)) {}
-					if (ImGui::MenuItem("Open", "Ctrl+O", false, false)) {}
+					if (ImGui::MenuItem("New", "Ctrl+N")) { project->Clear(); }
+					if (ImGui::MenuItem("Open", "Ctrl+O")) { project->OpenFrom(); }
 					ImGui::Separator();
 					if (ImGui::MenuItem("Save", "Ctrl+S")) { project->Save(); }
 					if (ImGui::MenuItem("Save As", "")) { project->SaveAs(); }
 					ImGui::Separator();
-					if (ImGui::MenuItem("Exit", "", false, false)) {}
+					if (ImGui::MenuItem("Exit", "")) { done = true; }
 					ImGui::EndMenu();
 				}
 				if (ImGui::BeginMenu("Edit"))

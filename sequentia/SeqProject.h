@@ -22,7 +22,9 @@ public:
 	SeqProject();
 	~SeqProject();
 
+	void Clear();
 	void Open();
+	void OpenFrom();
 	void Save();
 	void SaveAs();
 
@@ -62,10 +64,11 @@ private:
 	const int version = 1;
 	char *fullPath;
 	SeqLibrary *library;
-	SeqList<SeqActionHandler*> *actionHandlers;
-	SeqList<SeqAction> *actions;
-	int actionCursor = 0;
 	SeqList<SeqChannel> *channels;
 	SeqList<SeqUISequencer*> *uiSequencers;
 	SeqList<SeqUILibrary*> *uiLibraries;
+
+	SeqList<SeqActionHandler*> *actionHandlers;
+	SeqList<SeqAction> *actions;
+	int actionCursor = 0;
 };

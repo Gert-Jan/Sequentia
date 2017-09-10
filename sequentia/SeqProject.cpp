@@ -1,5 +1,6 @@
 #include <imgui.h>
 #include <SDL.h>
+
 #include "SeqProjectHeaders.h";
 #include "SeqDialogs.h";
 #include "SeqSerializerBin.h";
@@ -28,27 +29,65 @@ SeqProject::SeqProject()
 
 SeqProject::~SeqProject()
 {
+	Clear();
+	delete uiLibraries;
+	delete uiSequencers;
+	delete actions;
+	delete actionHandlers;
+	delete channels;
+	delete library;
+	delete[] fullPath;
+}
+
+void SeqProject::Clear()
+{
 	for (int i = 0; i < uiLibraries->Count(); i++)
 		delete uiLibraries->Get(i);
-	delete uiLibraries;
+	
 	for (int i = 0; i < uiSequencers->Count(); i++)
 		delete uiSequencers->Get(i);
-	delete uiSequencers;
 
 	for (int i = 0; i < actions->Count(); i++)
 		delete actions->Get(i).data;
-	delete actions;
-	delete actionHandlers;
-	
-	delete channels;
-	delete library;
 
-	delete[] fullPath;
+	uiLibraries->Clear();
+	uiSequencers->Clear();
+	actions->Clear();
+	actionHandlers->Clear();
+	channels->Clear();
+	library->Clear();
+
+	SeqUILibrary::nextWindowId = 0;
+	SeqUISequencer::nextWindowId = 0;
 }
 
 void SeqProject::Open()
 {
 
+	if (fullPath == "")
+	{
+		OpenFrom();
+		return;
+	}
+
+	SDL_RWops *file = SDL_RWFromFile(fullPath, "r");
+	if (file)
+	{
+		SeqSerializer *serializer = new SeqSerializerBin(file);
+		Clear();
+		Deserialize(serializer);
+		delete serializer;
+		SDL_RWclose(file);
+	}
+	else
+	{
+		SeqDialogs::ShowError(const_cast<char*>(SDL_GetError()));
+	}
+}
+
+void SeqProject::OpenFrom()
+{
+	SeqDialogs::ShowRequestProjectPath(fullPath, RequestPathAction::Open);
 }
 
 void SeqProject::Save()
@@ -66,22 +105,24 @@ void SeqProject::Save()
 	}
 	else
 	{
-		SDL_RWops *file = SDL_RWFromFile(fullPath, "w+b");
+		SDL_RWops *file = SDL_RWFromFile(fullPath, "wb");
 		if (file)
 		{
-			SDL_RWwrite(file, this, 100, 1);
+			SeqSerializer *serializer = new SeqSerializerBin(file);
+			Serialize(serializer);
+			delete serializer;
 			SDL_RWclose(file);
 		}
 		else
 		{
-			SeqDialogs::ShowError(const_cast<char*>(SDL_GetError()), 0);
+			SeqDialogs::ShowError(const_cast<char*>(SDL_GetError()));
 		}
 	}
 }
 
 void SeqProject::SaveAs()
 {
-	SeqDialogs::ShowRequestProjectPath(fullPath);
+	SeqDialogs::ShowRequestProjectPath(fullPath, RequestPathAction::Save);
 }
 
 void SeqProject::SetPath(char *fullPath)
