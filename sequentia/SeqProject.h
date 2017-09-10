@@ -1,5 +1,7 @@
 #pragma once
 
+struct SDL_RWops;
+class SeqSerializer;
 
 class SeqLibrary;
 class SeqChannel;
@@ -53,8 +55,8 @@ private:
 	void AddChannel(SeqChannelType type, char *name);
 	void RemoveChannel(const int index);
 
-	int Serialize();
-	int Deserialize();
+	int Serialize(SeqSerializer *serializer);
+	int Deserialize(SeqSerializer *serializer);
 
 private:
 	const int version = 1;

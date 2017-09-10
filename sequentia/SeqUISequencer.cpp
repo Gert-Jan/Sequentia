@@ -1,12 +1,13 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "SeqProjectHeaders.h";
+#include "SeqSerializer.h";
 #include "SeqString.h";
 #include "SeqList.h";
 
 int SeqUISequencer::nextWindowId = 0;
 
-SeqUISequencer::SeqUISequencer(SeqProject *project) :
+SeqUISequencer::SeqUISequencer(SeqProject *project):
 	project(project),
 	windowId(nextWindowId)
 {
@@ -14,7 +15,16 @@ SeqUISequencer::SeqUISequencer(SeqProject *project) :
 	Init();
 }
 
-SeqUISequencer::SeqUISequencer(SeqProject *project, int windowId) :
+SeqUISequencer::SeqUISequencer(SeqProject *project, SeqSerializer *serializer):
+	project(project),
+	windowId(nextWindowId)
+{
+	nextWindowId++;
+	Init();
+	Deserialize(serializer);
+}
+
+SeqUISequencer::SeqUISequencer(SeqProject *project, int windowId):
 	project(project),
 	windowId(windowId)
 {
@@ -258,4 +268,26 @@ int SeqUISequencer::TotalChannelHeight()
 	// remove spacing on the bottom most channel
 	totalHeight -= channelVerticalSpacing;
 	return totalHeight;
+}
+
+void SeqUISequencer::Serialize(SeqSerializer *serializer)
+{
+	serializer->Write(position);
+	serializer->Write(zoom);
+	serializer->Write(scrollY);
+	serializer->Write(settingsPanelWidth);
+	serializer->Write(channelHeights->Count());
+	for (int i = 0; i < channelHeights->Count(); i++)
+		serializer->Write(channelHeights->Get(i));
+}
+
+void SeqUISequencer::Deserialize(SeqSerializer *serializer)
+{
+	position = serializer->ReadDouble();
+	zoom = serializer->ReadFloat();
+	scrollY = serializer->ReadFloat();
+	settingsPanelWidth = serializer->ReadFloat();
+	int channelSettingsCount = serializer->ReadInt();
+	for (int i = 0; i < channelSettingsCount; i++)
+		channelHeights->ReplaceAt(serializer->ReadInt(), i);
 }

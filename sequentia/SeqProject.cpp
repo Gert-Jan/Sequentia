@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include "SeqProjectHeaders.h";
 #include "SeqDialogs.h";
+#include "SeqSerializerBin.h";
 #include "SeqPath.h";
 #include "SeqUtils.h";
 #include "SeqString.h";
@@ -87,17 +88,6 @@ void SeqProject::SetPath(char *fullPath)
 {
 	this->fullPath = fullPath;
 	library->UpdateRelativePaths(fullPath);
-}
-
-int SeqProject::Serialize()
-{
-	return 0;
-}
-
-int SeqProject::Deserialize()
-{
-	
-	return 0;
 }
 
 void SeqProject::AddAction(SeqAction action)
@@ -242,4 +232,64 @@ void SeqProject::Draw()
 	{
 		uiLibraries->Get(i)->Draw();
 	}
+}
+
+int SeqProject::Serialize(SeqSerializer *serializer)
+{
+	serializer->SetApplicationVersion(version);
+	serializer->SetSerializedVersion(version);
+
+	// project
+	serializer->Write(version);
+	serializer->Write(fullPath);
+	
+	// library
+	library->Serialize(serializer);
+	
+	// channels
+	serializer->Write(channels->Count());
+	for (int i = 0; i < channels->Count(); i++)
+		channels->Get(i).Serialize(serializer);
+	
+	// ui sequencers
+	serializer->Write(uiSequencers->Count());
+	for (int i = 0; i < uiSequencers->Count(); i++)
+		uiSequencers->Get(i)->Serialize(serializer);
+
+	// ui libraries
+	serializer->Write(uiLibraries->Count());
+	for (int i = 0; i < uiLibraries->Count(); i++)
+		uiLibraries->Get(i)->Serialize(serializer);
+
+	return 0;
+}
+
+int SeqProject::Deserialize(SeqSerializer *serializer)
+{
+	int count = 0;
+
+	// project
+	serializer->SetApplicationVersion(version);
+	serializer->SetSerializedVersion(serializer->ReadInt());
+	fullPath = serializer->ReadString();
+	
+	// library
+	library->Deserialize(serializer);
+
+	// channels
+	count = serializer->ReadInt();
+	for (int i = 0; i < count; i++)
+		channels->Add(SeqChannel(serializer));
+
+	// ui sequencers
+	count = serializer->ReadInt();
+	for (int i = 0; i < count; i++)
+		uiSequencers->Add(new SeqUISequencer(this, serializer));
+
+	// ui libraries
+	count = serializer->ReadInt();
+	for (int i = 0; i < count; i++)
+		uiLibraries->Add(new SeqUILibrary(this, serializer));
+
+	return 0;
 }

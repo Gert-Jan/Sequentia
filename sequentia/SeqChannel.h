@@ -1,5 +1,7 @@
 #pragma once
 
+class SeqSerializer;
+
 enum SeqChannelType
 {
 	None,
@@ -12,7 +14,13 @@ class SeqChannel
 public:
 	SeqChannel();
 	SeqChannel(char *name, SeqChannelType type);
+	SeqChannel(SeqSerializer *serializer);
 	~SeqChannel();
+
+	void Serialize(SeqSerializer *serializer);
+
+private:
+	void Deserialize(SeqSerializer *serializer);
 
 public:
 	SeqChannelType type;

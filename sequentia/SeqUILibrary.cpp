@@ -13,6 +13,14 @@ SeqUILibrary::SeqUILibrary(SeqProject *project) :
 	Init();
 }
 
+SeqUILibrary::SeqUILibrary(SeqProject *project, SeqSerializer *serializer) :
+	project(project),
+	windowId(nextWindowId)
+{
+	nextWindowId++;
+	Init();
+}
+
 SeqUILibrary::SeqUILibrary(SeqProject *project, int windowId) :
 	project(project),
 	windowId(windowId)
@@ -64,4 +72,14 @@ void SeqUILibrary::Draw()
 	ImGui::End();
 	if (!isOpen)
 		project->RemoveLibrary(this);
+}
+
+void SeqUILibrary::Serialize(SeqSerializer *serializer)
+{
+
+}
+
+void SeqUILibrary::Deserialize(SeqSerializer *serializer)
+{
+
 }

@@ -2,19 +2,22 @@
 
 class SeqActionHandler;
 class SeqProject;
+class SeqSerializer;
 template<class T>
 class SeqList;
 
 class SeqUISequencer : SeqActionHandler
 {
 public:
-	SeqUISequencer(SeqProject *project, int windowId);
 	SeqUISequencer(SeqProject *project);
+	SeqUISequencer(SeqProject *project, SeqSerializer *serializer);
+	SeqUISequencer(SeqProject *project, int windowId);
 	~SeqUISequencer();
 
 	void ActionDone(const SeqAction action);
 	void ActionUndone(const SeqAction action);
 	void Draw();
+	void Serialize(SeqSerializer *serializer);
 
 private:
 	void Init();
@@ -22,6 +25,10 @@ private:
 	void DrawSequencerRuler(float height);
 	void DrawChannels();
 	int TotalChannelHeight();
+	void Deserialize(SeqSerializer *serializer);
+
+public:
+	static int nextWindowId;
 
 private:
 	const float pixelsPerSecond = 100;
@@ -34,7 +41,6 @@ private:
 	const float collapsedSettingsPanelWidth = 10;
 	const float lineThickness = 1.0f;
 	const float rounding = 6.0f;
-	static int nextWindowId;
 	int windowId = 0;
 	char *name;
 	SeqProject *project;

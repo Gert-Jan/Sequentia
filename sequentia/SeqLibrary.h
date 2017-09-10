@@ -3,10 +3,10 @@
 class SeqProject;
 template<class T>
 class SeqList;
+class SeqSerializer;
 
 struct SeqLibraryLink
 {
-	bool isDirectory;
 	char *fullPath;
 	char *relativePath;
 };
@@ -17,8 +17,13 @@ public:
 	SeqLibrary(SeqProject *project);
 	~SeqLibrary();
 
+	void Clear();
+	
 	void AddLink(char *fullPath);
 	void UpdateRelativePaths(char *projectFullPath);
+
+	void Serialize(SeqSerializer *serializer);
+	void Deserialize(SeqSerializer *serializer);
 
 private:
 	SeqProject *project;
