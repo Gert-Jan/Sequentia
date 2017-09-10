@@ -169,6 +169,7 @@
     <ClCompile Include="SeqLibrary.cpp" />
     <ClCompile Include="SeqPath.cpp" />
     <ClCompile Include="SeqProject.cpp" />
+    <ClCompile Include="SeqSerializerBin.cpp" />
     <ClCompile Include="SeqString.cpp" />
     <ClCompile Include="SeqUILibrary.cpp" />
     <ClCompile Include="SeqUISequencer.cpp" />
@@ -189,6 +190,8 @@
     <ClInclude Include="SeqChannel.h" />
     <ClInclude Include="SeqPath.h" />
     <ClInclude Include="SeqProject.h" />
+    <ClInclude Include="SeqSerializer.h" />
+    <ClInclude Include="SeqSerializerBin.h" />
     <ClInclude Include="SeqString.h" />
     <ClInclude Include="SeqUILibrary.h" />
     <ClInclude Include="SeqUISequencer.h" />

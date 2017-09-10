@@ -1,5 +1,8 @@
 A quick doc to keep track of tasks that should be done later.
 
+BEFORE SHIPPING
+- Work out the TODO's in SeqSerializerBin, making sure serialization will work well across platforms.
+
 UI
 - Library - video collection
 	- Allow dragging folders and files to library windows

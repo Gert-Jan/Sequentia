@@ -39,6 +39,9 @@
     <ClCompile Include="SeqDialogs.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="SeqSerializerBin.cpp">
+      <Filter>util\serializer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -100,6 +103,12 @@
     <ClInclude Include="SeqProjectHeaders.h">
       <Filter>data</Filter>
     </ClInclude>
+    <ClInclude Include="SeqSerializerBin.h">
+      <Filter>util\serializer</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqSerializer.h">
+      <Filter>util\serializer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
@@ -128,6 +137,9 @@
     </Filter>
     <Filter Include="libs\gl3w">
       <UniqueIdentifier>{d0ec9ead-f8ba-4975-8b72-48db4c1ec821}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util\serializer">
+      <UniqueIdentifier>{2be59cab-cef9-404f-91a1-56cf85d39124}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
