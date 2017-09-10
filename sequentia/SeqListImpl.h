@@ -74,6 +74,14 @@ void SeqList<T>::RemoveAt(const int index)
 }
 
 template<class T>
+T SeqList<T>::ReplaceAt(T item, const int index)
+{
+	T previous = data[index];
+	data[index] = item;
+	return previous;
+}
+
+template<class T>
 void SeqList<T>::EnsureCapacity(const int requiredCapacity)
 {
 	if (requiredCapacity > capacity)
