@@ -1,6 +1,7 @@
 BEFORE SHIPPING
 - Work out the TODO's in SeqSerializerBin, making sure serialization will work well across platforms.
 - Add a warning when creating a new project or opening a new project while there are unsaved changes in the current project.
+- Validate command arguments
 
 UI
 - Library - video collection

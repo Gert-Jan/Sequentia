@@ -21,10 +21,6 @@ SeqProject::SeqProject()
 	uiLibraries = new SeqList<SeqUILibrary*>();
 
 	fullPath = "";
-
-	// test data
-	uiSequencers->Add(new SeqUISequencer(this));
-	uiLibraries->Add(new SeqUILibrary(this));
 }
 
 SeqProject::~SeqProject()

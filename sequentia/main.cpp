@@ -52,19 +52,32 @@ void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 	glBindTexture(GL_TEXTURE_2D, last_texture);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-	project = new SeqProject();
-	for (int i = 0; i < 20; i++)
+	if (argc >= 2)
 	{
-		project->AddAction(
-			SeqAction(SeqActionType::AddChannel,
-				new SeqActionAddChannel(SeqChannelType::Video, "Video")));
-		project->AddAction(
-			SeqAction(SeqActionType::AddChannel,
-				new SeqActionAddChannel(SeqChannelType::Audio, "Audio")));
+		// TODO: arg validation, at the very least a path exists check, may move that to project->SetPath()...
+		project = new SeqProject();
+		project->SetPath(argv[1]);
+		project->Open();
 	}
-	
+	else
+	{
+		// test data
+		project = new SeqProject();
+		for (int i = 0; i < 20; i++)
+		{
+			project->AddAction(
+				SeqAction(SeqActionType::AddChannel,
+					new SeqActionAddChannel(SeqChannelType::Video, "Video")));
+			project->AddAction(
+				SeqAction(SeqActionType::AddChannel,
+					new SeqActionAddChannel(SeqChannelType::Audio, "Audio")));
+		}
+		project->AddSequencer();
+		project->AddLibrary();
+	}
+
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
 	{
