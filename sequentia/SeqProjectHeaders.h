@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SeqAction.h";
+#include "SeqActionFactory.h";
 #include "SeqProject.h";
 #include "SeqLibrary.h";
 #include "SeqChannel.h";

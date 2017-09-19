@@ -31,6 +31,9 @@ public:
 	char* GetPath();
 	void SetPath(char *fullPath);
 
+	void Undo();
+	void Redo();
+
 	void AddAction(const SeqAction action);
 	void AddActionHandler(SeqActionHandler *handler);
 	void RemoveActionHandler(SeqActionHandler *handler);

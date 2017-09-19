@@ -121,20 +121,42 @@ void SeqProject::SaveAs()
 	SeqDialogs::ShowRequestProjectPath(fullPath, RequestPathAction::Save);
 }
 
+char* SeqProject::GetPath()
+{
+	return this->fullPath;
+}
+
 void SeqProject::SetPath(char *fullPath)
 {
-	this->fullPath = fullPath;
+	this->fullPath = SeqPath::Normalize(fullPath);
 	library->UpdateRelativePaths(fullPath);
+}
+
+void SeqProject::Undo()
+{
+	if (actionCursor > 0)
+	{
+		actionCursor--;
+		UndoAction(actions->Get(actionCursor));
+	}
+}
+
+void SeqProject::Redo()
+{
+	if (actionCursor < actions->Count())
+	{
+		DoAction(actions->Get(actionCursor));
+		actionCursor++;
+	}
 }
 
 void SeqProject::AddAction(SeqAction action)
 {
 	// overwrite redo list
-	while (actionCursor < actions->Count())
+	for (int i = actions->Count() - 1; i >= actionCursor; i--)
 	{
-		actionCursor--;
-		delete actions->Get(actionCursor).data;
-		actions->RemoveAt(actionCursor);
+		delete actions->Get(i).data;
+		actions->RemoveAt(i);
 	}
 	// add the action in the undo list
 	actions->Add(action);
@@ -183,6 +205,18 @@ void SeqProject::DoAction(const SeqAction action)
 			RemoveChannel(channels->Count() - 1);
 			break;
 		}
+		case SeqActionType::AddLibraryLink:
+		{
+			char *fullPath = (char*)action.data;
+			library->AddLink(fullPath);
+			break;
+		}
+		case SeqActionType::RemoveLibraryLink:
+		{
+			char *fullPath = (char*)action.data;
+			library->RemoveLink(fullPath);
+			break;
+		}
 	}
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
@@ -196,12 +230,28 @@ void SeqProject::UndoAction(const SeqAction action)
 	switch (action.type)
 	{
 		case SeqActionType::AddChannel:
+		{
 			RemoveChannel(channels->Count() - 1);
 			break;
+		}
 		case SeqActionType::RemoveChannel:
+		{
 			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
 			AddChannel(data->type, data->name);
 			break;
+		}
+		case SeqActionType::AddLibraryLink:
+		{
+			char *fullPath = (char*)action.data;
+			library->RemoveLink(fullPath);
+			break;
+		}
+		case SeqActionType::RemoveLibraryLink:
+		{
+			char *fullPath = (char*)action.data;
+			library->AddLink(fullPath);
+			break;
+		}
 	}
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
@@ -244,7 +294,7 @@ void SeqProject::RemoveSequencer(SeqUISequencer *sequencer)
 
 void SeqProject::AddLibrary()
 {
-	uiLibraries->Add(new SeqUILibrary(this));
+	uiLibraries->Add(new SeqUILibrary(this, library));
 }
 
 void SeqProject::RemoveLibrary(SeqUILibrary *library)
@@ -326,7 +376,7 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 	// ui libraries
 	count = serializer->ReadInt();
 	for (int i = 0; i < count; i++)
-		uiLibraries->Add(new SeqUILibrary(this, serializer));
+		uiLibraries->Add(new SeqUILibrary(this, library, serializer));
 
 	return 0;
 }

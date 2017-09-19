@@ -20,10 +20,17 @@ public:
 	void Clear();
 	
 	void AddLink(char *fullPath);
+	void RemoveLink(const int index);
+	void RemoveLink(char *fullPath);
+	int LinkCount();
+	SeqLibraryLink GetLink(const int index);
 	void UpdateRelativePaths(char *projectFullPath);
 
 	void Serialize(SeqSerializer *serializer);
 	void Deserialize(SeqSerializer *serializer);
+
+private:
+	int GetLinkIndex(char *fullPath);
 
 private:
 	SeqProject *project;

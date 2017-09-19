@@ -6,6 +6,8 @@ enum SeqActionType
 {
 	AddChannel,
 	RemoveChannel,
+	AddLibraryLink,
+	RemoveLibraryLink,
 	COUNT
 };
 

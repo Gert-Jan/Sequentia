@@ -67,12 +67,8 @@ int main(int argc, char** argv)
 		project = new SeqProject();
 		for (int i = 0; i < 20; i++)
 		{
-			project->AddAction(
-				SeqAction(SeqActionType::AddChannel,
-					new SeqActionAddChannel(SeqChannelType::Video, "Video")));
-			project->AddAction(
-				SeqAction(SeqActionType::AddChannel,
-					new SeqActionAddChannel(SeqChannelType::Audio, "Audio")));
+			project->AddAction(SeqActionFactory::CreateAddChannelAction(SeqChannelType::Video, "Video"));
+			project->AddAction(SeqActionFactory::CreateAddChannelAction(SeqChannelType::Audio, "Audio"));
 		}
 		project->AddSequencer();
 		project->AddLibrary();
@@ -182,8 +178,8 @@ int main(int argc, char** argv)
 				}
 				if (ImGui::BeginMenu("Edit"))
 				{
-					if (ImGui::MenuItem("Undo", "Ctrl+Z", false, false)) {}
-					if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false)) {}
+					if (ImGui::MenuItem("Undo", "Ctrl+Z")) { project->Undo(); }
+					if (ImGui::MenuItem("Redo", "Ctrl+Y")) { project->Redo(); }
 					ImGui::Separator();
 					if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {}
 					if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {}

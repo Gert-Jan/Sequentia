@@ -6,9 +6,9 @@ class SeqSerializer;
 class SeqUILibrary : SeqActionHandler
 {
 public:
-	SeqUILibrary(SeqProject *project);
-	SeqUILibrary(SeqProject *project, SeqSerializer *serializer);
-	SeqUILibrary(SeqProject *project, int windowId);
+	SeqUILibrary(SeqProject *project, SeqLibrary *library);
+	SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer);
+	SeqUILibrary(SeqProject *project, SeqLibrary *library, int windowId);
 	~SeqUILibrary();
 
 	void ActionDone(const SeqAction action);
@@ -27,4 +27,5 @@ private:
 	int windowId = 0;
 	char *name;
 	SeqProject *project;
+	SeqLibrary *library;
 };

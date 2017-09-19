@@ -5,7 +5,8 @@ class SeqProject;
 enum RequestPathAction
 {
 	Save,
-	Open
+	Open,
+	AddToLibrary
 };
 
 enum SeqDialogOption

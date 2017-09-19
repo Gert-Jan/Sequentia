@@ -1,28 +1,32 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "SeqProjectHeaders.h";
+#include "SeqDialogs.h";
 #include "SeqString.h";
 
 int SeqUILibrary::nextWindowId = 0;
 
-SeqUILibrary::SeqUILibrary(SeqProject *project) :
+SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library) :
 	project(project),
+	library(library),
 	windowId(nextWindowId)
 {
 	nextWindowId++;
 	Init();
 }
 
-SeqUILibrary::SeqUILibrary(SeqProject *project, SeqSerializer *serializer) :
+SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer) :
 	project(project),
+	library(library),
 	windowId(nextWindowId)
 {
 	nextWindowId++;
 	Init();
 }
 
-SeqUILibrary::SeqUILibrary(SeqProject *project, int windowId) :
+SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, int windowId) :
 	project(project),
+	library(library),
 	windowId(windowId)
 {
 	nextWindowId = ImMax(nextWindowId, windowId + 1);
@@ -68,6 +72,21 @@ void SeqUILibrary::Draw()
 
 	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
+		for (int i = 0; i < library->LinkCount(); i++)
+		{
+			bool opened = true;
+			if (ImGui::CollapsingHeader(library->GetLink(i).fullPath, &opened))
+			{
+			}
+			if (!opened)
+			{
+				project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(library->GetLink(i).fullPath));
+			}
+		}
+		if (ImGui::Button("Add file/folder", ImVec2(120, 0)))
+		{
+			SeqDialogs::ShowRequestProjectPath(project->GetPath(), RequestPathAction::AddToLibrary);
+		}
 	}
 	ImGui::End();
 	if (!isOpen)

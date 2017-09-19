@@ -1,8 +1,7 @@
 #include <imgui.h>
-//#include <cstdarg>
 
 #include "SeqDialogs.h";
-#include "SeqProject.h";
+#include "SeqProjectHeaders.h";
 #include "SeqString.h";
 #include "SeqPath.h";
 #include "SeqUtils.h";
@@ -80,6 +79,16 @@ void SeqDialogs::Draw(SeqProject *project)
 					{
 						ShowError("File not found.");
 					}
+				}
+				showRequestProjectPath = false;
+			}
+			break;
+		case AddToLibrary:
+			if (ShowFileBrowseDialog("Add to library"))
+			{
+				if (result == OK)
+				{
+					project->AddAction(SeqActionFactory::CreateAddLibraryLinkAction(path));
 				}
 				showRequestProjectPath = false;
 			}

@@ -109,6 +109,9 @@
     <ClInclude Include="SeqSerializer.h">
       <Filter>util\serializer</Filter>
     </ClInclude>
+    <ClInclude Include="SeqActionFactory.h">
+      <Filter>action</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
