@@ -18,6 +18,7 @@ public:
 
 private:
 	void Init();
+	void AddContextMenu(SeqLibraryLink link);
 	void Deserialize(SeqSerializer *serializer);
 
 public:

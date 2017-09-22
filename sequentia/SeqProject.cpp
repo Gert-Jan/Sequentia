@@ -11,7 +11,7 @@
 
 SeqProject::SeqProject()
 {
-	library = new SeqLibrary(this);
+	library = new SeqLibrary();
 	channels = new SeqList<SeqChannel>();
 
 	actionHandlers = new SeqList<SeqActionHandler*>();
@@ -128,8 +128,9 @@ char* SeqProject::GetPath()
 
 void SeqProject::SetPath(char *fullPath)
 {
+	char *oldPath = this->fullPath;
 	this->fullPath = SeqPath::Normalize(fullPath);
-	library->UpdateRelativePaths(fullPath);
+	library->UpdatePaths(oldPath, fullPath);
 }
 
 void SeqProject::Undo()
@@ -197,7 +198,7 @@ void SeqProject::DoAction(const SeqAction action)
 		case SeqActionType::AddChannel:
 		{
 			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-			AddChannel(data->type, data->name);
+			AddChannel(data->type, SeqString::Copy(data->name));
 			break;
 		}
 		case SeqActionType::RemoveChannel:
@@ -207,13 +208,13 @@ void SeqProject::DoAction(const SeqAction action)
 		}
 		case SeqActionType::AddLibraryLink:
 		{
-			char *fullPath = (char*)action.data;
+			char *fullPath = SeqString::Copy((char*)action.data);
 			library->AddLink(fullPath);
 			break;
 		}
 		case SeqActionType::RemoveLibraryLink:
 		{
-			char *fullPath = (char*)action.data;
+			char *fullPath = SeqString::Copy((char*)action.data);
 			library->RemoveLink(fullPath);
 			break;
 		}
@@ -237,18 +238,18 @@ void SeqProject::UndoAction(const SeqAction action)
 		case SeqActionType::RemoveChannel:
 		{
 			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-			AddChannel(data->type, data->name);
+			AddChannel(data->type, SeqString::Copy(data->name));
 			break;
 		}
 		case SeqActionType::AddLibraryLink:
 		{
-			char *fullPath = (char*)action.data;
+			char *fullPath = SeqString::Copy((char*)action.data);
 			library->RemoveLink(fullPath);
 			break;
 		}
 		case SeqActionType::RemoveLibraryLink:
 		{
-			char *fullPath = (char*)action.data;
+			char *fullPath = SeqString::Copy((char*)action.data);
 			library->AddLink(fullPath);
 			break;
 		}

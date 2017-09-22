@@ -94,6 +94,8 @@ int main(int argc, char** argv)
 	SDL_Window *window = SDL_CreateWindow("Sequentia", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 	gl3wInit();
+
+	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(window);
@@ -143,6 +145,19 @@ int main(int argc, char** argv)
 		while (SDL_PollEvent(&event))
 		{
 			ImGui_ImplSdlGL3_ProcessEvent(&event);
+			switch (event.type)
+			{
+				case SDL_QUIT:
+				{
+					done = true;
+					break;
+				}
+				case SDL_DROPFILE:
+				{
+					project->AddAction(SeqActionFactory::CreateAddLibraryLinkAction(event.drop.file));
+					break;
+				}
+			}
 			if (event.type == SDL_QUIT)
 				done = true;
 		}

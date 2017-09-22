@@ -1,12 +1,11 @@
 #include <dirent.h>
 #include "SeqLibrary.h";
-#include "SeqProject.h";
 #include "SeqList.h";
 #include "SeqString.h";
+#include "SeqPath.h";
 #include "SeqSerializer.h";
 
-SeqLibrary::SeqLibrary(SeqProject *project) :
-	project(project)
+SeqLibrary::SeqLibrary()
 {
 	links = new SeqList<SeqLibraryLink>();
 }
@@ -25,8 +24,7 @@ void SeqLibrary::Clear()
 void SeqLibrary::AddLink(char *fullPath)
 {
 	SeqLibraryLink link;
-	link.fullPath = fullPath;
-	link.relativePath = fullPath;
+	link.fullPath = SeqPath::Normalize(fullPath);
 	links->Add(link);
 }
 
@@ -64,9 +62,9 @@ int SeqLibrary::GetLinkIndex(char *fullPath)
 	return -1;
 }
 
-void SeqLibrary::UpdateRelativePaths(char *projectFullPath)
+void SeqLibrary::UpdatePaths(char *oldProjectFullPath, char *newProjectFullPath)
 {
-	// TODO: update relative paths based on the new project path
+	// TODO: update paths based on the new project path
 }
 
 void SeqLibrary::Serialize(SeqSerializer *serializer)
@@ -76,7 +74,6 @@ void SeqLibrary::Serialize(SeqSerializer *serializer)
 	{
 		SeqLibraryLink link = links->Get(i);
 		serializer->Write(link.fullPath);
-		serializer->Write(link.relativePath);
 	}
 }
 
@@ -87,7 +84,6 @@ void SeqLibrary::Deserialize(SeqSerializer *serializer)
 	{
 		SeqLibraryLink link;
 		link.fullPath = serializer->ReadString();
-		link.relativePath = serializer->ReadString();
 		links->Add(link);
 	}
 }

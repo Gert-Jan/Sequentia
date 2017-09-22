@@ -72,17 +72,29 @@ void SeqUILibrary::Draw()
 
 	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
+		ImGui::Columns(2, "libraryTable");
+		ImGui::Separator();
+		ImGui::Text("Name"); ImGui::NextColumn();
+		ImGui::Text("Size"); ImGui::NextColumn();
+		ImGui::Separator();
+
+		int selected = -1;
 		for (int i = 0; i < library->LinkCount(); i++)
 		{
+			SeqLibraryLink link = library->GetLink(i);
+			if (ImGui::Selectable(link.fullPath, selected == i, ImGuiSelectableFlags_SpanAllColumns))
+				selected = i;
+			AddContextMenu(link);
+			ImGui::NextColumn();
+			ImGui::Text("10");
+			ImGui::NextColumn();
 			bool opened = true;
-			if (ImGui::CollapsingHeader(library->GetLink(i).fullPath, &opened))
-			{
-			}
 			if (!opened)
 			{
 				project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(library->GetLink(i).fullPath));
 			}
 		}
+		ImGui::Columns(1);
 		if (ImGui::Button("Add file/folder", ImVec2(120, 0)))
 		{
 			SeqDialogs::ShowRequestProjectPath(project->GetPath(), RequestPathAction::AddToLibrary);
@@ -91,6 +103,16 @@ void SeqUILibrary::Draw()
 	ImGui::End();
 	if (!isOpen)
 		project->RemoveLibrary(this);
+}
+
+void SeqUILibrary::AddContextMenu(SeqLibraryLink link)
+{
+	if (ImGui::BeginPopupContextItem(link.fullPath))
+	{
+		if (ImGui::Selectable("Delete"))
+			project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(link.fullPath));
+		ImGui::EndPopup();
+	}
 }
 
 void SeqUILibrary::Serialize(SeqSerializer *serializer)
