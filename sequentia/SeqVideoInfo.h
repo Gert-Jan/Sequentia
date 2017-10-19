@@ -11,7 +11,7 @@ class SeqVideoInfo
 public:
 	SeqVideoInfo();
 	~SeqVideoInfo();
-	void GetTimeString(char *buffer,int bufferLen, uint64_t time);
+	static void GetTimeString(char *buffer,int bufferLen, uint64_t time);
 public:
 	AVFormatContext* formatContext = nullptr;
 	AVCodecContext* videoCodec = nullptr;

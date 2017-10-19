@@ -31,16 +31,31 @@
       <Filter>data</Filter>
     </ClCompile>
     <ClCompile Include="SeqString.cpp">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClCompile>
     <ClCompile Include="SeqPath.cpp">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClCompile>
     <ClCompile Include="SeqDialogs.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="SeqSerializerBin.cpp">
-      <Filter>util\serializer</Filter>
+      <Filter>sys\serializer</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqDecoder.cpp">
+      <Filter>sys\video</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqWorkerManager.cpp">
+      <Filter>sys\worker</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqWorker.cpp">
+      <Filter>sys\worker</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqTaskReadVideoInfo.cpp">
+      <Filter>sys\task</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqVideoInfo.cpp">
+      <Filter>sys\video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,16 +83,16 @@
       <Filter>data</Filter>
     </ClInclude>
     <ClInclude Include="SeqList.h">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClInclude>
     <ClInclude Include="SeqListImpl.h">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClInclude>
     <ClInclude Include="SeqUISequencer.h">
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="SeqAction.h">
-      <Filter>action</Filter>
+      <Filter>sys\action</Filter>
     </ClInclude>
     <ClInclude Include="libs\dirent\dirent.h">
       <Filter>libs\dirent</Filter>
@@ -89,13 +104,13 @@
       <Filter>data</Filter>
     </ClInclude>
     <ClInclude Include="SeqString.h">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClInclude>
     <ClInclude Include="SeqUtils.h">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClInclude>
     <ClInclude Include="SeqPath.h">
-      <Filter>util</Filter>
+      <Filter>sys\util</Filter>
     </ClInclude>
     <ClInclude Include="SeqDialogs.h">
       <Filter>ui</Filter>
@@ -104,13 +119,31 @@
       <Filter>data</Filter>
     </ClInclude>
     <ClInclude Include="SeqSerializerBin.h">
-      <Filter>util\serializer</Filter>
+      <Filter>sys\serializer</Filter>
     </ClInclude>
     <ClInclude Include="SeqSerializer.h">
-      <Filter>util\serializer</Filter>
+      <Filter>sys\serializer</Filter>
     </ClInclude>
     <ClInclude Include="SeqActionFactory.h">
-      <Filter>action</Filter>
+      <Filter>sys\action</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqDecoder.h">
+      <Filter>sys\video</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqWorkerManager.h">
+      <Filter>sys\worker</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqWorker.h">
+      <Filter>sys\worker</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqWorkerTask.h">
+      <Filter>sys\worker</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqTaskReadVideoInfo.h">
+      <Filter>sys\task</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqVideoInfo.h">
+      <Filter>sys\video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -120,14 +153,8 @@
     <Filter Include="data">
       <UniqueIdentifier>{417cdf94-0cdf-4885-bdcc-48cc4f21ec0c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="util">
-      <UniqueIdentifier>{9877d9cc-4a79-445f-8d13-50e4c9c692d9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ui">
       <UniqueIdentifier>{2988c913-3f6c-47d0-b0e3-c012df5ed5c6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="action">
-      <UniqueIdentifier>{9885789e-b076-422c-8ed3-4dd7ffe64a66}</UniqueIdentifier>
     </Filter>
     <Filter Include="libs">
       <UniqueIdentifier>{cce33654-f44c-4866-9469-1ed945854e05}</UniqueIdentifier>
@@ -141,8 +168,26 @@
     <Filter Include="libs\gl3w">
       <UniqueIdentifier>{d0ec9ead-f8ba-4975-8b72-48db4c1ec821}</UniqueIdentifier>
     </Filter>
-    <Filter Include="util\serializer">
+    <Filter Include="sys">
+      <UniqueIdentifier>{13c3e023-180b-4061-ba72-3bda59317d3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\video">
+      <UniqueIdentifier>{5d166a62-0b4c-4ba5-bed7-cc8833a33a9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\util">
+      <UniqueIdentifier>{9877d9cc-4a79-445f-8d13-50e4c9c692d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\serializer">
       <UniqueIdentifier>{2be59cab-cef9-404f-91a1-56cf85d39124}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\action">
+      <UniqueIdentifier>{9885789e-b076-422c-8ed3-4dd7ffe64a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\worker">
+      <UniqueIdentifier>{aa663711-15bd-45d9-bc0b-c1a1abf12eb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\task">
+      <UniqueIdentifier>{74f2fd11-ba69-42af-bcc9-6ee7eee7c927}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

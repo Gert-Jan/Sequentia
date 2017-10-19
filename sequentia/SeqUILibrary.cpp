@@ -1,6 +1,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "SeqProjectHeaders.h";
+#include "SeqVideoInfo.h";
 #include "SeqDialogs.h";
 #include "SeqString.h";
 
@@ -72,26 +73,42 @@ void SeqUILibrary::Draw()
 
 	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
-		ImGui::Columns(2, "libraryTable");
+		ImGui::Columns(3, "libraryTable");
 		ImGui::Separator();
 		ImGui::Text("Name"); ImGui::NextColumn();
-		ImGui::Text("Size"); ImGui::NextColumn();
+		ImGui::Text("Resolution"); ImGui::NextColumn();
+		ImGui::Text("Duration"); ImGui::NextColumn();
 		ImGui::Separator();
 
 		int selected = -1;
 		for (int i = 0; i < library->LinkCount(); i++)
 		{
-			SeqLibraryLink link = library->GetLink(i);
-			if (ImGui::Selectable(link.fullPath, selected == i, ImGuiSelectableFlags_SpanAllColumns))
+			SeqLibraryLink *link = library->GetLink(i);
+			if (ImGui::Selectable(link->fullPath, selected == i, ImGuiSelectableFlags_SpanAllColumns))
 				selected = i;
 			AddContextMenu(link);
 			ImGui::NextColumn();
-			ImGui::Text("10");
-			ImGui::NextColumn();
+			if (link->info != nullptr)
+			{
+				SeqVideoInfo *videoInfo = link->info;
+				SeqString::FormatBuffer("%ix%i", videoInfo->width, videoInfo->height);
+				ImGui::Text(SeqString::Buffer);
+				ImGui::NextColumn();
+				SeqVideoInfo::GetTimeString(SeqString::Buffer, SeqString::BufferLen, videoInfo->formatContext->duration);
+				ImGui::Text(SeqString::Buffer);
+				ImGui::NextColumn();
+			}
+			else
+			{
+				ImGui::Text("N/A");
+				ImGui::NextColumn();
+				ImGui::Text("N/A");
+				ImGui::NextColumn();
+			}
 			bool opened = true;
 			if (!opened)
 			{
-				project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(library->GetLink(i).fullPath));
+				project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(library->GetLink(i)->fullPath));
 			}
 		}
 		ImGui::Columns(1);
@@ -105,12 +122,12 @@ void SeqUILibrary::Draw()
 		project->RemoveLibrary(this);
 }
 
-void SeqUILibrary::AddContextMenu(SeqLibraryLink link)
+void SeqUILibrary::AddContextMenu(SeqLibraryLink *link)
 {
-	if (ImGui::BeginPopupContextItem(link.fullPath))
+	if (ImGui::BeginPopupContextItem(link->fullPath))
 	{
 		if (ImGui::Selectable("Delete"))
-			project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(link.fullPath));
+			project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(link->fullPath));
 		ImGui::EndPopup();
 	}
 }

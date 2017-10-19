@@ -211,6 +211,8 @@ int main(int argc, char** argv)
 				ImGui::EndMainMenuBar();
 			}
 
+			SeqWorkerManager::Instance()->Update();
+			project->Update();
 			project->Draw();
 
 

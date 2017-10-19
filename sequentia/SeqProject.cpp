@@ -309,6 +309,11 @@ double SeqProject::GetLength()
 	return 60.54321;
 }
 
+void SeqProject::Update()
+{
+	library->Update();
+}
+
 void SeqProject::Draw()
 {
 	SeqDialogs::Draw(this);

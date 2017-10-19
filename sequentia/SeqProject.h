@@ -53,6 +53,7 @@ public:
 
 	double GetLength();
 
+	void Update();
 	void Draw();
 	void DrawDialogs();
 
