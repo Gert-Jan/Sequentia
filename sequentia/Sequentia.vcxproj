@@ -165,6 +165,7 @@
     <ClCompile Include="libs\gl3w\GL\gl3w.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SeqChannel.cpp" />
+    <ClCompile Include="SeqDecoder.cpp" />
     <ClCompile Include="SeqDialogs.cpp" />
     <ClCompile Include="SeqLibrary.cpp" />
     <ClCompile Include="SeqPath.cpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="SeqString.cpp" />
     <ClCompile Include="SeqUILibrary.cpp" />
     <ClCompile Include="SeqUISequencer.cpp" />
+    <ClCompile Include="SeqVideoInfo.cpp" />
     <ClInclude Include="..\imgui\imconfig.h" />
     <ClInclude Include="..\imgui\imgui.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
@@ -183,6 +185,7 @@
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
     <ClInclude Include="SeqAction.h" />
     <ClInclude Include="SeqActionFactory.h" />
+    <ClInclude Include="SeqDecoder.h" />
     <ClInclude Include="SeqDialogs.h" />
     <ClInclude Include="SeqProjectHeaders.h" />
     <ClInclude Include="SeqLibrary.h" />
@@ -197,6 +200,7 @@
     <ClInclude Include="SeqUILibrary.h" />
     <ClInclude Include="SeqUISequencer.h" />
     <ClInclude Include="SeqUtils.h" />
+    <ClInclude Include="SeqVideoInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
