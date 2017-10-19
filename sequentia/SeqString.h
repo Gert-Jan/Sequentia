@@ -11,11 +11,14 @@ private:
 	static void AddToSplitResultBuffer(int index, char *string, int count, int offset);
 
 public:
+	static int BufferLen;
 	static char Buffer[1024];
 
 public:
 	static void SetBuffer(char *string, int count);
+	static void SetBuffer(char *string);
 	static char* Format(char *format, ...);
+	static void FormatBuffer(char *format, ...);
 	static char* Copy(char* string);
 	static char* CopyBuffer();
 	static bool Equals(char *string1, char *string2);

@@ -8,20 +8,26 @@
 
 SeqList<SeqList<char>*>* SeqString::SplitResultBuffer = new SeqList<SeqList<char>*>();
 int SeqString::SplitResultBufferCount = 0;
+int SeqString::BufferLen = 1024;
 char SeqString::Buffer[1024] = "";
 
 void SeqString::SetBuffer(char *string, int count)
 {
-	count = SDL_min(SEQ_COUNT(Buffer) - 1, count);
+	count = SDL_min(BufferLen - 1, count);
 	strncpy(Buffer, string, count);
-	Buffer[count + 1] = 0;
+	Buffer[count] = 0;
+}
+
+void SeqString::SetBuffer(char *string)
+{
+	SetBuffer(string, strlen(string));
 }
 
 char* SeqString::Format(char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	int length = vsnprintf((char*)&Buffer, SEQ_COUNT(Buffer), format, args);
+	int length = vsnprintf((char*)&Buffer, BufferLen, format, args);
 	va_end(args);
 	if (length < 0)
 	{
@@ -34,6 +40,22 @@ char* SeqString::Format(char *format, ...)
 		string[length] = 0;
 		Buffer[0] = 0;
 		return string;
+	}
+}
+
+void SeqString::FormatBuffer(char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	int length = vsnprintf((char*)&Buffer, BufferLen, format, args);
+	va_end(args);
+	if (length < 0)
+	{
+		SetBuffer("ERROR in SeqStringFormat");
+	}
+	else
+	{
+		Buffer[length] = 0;
 	}
 }
 
