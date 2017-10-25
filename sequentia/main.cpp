@@ -70,8 +70,9 @@ int main(int argc, char** argv)
 			project->AddAction(SeqActionFactory::CreateAddChannelAction(SeqChannelType::Video, "Video"));
 			project->AddAction(SeqActionFactory::CreateAddChannelAction(SeqChannelType::Audio, "Audio"));
 		}
-		project->AddSequencer();
-		project->AddLibrary();
+		project->AddUISequencer();
+		project->AddUILibrary();
+		project->AddUIVideo();
 	}
 
 	// Setup SDL
@@ -203,9 +204,9 @@ int main(int argc, char** argv)
 				}
 				if (ImGui::BeginMenu("Window"))
 				{
-					if (ImGui::MenuItem("Video", "", false, false)) {}
-					if (ImGui::MenuItem("Sequencer", "")) { project->AddSequencer(); }
-					if (ImGui::MenuItem("Library", "")) { project->AddLibrary(); }
+					if (ImGui::MenuItem("Video", "")) { project->AddUIVideo(); }
+					if (ImGui::MenuItem("Sequencer", "")) { project->AddUISequencer(); }
+					if (ImGui::MenuItem("Library", "")) { project->AddUILibrary(); }
 					ImGui::EndMenu();
 				}
 				ImGui::EndMainMenuBar();
@@ -214,7 +215,6 @@ int main(int argc, char** argv)
 			SeqWorkerManager::Instance()->Update();
 			project->Update();
 			project->Draw();
-
 
 			// show video windows
 			for (int i = 0; i < video_count; i++)

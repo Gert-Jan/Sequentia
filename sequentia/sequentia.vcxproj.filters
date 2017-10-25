@@ -57,6 +57,9 @@
     <ClCompile Include="SeqVideoInfo.cpp">
       <Filter>sys\video</Filter>
     </ClCompile>
+    <ClCompile Include="SeqUIVideo.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -144,6 +147,9 @@
     </ClInclude>
     <ClInclude Include="SeqVideoInfo.h">
       <Filter>sys\video</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqUIVideo.h">
+      <Filter>ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

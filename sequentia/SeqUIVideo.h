@@ -3,16 +3,14 @@
 #include "SeqAction.h";
 
 class SeqProject;
-class SeqLibrary;
-class SeqLibraryLink;
 class SeqSerializer;
 
-class SeqUILibrary : SeqActionHandler
+class SeqUIVideo : SeqActionHandler
 {
 public:
-	SeqUILibrary(SeqProject *project, SeqLibrary *library);
-	SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer);
-	~SeqUILibrary();
+	SeqUIVideo(SeqProject *project);
+	SeqUIVideo(SeqProject *project, SeqSerializer *serializer);
+	~SeqUIVideo();
 
 	void ActionDone(const SeqAction action);
 	void ActionUndone(const SeqAction action);
@@ -21,11 +19,9 @@ public:
 
 private:
 	void Init();
-	void AddContextMenu(SeqLibraryLink *link);
 	void Deserialize(SeqSerializer *serializer);
 
 private:
 	char *name;
 	SeqProject *project;
-	SeqLibrary *library;
 };

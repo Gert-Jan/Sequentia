@@ -1,6 +1,7 @@
 #pragma once
 
-class SeqActionHandler;
+#include "SeqAction.h";
+
 class SeqProject;
 class SeqSerializer;
 template<class T>
@@ -11,7 +12,6 @@ class SeqUISequencer : SeqActionHandler
 public:
 	SeqUISequencer(SeqProject *project);
 	SeqUISequencer(SeqProject *project, SeqSerializer *serializer);
-	SeqUISequencer(SeqProject *project, int windowId);
 	~SeqUISequencer();
 
 	void ActionDone(const SeqAction action);
@@ -27,9 +27,6 @@ private:
 	int TotalChannelHeight();
 	void Deserialize(SeqSerializer *serializer);
 
-public:
-	static int nextWindowId;
-
 private:
 	const float pixelsPerSecond = 100;
 	const float minSettingsPanelWidth = 40;
@@ -41,7 +38,6 @@ private:
 	const float collapsedSettingsPanelWidth = 10;
 	const float lineThickness = 1.0f;
 	const float rounding = 6.0f;
-	int windowId = 0;
 	char *name;
 	SeqProject *project;
 	SeqList<int> *channelHeights;

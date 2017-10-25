@@ -2,6 +2,9 @@
 #include <SDL.h>
 
 #include "SeqProjectHeaders.h";
+#include "SeqUILibrary.h";
+#include "SeqUISequencer.h";
+#include "SeqUIVideo.h";
 #include "SeqDialogs.h";
 #include "SeqSerializerBin.h";
 #include "SeqPath.h";
@@ -19,6 +22,7 @@ SeqProject::SeqProject()
 	
 	uiSequencers = new SeqList<SeqUISequencer*>();
 	uiLibraries = new SeqList<SeqUILibrary*>();
+	uiVideos = new SeqList<SeqUIVideo*>();
 
 	fullPath = "";
 }
@@ -26,6 +30,7 @@ SeqProject::SeqProject()
 SeqProject::~SeqProject()
 {
 	Clear();
+	delete uiVideos;
 	delete uiLibraries;
 	delete uiSequencers;
 	delete actions;
@@ -37,6 +42,9 @@ SeqProject::~SeqProject()
 
 void SeqProject::Clear()
 {
+	for (int i = 0; i < uiVideos->Count(); i++)
+		delete uiVideos->Get(i);
+
 	for (int i = 0; i < uiLibraries->Count(); i++)
 		delete uiLibraries->Get(i);
 	
@@ -46,6 +54,7 @@ void SeqProject::Clear()
 	for (int i = 0; i < actions->Count(); i++)
 		delete actions->Get(i).data;
 
+	uiVideos->Clear();
 	uiLibraries->Clear();
 	uiSequencers->Clear();
 	actions->Clear();
@@ -53,8 +62,7 @@ void SeqProject::Clear()
 	channels->Clear();
 	library->Clear();
 
-	SeqUILibrary::nextWindowId = 0;
-	SeqUISequencer::nextWindowId = 0;
+	nextWindowId = 0;
 }
 
 void SeqProject::Open()
@@ -282,26 +290,42 @@ SeqChannel SeqProject::GetChannel(const int index)
 	return channels->Get(index);
 }
 
-void SeqProject::AddSequencer()
+int SeqProject::NextWindowId()
+{
+	return nextWindowId++;
+}
+
+void SeqProject::AddUISequencer()
 {
 	uiSequencers->Add(new SeqUISequencer(this));
 }
 
-void SeqProject::RemoveSequencer(SeqUISequencer *sequencer)
+void SeqProject::RemoveUISequencer(SeqUISequencer *sequencer)
 {
 	uiSequencers->Remove(sequencer);
 	delete sequencer;
 }
 
-void SeqProject::AddLibrary()
+void SeqProject::AddUILibrary()
 {
 	uiLibraries->Add(new SeqUILibrary(this, library));
 }
 
-void SeqProject::RemoveLibrary(SeqUILibrary *library)
+void SeqProject::RemoveUILibrary(SeqUILibrary *library)
 {
 	uiLibraries->Remove(library);
 	delete library;
+}
+
+void SeqProject::AddUIVideo()
+{
+	uiVideos->Add(new SeqUIVideo(this));
+}
+
+void SeqProject::RemoveUIVideo(SeqUIVideo *video)
+{
+	uiVideos->Remove(video);
+	delete video;
 }
 
 double SeqProject::GetLength()
@@ -324,6 +348,10 @@ void SeqProject::Draw()
 	for (int i = 0; i < uiLibraries->Count(); i++)
 	{
 		uiLibraries->Get(i)->Draw();
+	}
+	for (int i = 0; i < uiVideos->Count(); i++)
+	{
+		uiVideos->Get(i)->Draw();
 	}
 }
 
@@ -354,6 +382,11 @@ int SeqProject::Serialize(SeqSerializer *serializer)
 	for (int i = 0; i < uiLibraries->Count(); i++)
 		uiLibraries->Get(i)->Serialize(serializer);
 
+	// ui videos
+	serializer->Write(uiVideos->Count());
+	for (int i = 0; i < uiVideos->Count(); i++)
+		uiVideos->Get(i)->Serialize(serializer);
+
 	return 0;
 }
 
@@ -383,6 +416,11 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 	count = serializer->ReadInt();
 	for (int i = 0; i < count; i++)
 		uiLibraries->Add(new SeqUILibrary(this, library, serializer));
+
+	// ui videos
+	count = serializer->ReadInt();
+	for (int i = 0; i < count; i++)
+		uiVideos->Add(new SeqUIVideo(this, serializer));
 
 	return 0;
 }

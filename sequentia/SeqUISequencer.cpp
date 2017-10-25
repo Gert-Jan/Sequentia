@@ -1,41 +1,28 @@
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "SeqUISequencer.h";
 #include "SeqProjectHeaders.h";
 #include "SeqSerializer.h";
 #include "SeqString.h";
 #include "SeqList.h";
 
-int SeqUISequencer::nextWindowId = 0;
-
 SeqUISequencer::SeqUISequencer(SeqProject *project):
-	project(project),
-	windowId(nextWindowId)
+	project(project)
 {
-	nextWindowId++;
 	Init();
 }
 
 SeqUISequencer::SeqUISequencer(SeqProject *project, SeqSerializer *serializer):
-	project(project),
-	windowId(nextWindowId)
+	project(project)
 {
-	nextWindowId++;
 	Init();
 	Deserialize(serializer);
-}
-
-SeqUISequencer::SeqUISequencer(SeqProject *project, int windowId):
-	project(project),
-	windowId(windowId)
-{
-	nextWindowId = ImMax(nextWindowId, windowId + 1);
-	Init();
 }
 
 void SeqUISequencer::Init()
 {
 	// alloc memory
-	name = SeqString::Format("Sequencer##%d", windowId);
+	name = SeqString::Format("Sequencer##%d", project->NextWindowId());
 	channelHeights = new SeqList<int>();
 	for (int i = 0; i < project->GetChannelCount(); i++)
 		channelHeights->Add(initialChannelHeight);
@@ -93,7 +80,7 @@ void SeqUISequencer::Draw()
 	}
 	ImGui::End();
 	if (!isOpen)
-		project->RemoveSequencer(this);
+		project->RemoveUISequencer(this);
 }
 
 void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)

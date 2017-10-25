@@ -1,43 +1,29 @@
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "SeqUILibrary.h";
 #include "SeqProjectHeaders.h";
 #include "SeqVideoInfo.h";
 #include "SeqDialogs.h";
 #include "SeqString.h";
 
-int SeqUILibrary::nextWindowId = 0;
-
 SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library) :
 	project(project),
-	library(library),
-	windowId(nextWindowId)
+	library(library)
 {
-	nextWindowId++;
 	Init();
 }
 
 SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer) :
 	project(project),
-	library(library),
-	windowId(nextWindowId)
+	library(library)
 {
-	nextWindowId++;
-	Init();
-}
-
-SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, int windowId) :
-	project(project),
-	library(library),
-	windowId(windowId)
-{
-	nextWindowId = ImMax(nextWindowId, windowId + 1);
 	Init();
 }
 
 void SeqUILibrary::Init()
 {
 	// alloc memory
-	name = SeqString::Format("Library##%d", windowId);
+	name = SeqString::Format("Library##%d", project->NextWindowId());
 	// start listening for project changes
 	project->AddActionHandler(this);
 }
@@ -119,7 +105,7 @@ void SeqUILibrary::Draw()
 	}
 	ImGui::End();
 	if (!isOpen)
-		project->RemoveLibrary(this);
+		project->RemoveUILibrary(this);
 }
 
 void SeqUILibrary::AddContextMenu(SeqLibraryLink *link)

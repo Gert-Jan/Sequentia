@@ -12,6 +12,7 @@ class SeqActionHandler;
 
 class SeqUILibrary;
 class SeqUISequencer;
+class SeqUIVideo;
 
 template<class T>
 class SeqList;
@@ -46,10 +47,13 @@ public:
 	int GetChannelCount();
 	SeqChannel GetChannel(const int index);
 
-	void AddSequencer();
-	void RemoveSequencer(SeqUISequencer *sequencer);
-	void AddLibrary();
-	void RemoveLibrary(SeqUILibrary *library);
+	int NextWindowId();
+	void AddUISequencer();
+	void RemoveUISequencer(SeqUISequencer *sequencer);
+	void AddUILibrary();
+	void RemoveUILibrary(SeqUILibrary *library);
+	void AddUIVideo();
+	void RemoveUIVideo(SeqUIVideo *video);
 
 	double GetLength();
 
@@ -67,10 +71,12 @@ private:
 private:
 	const int version = 1;
 	char *fullPath;
+	int nextWindowId;
 	SeqLibrary *library;
 	SeqList<SeqChannel> *channels;
 	SeqList<SeqUISequencer*> *uiSequencers;
 	SeqList<SeqUILibrary*> *uiLibraries;
+	SeqList<SeqUIVideo*> *uiVideos;
 
 	SeqList<SeqActionHandler*> *actionHandlers;
 	SeqList<SeqAction> *actions;
