@@ -5,7 +5,7 @@ class SeqSerializer;
 
 class SeqLibrary;
 class SeqChannel;
-enum SeqChannelType;
+enum class SeqChannelType;
 
 class SeqAction;
 class SeqActionHandler;

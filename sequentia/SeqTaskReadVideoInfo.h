@@ -2,7 +2,7 @@
 
 #include "SeqWorkerTask.h";
 
-enum SeqWorkerTaskPriority;
+enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;
 struct SeqVideoInfo;
 

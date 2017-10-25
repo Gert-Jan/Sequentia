@@ -13,7 +13,7 @@ class SeqLibraryLink;
 class SeqVideoInfo;
 struct SDL_mutex;
 
-enum SeqDecoderStatus
+enum class SeqDecoderStatus
 {
 	Inactive,
 	Opening,
@@ -48,7 +48,7 @@ private:
 	static const int defaultFrameBufferSize = 60;
 	static const int defaultPacketBufferSize = 500;
 
-	SeqDecoderStatus status = Inactive;
+	SeqDecoderStatus status = SeqDecoderStatus::Inactive;
 
 	SeqLibraryLink *videoRef;
 	

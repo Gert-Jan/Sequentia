@@ -4,7 +4,7 @@ class SeqWorkerTask;
 struct SDL_mutex;
 struct SDL_cond;
 
-enum SeqWorkerStatus
+enum class SeqWorkerStatus
 {
 	Idle,
 	Busy,

@@ -2,7 +2,7 @@
 
 class SeqSerializer;
 
-enum SeqChannelType
+enum class SeqChannelType
 {
 	None,
 	Video,

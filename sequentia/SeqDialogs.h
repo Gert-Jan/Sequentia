@@ -2,7 +2,7 @@
 
 class SeqProject;
 
-enum RequestPathAction
+enum class RequestPathAction
 {
 	Save,
 	Open,

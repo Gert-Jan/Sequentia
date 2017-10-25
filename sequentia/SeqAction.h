@@ -1,8 +1,8 @@
 #pragma once
 
-enum SeqChannelType;
+enum class SeqChannelType;
 
-enum SeqActionType
+enum class SeqActionType
 {
 	AddChannel,
 	RemoveChannel,

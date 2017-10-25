@@ -10,8 +10,8 @@ bool SeqDialogs::showError = false;
 bool SeqDialogs::showRequestProjectPath = false;
 bool SeqDialogs::showWarningOverwrite = false;
 
-SeqDialogOption SeqDialogs::result = OK;
-RequestPathAction SeqDialogs::requestPathAction = Open;
+SeqDialogOption SeqDialogs::result = SeqDialogOption::OK;
+RequestPathAction SeqDialogs::requestPathAction = RequestPathAction::Open;
 char *SeqDialogs::path = nullptr;
 char *SeqDialogs::message = nullptr;
 
@@ -36,7 +36,7 @@ void SeqDialogs::Draw(SeqProject *project)
 {
 	if (showError)
 	{
-		if (ShowMessage("Error##General", OK))
+		if (ShowMessage("Error##General", SeqDialogOption::OK))
 		{
 			showError = false;
 		}
@@ -46,10 +46,10 @@ void SeqDialogs::Draw(SeqProject *project)
 	{
 		switch (requestPathAction)
 		{
-		case Save:
+		case RequestPathAction::Save:
 			if (ShowFileBrowseDialog("Save As"))
 			{
-				if (result == OK)
+				if (result == SeqDialogOption::OK)
 				{
 					if (SeqPath::FileExists(path))
 					{
@@ -65,10 +65,10 @@ void SeqDialogs::Draw(SeqProject *project)
 				showRequestProjectPath = false;
 			}
 			break;
-		case Open:
+		case RequestPathAction::Open:
 			if (ShowFileBrowseDialog("Open"))
 			{
-				if (result == OK)
+				if (result == SeqDialogOption::OK)
 				{
 					if (SeqPath::FileExists(path))
 					{
@@ -83,10 +83,10 @@ void SeqDialogs::Draw(SeqProject *project)
 				showRequestProjectPath = false;
 			}
 			break;
-		case AddToLibrary:
+		case RequestPathAction::AddToLibrary:
 			if (ShowFileBrowseDialog("Add to library"))
 			{
-				if (result == OK)
+				if (result == SeqDialogOption::OK)
 				{
 					project->AddAction(SeqActionFactory::CreateAddLibraryLinkAction(path));
 				}
@@ -101,15 +101,15 @@ void SeqDialogs::Draw(SeqProject *project)
 	
 	if (showWarningOverwrite)
 	{
-		if (ShowMessage("Warning##Overwrite", Yes | No))
+		if (ShowMessage("Warning##Overwrite", SeqDialogOption::Yes | SeqDialogOption::No))
 		{
-			if (result == Yes)
+			if (result == SeqDialogOption::Yes)
 			{
 				project->SetPath(path);
 				project->Save();
 				showWarningOverwrite = false;
 			}
-			else if (result = No)
+			else if (result == SeqDialogOption::No)
 			{
 				showWarningOverwrite = false;
 			}
@@ -134,14 +134,14 @@ bool SeqDialogs::ShowFileBrowseDialog(const char *title)
 		if (ImGui::Button("OK", ImVec2(120, 0)))
 		{
 			path = SeqPath::Normalize(SeqString::CopyBuffer());
-			result = OK;
+			result = SeqDialogOption::OK;
 			isDone = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel", ImVec2(120, 0)))
 		{
-			result = Cancel;
+			result = SeqDialogOption::Cancel;
 			isDone = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -158,10 +158,10 @@ bool SeqDialogs::ShowMessage(const char *title, int options)
 	if (ImGui::BeginPopupModal(title, NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text(message);
-		isDone = isDone || ShowMessageButton("OK", options, OK);
-		isDone = isDone || ShowMessageButton("Cancel", options, Cancel);
-		isDone = isDone || ShowMessageButton("Yes", options, Yes);
-		isDone = isDone || ShowMessageButton("No", options, No);
+		isDone = isDone || ShowMessageButton("OK", options, SeqDialogOption::OK);
+		isDone = isDone || ShowMessageButton("Cancel", options, SeqDialogOption::Cancel);
+		isDone = isDone || ShowMessageButton("Yes", options, SeqDialogOption::Yes);
+		isDone = isDone || ShowMessageButton("No", options, SeqDialogOption::No);
 		ImGui::EndPopup();
 	}
 	return isDone;

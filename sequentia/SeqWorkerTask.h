@@ -1,6 +1,6 @@
 #pragma once
 
-enum SeqWorkerTaskPriority
+enum class SeqWorkerTaskPriority
 {
 	Low, Medium, High
 };
