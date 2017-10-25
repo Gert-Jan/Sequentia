@@ -207,6 +207,7 @@
     <ClInclude Include="SeqUIVideo.h" />
     <ClInclude Include="SeqUtils.h" />
     <ClInclude Include="SeqVideoInfo.h" />
+    <ClInclude Include="SeqWindow.h" />
     <ClInclude Include="SeqWorker.h" />
     <ClInclude Include="SeqWorkerManager.h" />
     <ClInclude Include="SeqWorkerTask.h" />

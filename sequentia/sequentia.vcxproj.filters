@@ -151,6 +151,9 @@
     <ClInclude Include="SeqUIVideo.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="SeqWindow.h">
+      <Filter>ui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />

@@ -50,6 +50,11 @@ void SeqUILibrary::ActionUndone(const SeqAction action)
 	}
 }
 
+SeqWindowType SeqUILibrary::GetWindowType()
+{
+	return SeqWindowType::Library;
+}
+
 void SeqUILibrary::Draw()
 {
 	bool isWindowNew = false;
@@ -105,7 +110,7 @@ void SeqUILibrary::Draw()
 	}
 	ImGui::End();
 	if (!isOpen)
-		project->RemoveUILibrary(this);
+		project->RemoveWindow(this);
 }
 
 void SeqUILibrary::AddContextMenu(SeqLibraryLink *link)

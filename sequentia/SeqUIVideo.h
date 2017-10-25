@@ -1,11 +1,12 @@
 #pragma once
 
+#include "SeqWindow.h";
 #include "SeqAction.h";
 
 class SeqProject;
 class SeqSerializer;
 
-class SeqUIVideo : SeqActionHandler
+class SeqUIVideo : public SeqWindow, SeqActionHandler
 {
 public:
 	SeqUIVideo(SeqProject *project);
@@ -14,6 +15,7 @@ public:
 
 	void ActionDone(const SeqAction action);
 	void ActionUndone(const SeqAction action);
+	SeqWindowType GetWindowType();
 	void Draw();
 	void Serialize(SeqSerializer *serializer);
 

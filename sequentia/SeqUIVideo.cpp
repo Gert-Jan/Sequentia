@@ -46,6 +46,11 @@ void SeqUIVideo::ActionUndone(const SeqAction action)
 	}
 }
 
+SeqWindowType SeqUIVideo::GetWindowType()
+{
+	return SeqWindowType::Video;
+}
+
 void SeqUIVideo::Draw()
 {
 	bool isWindowNew = false;
@@ -60,7 +65,7 @@ void SeqUIVideo::Draw()
 	ImGui::End();
 
 	if (!isOpen)
-		project->RemoveUIVideo(this);
+		project->RemoveWindow(this);
 }
 
 void SeqUIVideo::Serialize(SeqSerializer *serializer)

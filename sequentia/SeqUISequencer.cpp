@@ -59,6 +59,11 @@ void SeqUISequencer::ActionUndone(const SeqAction action)
 	}
 }
 
+SeqWindowType SeqUISequencer::GetWindowType()
+{
+	return SeqWindowType::Sequencer;
+}
+
 void SeqUISequencer::Draw()
 {
 	bool isWindowNew = false;
@@ -80,7 +85,7 @@ void SeqUISequencer::Draw()
 	}
 	ImGui::End();
 	if (!isOpen)
-		project->RemoveUISequencer(this);
+		project->RemoveWindow(this);
 }
 
 void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)

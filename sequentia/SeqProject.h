@@ -7,12 +7,10 @@ class SeqLibrary;
 class SeqChannel;
 enum class SeqChannelType;
 
+class SeqWindow;
+
 class SeqAction;
 class SeqActionHandler;
-
-class SeqUILibrary;
-class SeqUISequencer;
-class SeqUIVideo;
 
 template<class T>
 class SeqList;
@@ -48,12 +46,10 @@ public:
 	SeqChannel GetChannel(const int index);
 
 	int NextWindowId();
-	void AddUISequencer();
-	void RemoveUISequencer(SeqUISequencer *sequencer);
-	void AddUILibrary();
-	void RemoveUILibrary(SeqUILibrary *library);
-	void AddUIVideo();
-	void RemoveUIVideo(SeqUIVideo *video);
+	void AddWindowSequencer();
+	void AddWindowLibrary();
+	void AddWindowVideo();
+	void RemoveWindow(SeqWindow *window);
 
 	double GetLength();
 
@@ -74,9 +70,7 @@ private:
 	int nextWindowId;
 	SeqLibrary *library;
 	SeqList<SeqChannel> *channels;
-	SeqList<SeqUISequencer*> *uiSequencers;
-	SeqList<SeqUILibrary*> *uiLibraries;
-	SeqList<SeqUIVideo*> *uiVideos;
+	SeqList<SeqWindow*> *windows;
 
 	SeqList<SeqActionHandler*> *actionHandlers;
 	SeqList<SeqAction> *actions;

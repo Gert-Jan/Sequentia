@@ -70,9 +70,9 @@ int main(int argc, char** argv)
 			project->AddAction(SeqActionFactory::CreateAddChannelAction(SeqChannelType::Video, "Video"));
 			project->AddAction(SeqActionFactory::CreateAddChannelAction(SeqChannelType::Audio, "Audio"));
 		}
-		project->AddUISequencer();
-		project->AddUILibrary();
-		project->AddUIVideo();
+		project->AddWindowSequencer();
+		project->AddWindowLibrary();
+		project->AddWindowVideo();
 	}
 
 	// Setup SDL
@@ -204,9 +204,9 @@ int main(int argc, char** argv)
 				}
 				if (ImGui::BeginMenu("Window"))
 				{
-					if (ImGui::MenuItem("Video", "")) { project->AddUIVideo(); }
-					if (ImGui::MenuItem("Sequencer", "")) { project->AddUISequencer(); }
-					if (ImGui::MenuItem("Library", "")) { project->AddUILibrary(); }
+					if (ImGui::MenuItem("Video", "")) { project->AddWindowVideo(); }
+					if (ImGui::MenuItem("Sequencer", "")) { project->AddWindowSequencer(); }
+					if (ImGui::MenuItem("Library", "")) { project->AddWindowLibrary(); }
 					ImGui::EndMenu();
 				}
 				ImGui::EndMainMenuBar();
