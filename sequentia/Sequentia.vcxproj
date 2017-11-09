@@ -168,11 +168,14 @@
     <ClCompile Include="SeqDecoder.cpp" />
     <ClCompile Include="SeqDialogs.cpp" />
     <ClCompile Include="SeqLibrary.cpp" />
+    <ClCompile Include="SeqMaterial.cpp" />
     <ClCompile Include="SeqPath.cpp" />
     <ClCompile Include="SeqProject.cpp" />
+    <ClCompile Include="SeqRenderer.cpp" />
     <ClCompile Include="SeqSerializerBin.cpp" />
     <ClCompile Include="SeqString.cpp" />
     <ClCompile Include="SeqTaskReadVideoInfo.cpp" />
+    <ClCompile Include="Sequentia.cpp" />
     <ClCompile Include="SeqUILibrary.cpp" />
     <ClCompile Include="SeqUISequencer.cpp" />
     <ClCompile Include="SeqUIVideo.cpp" />
@@ -191,6 +194,7 @@
     <ClInclude Include="SeqActionFactory.h" />
     <ClInclude Include="SeqDecoder.h" />
     <ClInclude Include="SeqDialogs.h" />
+    <ClInclude Include="SeqMaterial.h" />
     <ClInclude Include="SeqProjectHeaders.h" />
     <ClInclude Include="SeqLibrary.h" />
     <ClInclude Include="SeqList.h" />
@@ -198,10 +202,12 @@
     <ClInclude Include="SeqChannel.h" />
     <ClInclude Include="SeqPath.h" />
     <ClInclude Include="SeqProject.h" />
+    <ClInclude Include="SeqRenderer.h" />
     <ClInclude Include="SeqSerializer.h" />
     <ClInclude Include="SeqSerializerBin.h" />
     <ClInclude Include="SeqString.h" />
     <ClInclude Include="SeqTaskReadVideoInfo.h" />
+    <ClInclude Include="Sequentia.h" />
     <ClInclude Include="SeqUILibrary.h" />
     <ClInclude Include="SeqUISequencer.h" />
     <ClInclude Include="SeqUIVideo.h" />

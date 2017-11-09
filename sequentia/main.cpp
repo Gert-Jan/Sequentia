@@ -7,7 +7,9 @@
 #include <GL/gl3w.h>    // This example is using gl3w to access OpenGL functions (because it is small). You may use glew/glad/glLoadGen/etc. whatever already works for you.
 #include <SDL.h>
 #include "decoder.h";
+#include "Sequentia.h";
 #include "SeqProjectHeaders.h";
+#include "SeqWorkerManager.h";
 
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
@@ -54,6 +56,13 @@ void CreateFrameTexture(AVFrame* frame, GLuint texId[3])
 
 int main(int argc, char** argv)
 {
+	if (argc >= 2)
+		return Sequentia::Run(argv[1]);
+	else
+		return Sequentia::Run(nullptr);
+
+
+
 	if (argc >= 2)
 	{
 		// TODO: arg validation, at the very least a path exists check, may move that to project->SetPath()...

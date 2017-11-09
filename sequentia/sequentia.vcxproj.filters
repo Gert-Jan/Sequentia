@@ -60,6 +60,13 @@
     <ClCompile Include="SeqUIVideo.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="Sequentia.cpp" />
+    <ClCompile Include="SeqRenderer.cpp">
+      <Filter>sys\render</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqMaterial.cpp">
+      <Filter>sys\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -154,6 +161,13 @@
     <ClInclude Include="SeqWindow.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="Sequentia.h" />
+    <ClInclude Include="SeqRenderer.h">
+      <Filter>sys\render</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqMaterial.h">
+      <Filter>sys\render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
@@ -197,6 +211,9 @@
     </Filter>
     <Filter Include="sys\task">
       <UniqueIdentifier>{74f2fd11-ba69-42af-bcc9-6ee7eee7c927}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\render">
+      <UniqueIdentifier>{aa8bf1b4-9064-4d08-b914-a0c2be9cfc7b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
