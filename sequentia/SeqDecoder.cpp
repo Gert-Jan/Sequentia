@@ -6,8 +6,12 @@
 SeqDecoder::SeqDecoder(SeqLibraryLink *link):
 	videoRef(link),
 	frameBufferSize(defaultFrameBufferSize),
-	packetBufferSize(defaultPacketBufferSize)
+	packetBufferSize(defaultPacketBufferSize),
+	frameBuffer(nullptr),
+	packetBuffer(nullptr)
 {
+	packetBuffer = new AVPacket[packetBufferSize];
+	frameBuffer = new AVFrame*[frameBufferSize]();
 }
 
 SeqDecoder::~SeqDecoder()
@@ -36,13 +40,13 @@ int SeqDecoder::ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo)
 	/* register all formats and codecs */
 	av_register_all();
 	/* open input file, and allocate format context */
-	if (avformat_open_input(&videoInfo->formatContext, fullPath, NULL, NULL) < 0)
+	if (avformat_open_input(&videoInfo->formatContext, fullPath, nullptr, nullptr) < 0)
 	{
 		fprintf(stderr, "Could not open source file %s\n", fullPath);
 		return 1;
 	}
 	/* retrieve stream information */
-	if (avformat_find_stream_info(videoInfo->formatContext, NULL) < 0)
+	if (avformat_find_stream_info(videoInfo->formatContext, nullptr) < 0)
 	{
 		fprintf(stderr, "Could not find stream information\n");
 		return 1;
@@ -66,10 +70,8 @@ int SeqDecoder::Preload()
 {
 	status = SeqDecoderStatus::Opening;
 	// create buffers
-	if (frameBuffer == nullptr)
+	if (frameBuffer[0] == nullptr)
 	{
-		frameBuffer = new AVFrame*[frameBufferSize];
-		packetBuffer = new AVPacket[packetBufferSize];
 		displayFrameCursor = frameBufferSize - 1;
 		seekMutex = SDL_CreateMutex();
 
@@ -106,12 +108,13 @@ int SeqDecoder::Preload()
 			return 1;
 		}
 
-		/* initialize packets, set data to NULL, let the demuxer fill it */
+		/* initialize packets, set data to nullptr, let the demuxer fill it */
 		for (int i = 0; i < packetBufferSize; ++i)
 		{
-			av_init_packet(&packetBuffer[i]);
-			packetBuffer[i].data = NULL;
-			packetBuffer[i].size = 0;
+			AVPacket* pkt = &packetBuffer[i];
+			av_init_packet(pkt);
+			pkt->data = nullptr;
+			pkt->size = 0;
 		}
 	}
 
@@ -126,7 +129,7 @@ int SeqDecoder::Loop()
 	SeqVideoInfo *videoInfo = videoRef->info;
 	bool hasSkippedVideoFrame = false;
 	// allocate temp frame
-	AVFrame* tempFrame = NULL;
+	AVFrame* tempFrame = nullptr;
 	tempFrame = av_frame_alloc();
 	if (!tempFrame)
 	{
@@ -455,9 +458,9 @@ int SeqDecoder::OpenCodecContext(int *streamIndex, AVCodecContext **codec, AVFor
 {
 	int ret, streamId;
 	AVStream *stream;
-	AVCodec *decoder = NULL;
-	AVDictionary *opts = NULL;
-	ret = av_find_best_stream(format, type, -1, -1, NULL, 0);
+	AVCodec *decoder = nullptr;
+	AVDictionary *opts = nullptr;
+	ret = av_find_best_stream(format, type, -1, -1, nullptr, 0);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Could not find %s stream in input file'\n",
