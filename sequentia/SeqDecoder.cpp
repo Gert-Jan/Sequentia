@@ -163,7 +163,6 @@ int SeqDecoder::Loop()
 
 		// decode the next packet
 		displayPacketCursor = (displayPacketCursor + 1) % packetBufferSize;
-		av_packet_unref(&pkt);
 		pkt = packetBuffer[displayPacketCursor];
 
 		// skip the packet if:
@@ -254,7 +253,6 @@ int SeqDecoder::Loop()
 
 	// disposing...
 	av_frame_free(&tempFrame);
-	av_packet_unref(&pkt);
 	Dispose();
 
 	return 0;
