@@ -13,6 +13,7 @@ public:
 	int Remove(T item);
 	void InsertAt(T item, const int index);
 	void RemoveAt(const int index);
+	void RemoveLast();
 	T ReplaceAt(T item, const int index);
 	T Get(const int index);
 	void Set(const int index, T item);

@@ -74,6 +74,12 @@ void SeqList<T>::RemoveAt(const int index)
 }
 
 template<class T>
+void SeqList<T>::RemoveLast()
+{
+	count = max(0, count - 1);
+}
+
+template<class T>
 T SeqList<T>::ReplaceAt(T item, const int index)
 {
 	T previous = data[index];
