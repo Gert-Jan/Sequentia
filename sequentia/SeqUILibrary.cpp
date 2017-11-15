@@ -76,7 +76,10 @@ void SeqUILibrary::Draw()
 		{
 			SeqLibraryLink *link = library->GetLink(i);
 			if (ImGui::Selectable(link->fullPath, selected == i, ImGuiSelectableFlags_SpanAllColumns))
+			{
 				selected = i;
+				library->SetLastLinkFocus(link);
+			}
 			AddContextMenu(link);
 			ImGui::NextColumn();
 			if (link->info != nullptr)

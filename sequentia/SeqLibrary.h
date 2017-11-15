@@ -29,6 +29,8 @@ public:
 	void RemoveLink(char *fullPath);
 	int LinkCount();
 	SeqLibraryLink* GetLink(const int index);
+	void SetLastLinkFocus(SeqLibraryLink *link);
+	SeqLibraryLink* GetLastLinkFocus();
 	void UpdatePaths(char *oldProjectFullPath, char *newProjectFullPath);
 	void Update();
 
@@ -41,4 +43,5 @@ private:
 private:
 	SeqList<SeqLibraryLink*> *links;
 	SeqList<SeqLibraryLink*> *disposeLinks;
+	SeqLibraryLink *lastLinkFocus;
 };

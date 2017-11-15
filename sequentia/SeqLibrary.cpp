@@ -8,7 +8,8 @@
 #include "SeqWorkerManager.h";
 #include "SeqTaskReadVideoInfo.h";
 
-SeqLibrary::SeqLibrary()
+SeqLibrary::SeqLibrary() :
+	lastLinkFocus(nullptr)
 {
 	links = new SeqList<SeqLibraryLink*>();
 	disposeLinks = new SeqList<SeqLibraryLink*>();
@@ -23,7 +24,11 @@ SeqLibrary::~SeqLibrary()
 
 void SeqLibrary::Clear()
 {
+	lastLinkFocus = nullptr;
+	for (int i = 0; i < links->Count(); i++)
+		disposeLinks->Add(links->Get(i));
 	links->Clear();
+	Update();
 }
 
 void SeqLibrary::AddLink(char *fullPath)
@@ -69,6 +74,16 @@ int SeqLibrary::GetLinkIndex(char *fullPath)
 		}
 	}
 	return -1;
+}
+
+void SeqLibrary::SetLastLinkFocus(SeqLibraryLink *link)
+{
+	lastLinkFocus = link;
+}
+
+SeqLibraryLink* SeqLibrary::GetLastLinkFocus()
+{
+	return lastLinkFocus;
 }
 
 void SeqLibrary::UpdatePaths(char *oldProjectFullPath, char *newProjectFullPath)
