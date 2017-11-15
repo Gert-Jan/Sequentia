@@ -18,8 +18,6 @@ public:
 	SeqWorker();
 	~SeqWorker();
 
-	// static, SDL compatible thread reference
-	static int ThreadProxy(void* instance);
 	// thread entry
 	void StartWork();
 	// gracefully stops the current task and stops the thread, eventually set's the status to Disposed
@@ -30,6 +28,10 @@ public:
 	void Finalize();
 	// worker status
 	SeqWorkerStatus GetStatus();
+private:
+	// static, SDL compatible thread reference
+	static int ThreadProxy(void* instance);
+
 private:
 	bool work;
 	SDL_mutex *mutex;
