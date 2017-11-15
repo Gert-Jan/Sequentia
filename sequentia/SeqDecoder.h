@@ -19,6 +19,7 @@ enum class SeqDecoderStatus
 	Opening,
 	Loading,
 	Ready,
+	Stopping,
 	Disposing
 };
 
@@ -27,10 +28,17 @@ class SeqDecoder
 public:
 	SeqDecoder(SeqLibraryLink *link);
 	~SeqDecoder();
+
+	SeqDecoderStatus GetStatus();
+	int64_t GetDuration();
+	int64_t GetPlaybackTime();
+	int64_t GetBufferTime();
+
 	void Dispose();
 	static int ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo);
 	int Preload();
 	int Loop();
+	void Stop();
 	void Seek(int64_t time);
 	AVFrame* NextFrame(int64_t);
 	AVFrame* NextFrame();

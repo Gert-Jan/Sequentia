@@ -19,6 +19,26 @@ SeqDecoder::~SeqDecoder()
 	Dispose();
 }
 
+SeqDecoderStatus SeqDecoder::GetStatus()
+{
+	return status;
+}
+
+int64_t SeqDecoder::GetDuration()
+{
+	return videoRef->info->formatContext->duration;
+}
+
+int64_t SeqDecoder::GetPlaybackTime()
+{
+	return lastRequestedFrameTime;
+}
+
+int64_t SeqDecoder::GetBufferTime()
+{
+	return 0;
+}
+
 void SeqDecoder::Dispose()
 {
 	if (status != SeqDecoderStatus::Disposing && status != SeqDecoderStatus::Inactive)
@@ -259,6 +279,11 @@ int SeqDecoder::Loop()
 	Dispose();
 
 	return 0;
+}
+
+void SeqDecoder::Stop()
+{
+	status = SeqDecoderStatus::Stopping;
 }
 
 void SeqDecoder::Seek(int64_t time)
