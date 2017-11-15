@@ -1,22 +1,29 @@
 #include "SeqRenderer.h";
+#include "SeqList.h";
 #include "imgui.h"
 #include <GL/gl3w.h>
+extern "C"
+{
+	#include "libavformat/avformat.h"
+}
 
 ImVec4 SeqRenderer::clearColor = ImColor(114, 144, 154);
-SeqMaterial SeqRenderer::fontMaterial = SeqMaterial();
-SeqMaterial SeqRenderer::videoMaterial[videoCount];
 unsigned int SeqRenderer::vboHandle = 0;
 unsigned int SeqRenderer::vaoHandle = 0;
 unsigned int SeqRenderer::elementsHandle = 0;
+SeqList<SeqMaterial*>* SeqRenderer::materials = new SeqList<SeqMaterial*>();
+SeqMaterial SeqRenderer::fontMaterial = SeqMaterial();
+SeqMaterial SeqRenderer::videoMaterial = SeqMaterial();
 
 void SeqRenderer::InitGL()
 {
 	gl3wInit();
+	RefreshDeviceObjects();
 };
 
 void SeqRenderer::RefreshDeviceObjects()
 {
-	if (!fontMaterial.programHandle)
+	if (materials->Count() == 0)
 		CreateDeviceObjects();
 };
 
@@ -112,11 +119,8 @@ void SeqRenderer::CreateDeviceObjects()
 	glBindVertexArray(vaoHandle);
 	glBindBuffer(GL_ARRAY_BUFFER, vboHandle);
 
-	fontMaterial.Init(vertex_shader, fragment_shader_default);
-	videoMaterial[0].Init(vertex_shader, fragment_shader_video);
-	videoMaterial[1] = videoMaterial[0];
-	videoMaterial[2] = videoMaterial[0];
-	videoMaterial[3] = videoMaterial[0];
+	fontMaterial.Init(vertex_shader, fragment_shader_default, 1);
+	videoMaterial.Init(vertex_shader, fragment_shader_video, 3);
 
 	CreateFontsTexture();
 
@@ -137,35 +141,9 @@ void SeqRenderer::InvalidateDeviceObjects()
 	vaoHandle = vboHandle = elementsHandle = 0;
 
 	fontMaterial.Dispose();
-	for (int i = 0; i < videoCount; i++)
-		videoMaterial[i].Dispose();
-};
-
-void SeqRenderer::CreateFontsTexture()
-{
-	// Build texture atlas
-	ImGuiIO& io = ImGui::GetIO();
-	unsigned char* pixels;
-	int width, height;
-	// Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
-	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-
-	// Upload texture to graphics system
-	GLint lastTexture;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
-	glGenTextures(1, &fontMaterial.textureHandles[0]);
-	glBindTexture(GL_TEXTURE_2D, fontMaterial.textureHandles[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-	// Store our identifier
-	fontMaterial.textureCount = 1;
-	io.Fonts->TexID = (void *)&fontMaterial;
-
-	// Restore state
-	glBindTexture(GL_TEXTURE_2D, lastTexture);
+	for (int i = 0; i < materials->Count(); i++)
+		materials->Get(i)->Dispose();
+	videoMaterial.Dispose();
 };
 
 void SeqRenderer::Render()
@@ -225,9 +203,9 @@ void SeqRenderer::Render()
 		{ -1.0f, 1.0f, 0.0f, 1.0f },
 	};
 
-	for (int i = 0; i < videoCount; i++)
-		videoMaterial[i].Begin(orthoProjection, vaoHandle);
 	fontMaterial.Begin(orthoProjection, vaoHandle);
+	for (int i = 0; i < materials->Count(); i++)
+		materials->Get(i)->Begin(orthoProjection, vaoHandle);
 
 	for (int n = 0; n < drawData->CmdListsCount; n++)
 	{
@@ -278,4 +256,84 @@ void SeqRenderer::Render()
 void SeqRenderer::Shutdown()
 {
 	InvalidateDeviceObjects();
+};
+
+SeqMaterial* SeqRenderer::GetVideoMaterial()
+{
+	SeqMaterial* material = new SeqMaterial(videoMaterial);
+	materials->Add(material);
+	return material;
+};
+
+void SeqRenderer::CreateFontsTexture()
+{
+	// Build texture atlas
+	ImGuiIO& io = ImGui::GetIO();
+	unsigned char* pixels;
+	int width, height;
+	// Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
+	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+
+	// Upload texture to graphics system
+	GLint lastTexture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
+	glGenTextures(1, &fontMaterial.textureHandles[0]);
+	glBindTexture(GL_TEXTURE_2D, fontMaterial.textureHandles[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+	// Store our identifier
+	io.Fonts->TexID = (void *)&fontMaterial;
+
+	// Restore state
+	glBindTexture(GL_TEXTURE_2D, lastTexture);
+};
+
+void SeqRenderer::CreateVideoTextures(AVFrame* frame, GLuint texId[3])
+{
+	// Store current state
+	GLint last_texture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+
+	// Create textures
+	glBindTexture(GL_TEXTURE_2D, texId[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width, frame->height, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
+
+	glBindTexture(GL_TEXTURE_2D, texId[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
+
+	glBindTexture(GL_TEXTURE_2D, texId[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
+
+	// Restore state
+	glBindTexture(GL_TEXTURE_2D, last_texture);
+}
+
+void SeqRenderer::OverwriteVideoTextures(AVFrame* frame, GLuint texId[3])
+{
+	// Store current state
+	GLint last_texture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+
+	// Overwrite textures
+	glBindTexture(GL_TEXTURE_2D, texId[0]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
+	glBindTexture(GL_TEXTURE_2D, texId[1]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width / 2, frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
+	glBindTexture(GL_TEXTURE_2D, texId[2]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width / 2, frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
+
+	// Restore state
+	glBindTexture(GL_TEXTURE_2D, last_texture);
 }

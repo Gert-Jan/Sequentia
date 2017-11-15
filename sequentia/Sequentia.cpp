@@ -36,11 +36,9 @@ int Sequentia::Run(char *openProject)
 	window = SDL_CreateWindow("Sequentia", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 
-	SeqRenderer::InitGL();
-
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-
 	InitImGui();
+	SeqRenderer::InitGL();
 
 	// Setup initial project
 	if (openProject != nullptr)

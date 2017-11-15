@@ -2,7 +2,14 @@
 #include "SeqString.h";
 #include "imgui.h"
 
-SeqMaterial::SeqMaterial()
+SeqMaterial::SeqMaterial() :
+	programHandle(0),
+	vertShaderHandle(0),
+	fragShaderHandle(0),
+	textureCount(0),
+	projMatAttribLoc(0),
+	uvAttribLoc(0),
+	colorAttribLoc(0)
 {
 }
 
@@ -10,8 +17,11 @@ SeqMaterial::~SeqMaterial()
 {
 }
 
-void SeqMaterial::Init(const GLchar* vertShaderSource, const GLchar* fragShaderSource)
+void SeqMaterial::Init(const GLchar* vertShaderSource, const GLchar* fragShaderSource, int textureCount)
 {
+	this->textureCount = textureCount;
+	glGenTextures(textureCount, &textureHandles[0]);
+
 	programHandle = glCreateProgram();
 	vertShaderHandle = glCreateShader(GL_VERTEX_SHADER);
 	fragShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
@@ -23,7 +33,7 @@ void SeqMaterial::Init(const GLchar* vertShaderSource, const GLchar* fragShaderS
 	glAttachShader(programHandle, fragShaderHandle);
 	glLinkProgram(programHandle);
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < textureCount; i++)
 	{
 		SeqString::FormatBuffer("Texture%d", i);
 		textureAttribLoc[i] = glGetUniformLocation(programHandle, SeqString::Buffer);
@@ -85,8 +95,7 @@ void SeqMaterial::Dispose()
 	}
 	if (textureCount  > 0)
 	{
-		for (int i = 0; i < textureCount; i++)
-			glDeleteTextures(1, &textureHandles[i]);
+		glDeleteTextures(textureCount, &textureHandles[0]);
 		ImGui::GetIO().Fonts->TexID = 0;
 		textureCount = 0;
 	}
