@@ -60,6 +60,9 @@
     <ClCompile Include="SeqUIVideo.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="SeqTaskDecodeVideo.cpp">
+      <Filter>sys\task</Filter>
+    </ClCompile>
     <ClCompile Include="Sequentia.cpp" />
     <ClCompile Include="SeqRenderer.cpp">
       <Filter>sys\render</Filter>
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="SeqWindow.h">
       <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqTaskDecodeVideo.h">
+      <Filter>sys\task</Filter>
     </ClInclude>
     <ClInclude Include="Sequentia.h" />
     <ClInclude Include="SeqRenderer.h">

@@ -296,7 +296,7 @@ void SeqProject::AddWindowLibrary()
 
 void SeqProject::AddWindowVideo()
 {
-	windows->Add(new SeqUIVideo(this));
+	windows->Add(new SeqUIVideo(this, library));
 }
 
 void SeqProject::RemoveWindow(SeqWindow *window)
@@ -381,7 +381,7 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 				windows->Add(new SeqUILibrary(this, library, serializer));
 				break;
 			case SeqWindowType::Video:
-				windows->Add(new SeqUIVideo(this, serializer));
+				windows->Add(new SeqUIVideo(this, library, serializer));
 				break;
 			case SeqWindowType::Sequencer:
 				windows->Add(new SeqUISequencer(this, serializer));

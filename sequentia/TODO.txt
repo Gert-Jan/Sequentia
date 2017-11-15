@@ -5,6 +5,7 @@ BEFORE SHIPPING
 
 UI
 - Library - video collection
+	- Remove AVFormatContext from SeqLibraryLink as it stores playback state. So we need a separate AVFormatContext per playback instance.
 	- Allow dragging folders and files to library windows
 		- Add 'filter' virtual folders
 		- Add 'links', linking to files or folders on the filesystem
