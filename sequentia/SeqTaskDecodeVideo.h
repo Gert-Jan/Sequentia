@@ -4,8 +4,8 @@
 
 enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;
-struct SeqVideoInfo;
 class SeqDecoder;
+struct SDL_mutex;
 
 class SeqTaskDecodeVideo : public SeqWorkerTask
 {
@@ -22,4 +22,7 @@ public:
 private:
 	SeqLibraryLink *link;
 	SeqDecoder *decoder;
+	SDL_mutex *mutex;
+	int error;
+	bool done;
 };

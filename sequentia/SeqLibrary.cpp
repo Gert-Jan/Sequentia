@@ -100,7 +100,6 @@ void SeqLibrary::Update()
 		{
 			disposeLinks->RemoveAt(i);
 			delete[] link->fullPath;
-			delete link->info;
 			delete link;
 		}
 	}

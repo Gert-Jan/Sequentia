@@ -28,9 +28,11 @@ void SeqTaskReadVideoInfo::Stop()
 
 void SeqTaskReadVideoInfo::Finalize()
 {
-	if (link->info != nullptr)
-		delete link->info;
-	link->info = resultVideoInfo;
+	link->width = resultVideoInfo->videoCodec->width;
+	link->height = resultVideoInfo->videoCodec->height;
+	link->duration = resultVideoInfo->formatContext->duration;
+	link->metaDataLoaded = true;
+	delete resultVideoInfo;
 	SDL_AtomicDecRef(&link->useCount);
 	// we're done here remove self
 	delete this;

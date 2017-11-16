@@ -1,10 +1,9 @@
 #include "SeqDecoder.h";
-#include "SeqLibrary.h";
 #include "SeqVideoInfo.h";
 #include <SDL.h>
 
-SeqDecoder::SeqDecoder(SeqLibraryLink *link):
-	videoRef(link),
+SeqDecoder::SeqDecoder():
+	videoInfo(nullptr),
 	frameBufferSize(defaultFrameBufferSize),
 	packetBufferSize(defaultPacketBufferSize),
 	frameBuffer(nullptr),
@@ -26,7 +25,7 @@ SeqDecoderStatus SeqDecoder::GetStatus()
 
 int64_t SeqDecoder::GetDuration()
 {
-	return videoRef->info->formatContext->duration;
+	return videoInfo->formatContext->duration;
 }
 
 int64_t SeqDecoder::GetPlaybackTime()
@@ -72,9 +71,6 @@ int SeqDecoder::ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo)
 	}
 	if (OpenCodecContext(&videoInfo->videoStreamIndex, &videoInfo->videoCodec, videoInfo->formatContext, AVMEDIA_TYPE_VIDEO) >= 0)
 	{
-		videoInfo->width = videoInfo->videoCodec->width;
-		videoInfo->height = videoInfo->videoCodec->height;
-		videoInfo->pixelFormat = videoInfo->videoCodec->pix_fmt;
 	}
 	if (OpenCodecContext(&videoInfo->audioStreamIndex, &videoInfo->audioCodec, videoInfo->formatContext, AVMEDIA_TYPE_AUDIO) >= 0)
 	{
@@ -85,8 +81,9 @@ int SeqDecoder::ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo)
 	return 0;
 }
 
-int SeqDecoder::Preload()
+int SeqDecoder::Preload(SeqVideoInfo *info)
 {
+	videoInfo = info;
 	status = SeqDecoderStatus::Opening;
 	// create buffers
 	if (frameBuffer[0] == nullptr)
@@ -94,11 +91,9 @@ int SeqDecoder::Preload()
 		displayFrameCursor = frameBufferSize - 1;
 		seekMutex = SDL_CreateMutex();
 
-		SeqVideoInfo *videoInfo = videoRef->info;
-
 		/* allocate image where the decoded image will be put */
 		int ret = av_image_alloc(videoDestData, videoInfo->videoDestLinesize,
-			videoInfo->width, videoInfo->height, videoInfo->pixelFormat, 1);
+			videoInfo->videoCodec->width, videoInfo->videoCodec->height, videoInfo->videoCodec->pix_fmt, 1);
 		if (ret < 0)
 		{
 			fprintf(stderr, "Could not allocate raw video buffer\n");
@@ -145,7 +140,6 @@ int SeqDecoder::Preload()
 
 int SeqDecoder::Loop()
 {
-	SeqVideoInfo *videoInfo = videoRef->info;
 	bool hasSkippedVideoFrame = false;
 	// allocate temp frame
 	AVFrame* tempFrame = nullptr;
@@ -368,7 +362,7 @@ void SeqDecoder::FillPacketBuffer()
 	while (nextPacketBufferCursor != displayPacketCursor && ret >= 0)
 	{
 		packetBufferCursor = nextPacketBufferCursor;
-		ret = av_read_frame(videoRef->info->formatContext, &packetBuffer[packetBufferCursor]);
+		ret = av_read_frame(videoInfo->formatContext, &packetBuffer[packetBufferCursor]);
 		if (ret >= 0)
 			nextPacketBufferCursor = (packetBufferCursor + 1) % packetBufferSize;
 	}
@@ -387,7 +381,6 @@ bool SeqDecoder::IsSlowAndShouldSkip()
 
 bool SeqDecoder::NextKeyFramePts(int64_t *result)
 {
-	SeqVideoInfo *videoInfo = videoRef->info;
 	for (int i = 1; i < packetBufferSize; ++i)
 	{
 		AVPacket* pkt = &packetBuffer[(displayPacketCursor + i) % packetBufferSize];
@@ -403,7 +396,6 @@ bool SeqDecoder::NextKeyFramePts(int64_t *result)
 
 int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int cached)
 {
-	SeqVideoInfo *videoInfo = videoRef->info;
 	int ret = 0;
 	int decoded = pkt.size;
 	*frameIndex = 0;
@@ -420,9 +412,9 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 		}
 		if (*frameIndex)
 		{
-			if (target->width != videoInfo->width || 
-				target->height != videoInfo->height || 
-				target->format != videoInfo->pixelFormat)
+			if (target->width != videoInfo->videoCodec->width || 
+				target->height != videoInfo->videoCodec->height ||
+				target->format != videoInfo->videoCodec->pix_fmt)
 			{
 				// To handle this change, one could call av_image_alloc again and
 				// decode the following frames into another rawvideo file.
@@ -431,7 +423,7 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 					"pixel format of the input video changed:\n"
 					"old: width = %d, height = %d, format = %s\n"
 					"new: width = %d, height = %d, format = %s\n",
-					videoInfo->width, videoInfo->height, av_get_pix_fmt_name(videoInfo->pixelFormat),
+					videoInfo->videoCodec->width, videoInfo->videoCodec->height, av_get_pix_fmt_name(videoInfo->videoCodec->pix_fmt),
 					target->width, target->height, av_get_pix_fmt_name((AVPixelFormat)target->format));
 				return -1;
 			}

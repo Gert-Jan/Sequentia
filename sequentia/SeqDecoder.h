@@ -9,7 +9,6 @@ extern "C"
 	#include "libavutil/timestamp.h"
 }
 
-class SeqLibraryLink;
 class SeqVideoInfo;
 struct SDL_mutex;
 
@@ -26,7 +25,7 @@ enum class SeqDecoderStatus
 class SeqDecoder
 {
 public:
-	SeqDecoder(SeqLibraryLink *link);
+	SeqDecoder();
 	~SeqDecoder();
 
 	SeqDecoderStatus GetStatus();
@@ -36,7 +35,7 @@ public:
 
 	void Dispose();
 	static int ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo);
-	int Preload();
+	int Preload(SeqVideoInfo *info);
 	int Loop();
 	void Stop();
 	void Seek(int64_t time);
@@ -57,24 +56,22 @@ private:
 	static const int defaultPacketBufferSize = 500;
 
 	SeqDecoderStatus status = SeqDecoderStatus::Inactive;
-
-	SeqLibraryLink *videoRef;
-	
+	SeqVideoInfo *videoInfo;
 	int frameBufferSize = defaultFrameBufferSize;
 	int packetBufferSize = defaultPacketBufferSize;
-	uint8_t* videoDestData[4] = { NULL };
+	uint8_t *videoDestData[4] = { NULL };
 	bool skipFramesIfSlow = false;
 	int64_t lastRequestedFrameTime = 0;
 	int64_t bufferPunctuality = 0;
 	int64_t lowestKeyFrameDecodeTime = 0;
 	bool shouldSeek = false;
 	int64_t seekTime = 0;
-	SDL_mutex* seekMutex;
-	AVFrame* audioFrame = NULL;
+	SDL_mutex *seekMutex;
+	AVFrame *audioFrame = NULL;
 	int displayFrameCursor;
 	int frameBufferCursor = 0;
-	AVFrame** frameBuffer;
+	AVFrame **frameBuffer;
 	int displayPacketCursor = 0;
 	int packetBufferCursor = 0;
-	AVPacket* packetBuffer;
+	AVPacket *packetBuffer;
 };

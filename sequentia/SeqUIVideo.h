@@ -32,6 +32,6 @@ private:
 	SeqProject *project;
 	SeqLibrary *library;
 	SeqMaterial *material;
-	SeqTaskDecodeVideo* decoderTask;
-	AVFrame* previousFrame;
+	SeqTaskDecodeVideo *decoderTask;
+	AVFrame *previousFrame;
 };

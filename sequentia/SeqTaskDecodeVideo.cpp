@@ -1,5 +1,6 @@
 #include "SeqTaskDecodeVideo.h";
 #include "SeqLibrary.h";
+#include "SeqVideoInfo.h";
 #include "SeqDecoder.h";
 #include <SDL.h>
 
@@ -7,11 +8,13 @@ SeqTaskDecodeVideo::SeqTaskDecodeVideo(SeqLibraryLink *link) :
 	link(link)
 {
 	SDL_AtomicIncRef(&link->useCount);
-	decoder = new SeqDecoder(link);
+	mutex = SDL_CreateMutex();
+	decoder = new SeqDecoder();
 }
 
 SeqTaskDecodeVideo::~SeqTaskDecodeVideo()
 {
+	SDL_DestroyMutex(mutex);
 }
 
 SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
@@ -21,13 +24,26 @@ SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
 
 void SeqTaskDecodeVideo::Start()
 {
-	decoder->Preload();
-	decoder->Loop();
+	SeqVideoInfo *info = new SeqVideoInfo();
+	SDL_LockMutex(mutex);
+	error = SeqDecoder::ReadVideoInfo(link->fullPath, info);
+	SDL_UnlockMutex(mutex);
+	if (error == 0)
+	{
+		decoder->Preload(info);
+		decoder->Loop();
+	}
+	while (!done)
+		SDL_Delay(10);
 }
 
 void SeqTaskDecodeVideo::Stop()
 {
-	decoder->Stop();
+	done = true;
+	SDL_LockMutex(mutex);
+	if (error == 0)
+		decoder->Stop();
+	SDL_UnlockMutex(mutex);
 }
 
 void SeqTaskDecodeVideo::Finalize()

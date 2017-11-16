@@ -13,11 +13,9 @@ public:
 	~SeqVideoInfo();
 	static void GetTimeString(char *buffer,int bufferLen, uint64_t time);
 public:
-	AVFormatContext* formatContext = nullptr;
-	AVCodecContext* videoCodec = nullptr;
-	AVCodecContext* audioCodec = nullptr;
-	int width, height;
-	AVPixelFormat pixelFormat;
+	AVFormatContext *formatContext = nullptr;
+	AVCodecContext *videoCodec = nullptr;
+	AVCodecContext *audioCodec = nullptr;
 	int videoDestLinesize[4];
 	int videoDestBufferSize;
 	int videoStreamIndex = -1;

@@ -6,8 +6,6 @@ SeqVideoInfo::SeqVideoInfo() :
 	formatContext(nullptr),
 	videoCodec(nullptr),
 	audioCodec(nullptr),
-	width(0), height(0),
-	pixelFormat(AVPixelFormat::AV_PIX_FMT_NONE),
 	videoStreamIndex(-1),
 	audioStreamIndex(-1),
 	videoFrameCount(0),

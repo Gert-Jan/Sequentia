@@ -82,13 +82,12 @@ void SeqUILibrary::Draw()
 			}
 			AddContextMenu(link);
 			ImGui::NextColumn();
-			if (link->info != nullptr)
+			if (link->metaDataLoaded)
 			{
-				SeqVideoInfo *videoInfo = link->info;
-				SeqString::FormatBuffer("%ix%i", videoInfo->width, videoInfo->height);
+				SeqString::FormatBuffer("%ix%i", link->width, link->height);
 				ImGui::Text(SeqString::Buffer);
 				ImGui::NextColumn();
-				SeqVideoInfo::GetTimeString(SeqString::Buffer, SeqString::BufferLen, videoInfo->formatContext->duration);
+				SeqVideoInfo::GetTimeString(SeqString::Buffer, SeqString::BufferLen, link->duration);
 				ImGui::Text(SeqString::Buffer);
 				ImGui::NextColumn();
 			}

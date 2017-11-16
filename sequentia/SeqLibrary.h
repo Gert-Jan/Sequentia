@@ -12,8 +12,10 @@ struct SeqVideoInfo;
 struct SeqLibraryLink
 {
 	char *fullPath;
-	SeqVideoInfo *info;
 	SDL_atomic_t useCount;
+	bool metaDataLoaded;
+	int width, height;
+	uint64_t duration;
 };
 
 class SeqLibrary
