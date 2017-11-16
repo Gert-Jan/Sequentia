@@ -57,8 +57,7 @@ void SeqDecoder::Dispose()
 int SeqDecoder::ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo)
 {
 	int frameIndex = 0;
-	/* register all formats and codecs */
-	av_register_all();
+
 	/* open input file, and allocate format context */
 	if (avformat_open_input(&videoInfo->formatContext, fullPath, nullptr, nullptr) < 0)
 	{

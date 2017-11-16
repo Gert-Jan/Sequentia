@@ -17,6 +17,7 @@ SeqMaterial SeqRenderer::videoMaterial = SeqMaterial();
 
 void SeqRenderer::InitGL()
 {
+	av_register_all();
 	gl3wInit();
 	RefreshDeviceObjects();
 };
