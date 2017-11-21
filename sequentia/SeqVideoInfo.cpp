@@ -32,11 +32,22 @@ void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint64_t time)
 		secs %= 60;
 		hours = mins / 60;
 		mins %= 60;
-		snprintf(buffer, bufferLen, "%02d:%02d:%02d.%02d", hours, mins, secs,
-			(100 * us) / AV_TIME_BASE);
+		snprintf(buffer, bufferLen, "%02d:%02d:%02d.%02d", hours, mins, secs, (100 * us) / AV_TIME_BASE);
 	}
 	else
 	{
 		strcpy_s(buffer, bufferLen, "N/A");
 	}
+};
+
+void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint32_t time)
+{
+	int hours, mins, secs, us;
+	secs = time / 1000;
+	us = time % 1000;
+	mins = secs / 60;
+	secs %= 60;
+	hours = mins / 60;
+	mins %= 60;
+	snprintf(buffer, bufferLen, "%02d:%02d:%02d.%02d", hours, mins, secs, (100 * us) / 1000);
 };

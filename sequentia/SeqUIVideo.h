@@ -34,4 +34,7 @@ private:
 	SeqMaterial *material;
 	SeqTaskDecodeVideo *decoderTask;
 	AVFrame *previousFrame;
+	bool isSeeking;
+	int seekVideoTime;
+	int startVideoTime;
 };
