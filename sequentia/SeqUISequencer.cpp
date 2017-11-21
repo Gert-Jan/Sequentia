@@ -73,8 +73,7 @@ void SeqUISequencer::Draw()
 	
 	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
-		const static ImVec2 textSize = ImGui::CalcTextSize("01234567889:.");
-		const float headerHeight = textSize.y + 3;
+		const float headerHeight = ImGui::GetTextLineHeightWithSpacing();
 		ImGui::Columns(2, "panel");
 		DrawChannelSettings(headerHeight, isWindowNew);
 		ImGui::NextColumn();
