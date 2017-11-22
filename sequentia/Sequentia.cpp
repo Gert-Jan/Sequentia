@@ -10,6 +10,7 @@
 bool Sequentia::done = false;
 SDL_Window* Sequentia::window = nullptr;
 SeqProject* Sequentia::project = nullptr;
+bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
@@ -101,6 +102,8 @@ int Sequentia::Run(char *openProject)
 				if (ImGui::MenuItem("Video", "")) { project->AddWindowVideo(); }
 				if (ImGui::MenuItem("Sequencer", "")) { project->AddWindowSequencer(); }
 				if (ImGui::MenuItem("Library", "")) { project->AddWindowLibrary(); }
+				ImGui::Separator();
+				if (ImGui::MenuItem("ImGui Demo", "")) { showImGuiDemo = true; }
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
@@ -109,6 +112,11 @@ int Sequentia::Run(char *openProject)
 		SeqWorkerManager::Instance()->Update();
 		project->Update();
 		project->Draw();
+
+		if (showImGuiDemo)
+		{
+			ImGui::ShowTestWindow(&showImGuiDemo);
+		}
 
 		// Rendering
 		SeqRenderer::Render();
