@@ -104,6 +104,7 @@ void SeqUIVideo::Draw()
 		isWindowNew = true;
 	bool isOpen = true;
 
+	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 200), ImVec2(FLT_MAX, FLT_MAX));
 	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
 		if (decoderTask != nullptr)
@@ -148,7 +149,7 @@ void SeqUIVideo::Draw()
 					{
 						videoWidth = contentRegion.x;
 						videoHeight = videoWidth / videoAspectRatio;
-						ImGui::SetCursorPosY((contentRegion.y - videoHeight) / 2 + style.WindowPadding.y);
+						ImGui::SetCursorPosY((contentRegion.y - videoHeight) / 2 + style.WindowPadding.y + ImGui::GetTextLineHeightWithSpacing());
 					}
 
 					// draw video
