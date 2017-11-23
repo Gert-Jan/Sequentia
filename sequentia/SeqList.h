@@ -9,8 +9,8 @@ public:
 	~SeqList();
 
 	void Add(T item);
-	void AddCopy(T *source, int addCount, int sourceOffset);
-	int Remove(T item);
+	void AddCopy(const T *source, const int addCount, const int sourceOffset);
+	int Remove(const T item);
 	void InsertAt(T item, const int index);
 	void RemoveAt(const int index);
 	void RemoveLast();
@@ -21,7 +21,7 @@ public:
 	void Clear();
 
 private:
-	void EnsureCapacity(int requiredCapacity);
+	void EnsureCapacity(const int requiredCapacity);
 
 private:
 	T *data;

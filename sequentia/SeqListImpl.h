@@ -30,7 +30,7 @@ void SeqList<T>::Add(T item)
 }
 
 template<class T>
-void SeqList<T>::AddCopy(T *source, int addCount, int sourceOffset)
+void SeqList<T>::AddCopy(const T *source, const int addCount, const int sourceOffset)
 {
 	EnsureCapacity(count + addCount);
 	memcpy(&data[count], &source[sourceOffset], sizeof(T) * addCount);
@@ -38,7 +38,7 @@ void SeqList<T>::AddCopy(T *source, int addCount, int sourceOffset)
 }
 
 template<class T>
-int SeqList<T>::Remove(T item)
+int SeqList<T>::Remove(const T item)
 {
 	for (int i = 0; i < count; i++)
 	{

@@ -11,19 +11,19 @@ int SeqString::SplitResultBufferCount = 0;
 int SeqString::BufferLen = 1024;
 char SeqString::Buffer[1024] = "";
 
-void SeqString::SetBuffer(char *string, int count)
+void SeqString::SetBuffer(const char *string, const int count)
 {
-	count = SDL_min(BufferLen - 1, count);
-	strncpy(Buffer, string, count);
-	Buffer[count] = 0;
+	int cappedCount = SDL_min(BufferLen - 1, count);
+	strncpy(Buffer, string, cappedCount);
+	Buffer[cappedCount] = 0;
 }
 
-void SeqString::SetBuffer(char *string)
+void SeqString::SetBuffer(const char *string)
 {
 	SetBuffer(string, strlen(string));
 }
 
-char* SeqString::Format(char *format, ...)
+char* SeqString::Format(const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -43,7 +43,7 @@ char* SeqString::Format(char *format, ...)
 	}
 }
 
-void SeqString::FormatBuffer(char *format, ...)
+void SeqString::FormatBuffer(const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -59,7 +59,7 @@ void SeqString::FormatBuffer(char *format, ...)
 	}
 }
 
-char* SeqString::Copy(char *string)
+char* SeqString::Copy(const char *string)
 {
 	size_t size = strlen(string) + 1;
 	char* copy = new char[size];
@@ -75,17 +75,17 @@ char* SeqString::CopyBuffer()
 	return copy;
 }
 
-bool SeqString::Equals(char *string1, char *string2)
+bool SeqString::Equals(const char *string1, const char *string2)
 {
 	return strcmp(string1, string2) == 0;
 }
 
-bool SeqString::EqualsBuffer(char *string)
+bool SeqString::EqualsBuffer(const char *string)
 {
 	return strcmp(string, Buffer) == 0;
 }
 
-int SeqString::Find(char *string, char *phrase, int startAt)
+int SeqString::Find(const char *string, const char *phrase, int startAt)
 {
 	int phrasePos = 0;
 	int phraseLen = strlen(phrase);
@@ -107,13 +107,11 @@ int SeqString::Find(char *string, char *phrase, int startAt)
 	return -1;
 }
 
-int SeqString::FindReverse(char *string, char *phrase, int startAt)
+int SeqString::FindReverse(const char *string, const char *phrase, const int startAt)
 {
-	if (startAt == -1)
-		startAt = strlen(string);
 	int phraseLen = strlen(phrase);
 	int phrasePos = phraseLen - 1;
-	int current = startAt;
+	int current = startAt == -1 ? strlen(string) : startAt;
 	while (current >= 0)
 	{
 		if (string[current] == phrase[phrasePos])
@@ -131,7 +129,7 @@ int SeqString::FindReverse(char *string, char *phrase, int startAt)
 	return -1;
 }
 
-void SeqString::Replace(char* phrase, char *with)
+void SeqString::ReplaceBuffer(const char* phrase, const char *with)
 {
 	int pos = Find(Buffer, phrase, 0);
 	int phraseLen = strlen(phrase);
@@ -150,7 +148,7 @@ void SeqString::Replace(char* phrase, char *with)
 	}
 }
 
-SeqList<SeqList<char>*>* SeqString::Split(char *string, char *separator)
+SeqList<SeqList<char>*>* SeqString::Split(const char *string, const char *separator)
 {
 	int previousSplit = 0;
 	int splitIndex = 0;
@@ -174,7 +172,7 @@ SeqList<SeqList<char>*>* SeqString::Split(char *string, char *separator)
 	return SplitResultBuffer;
 }
 
-void SeqString::AddToSplitResultBuffer(int index, char *string, int count, int offset)
+void SeqString::AddToSplitResultBuffer(const int index, const char *string, const int count, const int offset)
 {
 	// ensure the result buffer is ready  
 	if (index >= SplitResultBufferCount)

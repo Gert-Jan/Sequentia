@@ -9,7 +9,7 @@
 char* SeqPath::Normalize(char *path)
 {
 	SeqString::SetBuffer(path, strlen(path));
-	SeqString::Replace("\\", "/");
+	SeqString::ReplaceBuffer("\\", "/");
 	return SeqString::CopyBuffer();
 }
 
