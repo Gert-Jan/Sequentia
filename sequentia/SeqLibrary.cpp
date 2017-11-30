@@ -64,7 +64,16 @@ SeqLibraryLink* SeqLibrary::GetLink(const int index)
 	return links->Get(index);
 }
 
-int SeqLibrary::GetLinkIndex(char *fullPath)
+SeqLibraryLink* SeqLibrary::GetLink(const char *fullPath)
+{
+	int index = GetLinkIndex(fullPath);
+	if (index > -1)
+		return GetLink(index);
+	else
+		return nullptr;
+}
+
+int SeqLibrary::GetLinkIndex(const char *fullPath)
 {
 	for (int i = 0; i < LinkCount(); i++)
 	{

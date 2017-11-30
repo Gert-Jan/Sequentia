@@ -164,6 +164,7 @@
     <ClCompile Include="libs\gl3w\GL\gl3w.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SeqChannel.cpp" />
+    <ClCompile Include="SeqClip.cpp" />
     <ClCompile Include="SeqDecoder.cpp" />
     <ClCompile Include="SeqDialogs.cpp" />
     <ClCompile Include="SeqLibrary.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="libs\gl3w\GL\glcorearb.h" />
     <ClInclude Include="SeqAction.h" />
     <ClInclude Include="SeqActionFactory.h" />
+    <ClInclude Include="SeqClip.h" />
     <ClInclude Include="SeqDecoder.h" />
     <ClInclude Include="SeqDialogs.h" />
     <ClInclude Include="SeqMaterial.h" />

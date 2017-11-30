@@ -69,6 +69,9 @@
     <ClCompile Include="SeqMaterial.cpp">
       <Filter>sys\render</Filter>
     </ClCompile>
+    <ClCompile Include="SeqClip.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -170,6 +173,9 @@
     </ClInclude>
     <ClInclude Include="SeqMaterial.h">
       <Filter>sys\render</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqClip.h">
+      <Filter>data</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

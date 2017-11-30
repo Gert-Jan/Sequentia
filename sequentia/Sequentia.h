@@ -18,6 +18,9 @@ private:
 	static void ImGuiSetClipboardText(void*, const char *text);
 	static const char* ImGuiGetClipboardText(void*);
 
+public:
+	static const int TimeBase = 1000000;
+
 private:
 	static bool done;
 	static SDL_Window *window;
