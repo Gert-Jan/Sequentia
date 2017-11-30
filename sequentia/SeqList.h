@@ -16,7 +16,9 @@ public:
 	void RemoveLast();
 	T ReplaceAt(T item, const int index);
 	T Get(const int index);
+	T* GetPtr(const int index);
 	void Set(const int index, T item);
+	int IndexOf(T item);
 	int Count();
 	void Clear();
 

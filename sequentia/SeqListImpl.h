@@ -61,6 +61,10 @@ void SeqList<T>::InsertAt(T item, const int index)
 		data[index] = item;
 		count += 1;
 	}
+	else
+	{
+		Add(item);
+	}
 }
 
 template<class T>
@@ -111,9 +115,24 @@ T SeqList<T>::Get(const int index)
 }
 
 template<class T>
+T* SeqList<T>::GetPtr(const int index)
+{
+	return &data[index];
+}
+
+template<class T>
 void SeqList<T>::Set(const int index, T value)
 {
 	data[index] = value;
+}
+
+template<class T>
+int SeqList<T>::IndexOf(T item)
+{
+	for (int i = 0; i < count; i++)
+		if (data[i] == item)
+			return i;
+	return -1;
 }
 
 template<class T>
