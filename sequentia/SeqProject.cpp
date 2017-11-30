@@ -16,7 +16,7 @@
 SeqProject::SeqProject()
 {
 	library = new SeqLibrary();
-	channels = new SeqList<SeqChannel>();
+	channels = new SeqList<SeqChannel*>();
 
 	windows = new SeqList<SeqWindow*>();
 
@@ -44,6 +44,9 @@ void SeqProject::Clear()
 
 	for (int i = 0; i < actions->Count(); i++)
 		delete actions->Get(i).data;
+
+	for (int i = 0; i < channels->Count(); i++)
+		delete channels->Get(i);
 
 	windows->Clear();
 	actions->Clear();
@@ -260,7 +263,7 @@ void SeqProject::UndoAction(const SeqAction action)
 
 void SeqProject::AddChannel(SeqChannelType type, char *name)
 {
-	SeqChannel channel = SeqChannel(name, type);
+	SeqChannel* channel = new SeqChannel(library, name, type);
 	channels->Add(channel);
 }
 
@@ -274,7 +277,7 @@ int SeqProject::GetChannelCount()
 	return channels->Count();
 }
 
-SeqChannel SeqProject::GetChannel(const int index)
+SeqChannel* SeqProject::GetChannel(const int index)
 {
 	return channels->Get(index);
 }
@@ -339,7 +342,7 @@ int SeqProject::Serialize(SeqSerializer *serializer)
 	// channels
 	serializer->Write(channels->Count());
 	for (int i = 0; i < channels->Count(); i++)
-		channels->Get(i).Serialize(serializer);
+		channels->Get(i)->Serialize(serializer);
 	
 	// windows
 	serializer->Write(windows->Count());
@@ -368,7 +371,7 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 	// channels
 	count = serializer->ReadInt();
 	for (int i = 0; i < count; i++)
-		channels->Add(SeqChannel(serializer));
+		channels->Add(new SeqChannel(library, serializer));
 
 	// ui sequencers
 	count = serializer->ReadInt();

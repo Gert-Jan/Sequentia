@@ -43,7 +43,7 @@ public:
 	void UndoAction(const SeqAction action);
 
 	int GetChannelCount();
-	SeqChannel GetChannel(const int index);
+	SeqChannel* GetChannel(const int index);
 
 	int NextWindowId();
 	void AddWindowSequencer();
@@ -69,7 +69,7 @@ private:
 	char *fullPath;
 	int nextWindowId;
 	SeqLibrary *library;
-	SeqList<SeqChannel> *channels;
+	SeqList<SeqChannel*> *channels;
 	SeqList<SeqWindow*> *windows;
 
 	SeqList<SeqActionHandler*> *actionHandlers;
