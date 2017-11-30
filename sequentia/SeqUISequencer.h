@@ -4,6 +4,7 @@
 #include "SeqAction.h";
 
 class SeqProject;
+class SeqChannel;
 class SeqSerializer;
 template<class T>
 class SeqList;
@@ -26,10 +27,15 @@ private:
 	void DrawChannelSettings(float rulerHeight, bool isWindowNew);
 	void DrawSequencerRuler(float height);
 	void DrawChannels();
+	void DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 contentSize, float height);
 	int TotalChannelHeight();
+	double PixelsToTime(float pixels);
+	float TimeToPixels(double time);
 	void Deserialize(SeqSerializer *serializer);
 
 private:
+	ImU32 lineColor;
+	ImU32 backgroundColor;
 	const float pixelsPerSecond = 100;
 	const float minSettingsPanelWidth = 40;
 	const float maxSettingsPanelWidth = 300;
@@ -45,7 +51,9 @@ private:
 	SeqList<int> *channelHeights;
 	double position;
 	float zoom = 1;
-	float scrollY = 0;
+	bool overrideScrollX = true;
+	ImVec2 scroll = ImVec2(0, 0);
+	double dragStartPosition = 0;
 	float settingsPanelWidth = 100;
 	bool isSettingsPanelCollapsed = false;
 };
