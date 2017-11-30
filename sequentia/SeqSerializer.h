@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SDL_config.h";
+
 class SeqSerializer
 {
 public:
@@ -8,8 +10,10 @@ public:
 	virtual int GetApplicationVersion() = 0;
 	virtual void SetApplicationVersion(int applicationVersion) = 0;
 
-	virtual void Write(int value) = 0;
-	virtual int ReadInt() = 0;
+	virtual void Write(int32_t value) = 0;
+	virtual int32_t ReadInt() = 0;
+	virtual void Write(int64_t value) = 0;
+	virtual int64_t ReadLong() = 0;
 	virtual void Write(float value) = 0;
 	virtual float ReadFloat() = 0;
 	virtual void Write(double value) = 0;

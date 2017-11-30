@@ -31,16 +31,27 @@ void SeqSerializerBin::SetApplicationVersion(int applicationVersion)
 	this->applicationVersion = applicationVersion;
 }
 
-void SeqSerializerBin::Write(int value)
+void SeqSerializerBin::Write(int32_t value)
 {
-	int32_t value32 = (int32_t)value;
-	stream->write(stream, &value32, 4, 1);
+	stream->write(stream, &value, 4, 1);
 }
 
-int SeqSerializerBin::ReadInt()
+int32_t SeqSerializerBin::ReadInt()
 {
 	int value = 0;
 	stream->read(stream, &value, 4, 1);
+	return value;
+}
+
+void SeqSerializerBin::Write(int64_t value)
+{
+	stream->write(stream, &value, 8, 1);
+}
+
+int64_t SeqSerializerBin::ReadLong()
+{
+	int64_t value = 0;
+	stream->read(stream, &value, 8, 1);
 	return value;
 }
 

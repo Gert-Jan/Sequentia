@@ -14,8 +14,10 @@ public:
 	int GetApplicationVersion();
 	void SetApplicationVersion(int applicationVersion);
 	
-	void Write(int value);
-	int ReadInt();
+	void Write(int32_t value);
+	int32_t ReadInt();
+	void Write(int64_t value);
+	int64_t ReadLong();
 	void Write(float value);
 	float ReadFloat();
 	void Write(double value);
