@@ -86,7 +86,6 @@
     <ClInclude Include="libs\gl3w\GL\glcorearb.h">
       <Filter>libs\gl3w</Filter>
     </ClInclude>
-    <ClInclude Include="decoder.h" />
     <ClInclude Include="SeqProject.h">
       <Filter>data</Filter>
     </ClInclude>
