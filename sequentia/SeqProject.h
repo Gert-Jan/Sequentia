@@ -30,18 +30,6 @@ public:
 	char* GetPath();
 	void SetPath(char *fullPath);
 
-	void Undo();
-	void Redo();
-
-	void AddAction(const SeqAction action);
-	void AddActionHandler(SeqActionHandler *handler);
-	void RemoveActionHandler(SeqActionHandler *handler);
-	int GetActionCount();
-	int GetActionCursor();
-	SeqAction GetAction(const int index);
-	void DoAction(const SeqAction action);
-	void UndoAction(const SeqAction action);
-
 	int GetChannelCount();
 	SeqChannel* GetChannel(const int index);
 
@@ -56,6 +44,18 @@ public:
 	void Update();
 	void Draw();
 	void DrawDialogs();
+
+	void Undo();
+	void Redo();
+
+	void AddAction(const SeqAction action);
+	void AddActionHandler(SeqActionHandler *handler);
+	void RemoveActionHandler(SeqActionHandler *handler);
+	int GetActionCount();
+	int GetActionCursor();
+	SeqAction GetAction(const int index);
+	void DoAction(const SeqAction action);
+	void UndoAction(const SeqAction action);
 
 private:
 	void AddChannel(SeqChannelType type, char *name);

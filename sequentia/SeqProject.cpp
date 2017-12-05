@@ -133,6 +133,72 @@ void SeqProject::SetPath(char *fullPath)
 	library->UpdatePaths(oldPath, fullPath);
 }
 
+void SeqProject::AddChannel(SeqChannelType type, char *name)
+{
+	SeqChannel* channel = new SeqChannel(library, name, type);
+	channels->Add(channel);
+}
+
+void SeqProject::RemoveChannel(const int index)
+{
+	channels->RemoveAt(index);
+}
+
+int SeqProject::GetChannelCount()
+{
+	return channels->Count();
+}
+
+SeqChannel* SeqProject::GetChannel(const int index)
+{
+	return channels->Get(index);
+}
+
+int SeqProject::NextWindowId()
+{
+	return nextWindowId++;
+}
+
+void SeqProject::AddWindowSequencer()
+{
+	windows->Add(new SeqUISequencer(this));
+}
+
+void SeqProject::AddWindowLibrary()
+{
+	windows->Add(new SeqUILibrary(this, library));
+}
+
+void SeqProject::AddWindowVideo()
+{
+	windows->Add(new SeqUIVideo(this, library));
+}
+
+void SeqProject::RemoveWindow(SeqWindow *window)
+{
+	windows->Remove(window);
+	delete window;
+}
+
+double SeqProject::GetLength()
+{
+	return 60.54321;
+}
+
+void SeqProject::Update()
+{
+	library->Update();
+}
+
+void SeqProject::Draw()
+{
+	SeqDialogs::Draw(this);
+	for (int i = 0; i < windows->Count(); i++)
+	{
+		windows->Get(i)->Draw();
+	}
+}
+
 void SeqProject::Undo()
 {
 	if (actionCursor > 0)
@@ -258,72 +324,6 @@ void SeqProject::UndoAction(const SeqAction action)
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
 		actionHandlers->Get(i)->ActionUndone(action);
-	}
-}
-
-void SeqProject::AddChannel(SeqChannelType type, char *name)
-{
-	SeqChannel* channel = new SeqChannel(library, name, type);
-	channels->Add(channel);
-}
-
-void SeqProject::RemoveChannel(const int index)
-{
-	channels->RemoveAt(index);
-}
-
-int SeqProject::GetChannelCount()
-{
-	return channels->Count();
-}
-
-SeqChannel* SeqProject::GetChannel(const int index)
-{
-	return channels->Get(index);
-}
-
-int SeqProject::NextWindowId()
-{
-	return nextWindowId++;
-}
-
-void SeqProject::AddWindowSequencer()
-{
-	windows->Add(new SeqUISequencer(this));
-}
-
-void SeqProject::AddWindowLibrary()
-{
-	windows->Add(new SeqUILibrary(this, library));
-}
-
-void SeqProject::AddWindowVideo()
-{
-	windows->Add(new SeqUIVideo(this, library));
-}
-
-void SeqProject::RemoveWindow(SeqWindow *window)
-{
-	windows->Remove(window);
-	delete window;
-}
-
-double SeqProject::GetLength()
-{
-	return 60.54321;
-}
-
-void SeqProject::Update()
-{
-	library->Update();
-}
-
-void SeqProject::Draw()
-{
-	SeqDialogs::Draw(this);
-	for (int i = 0; i < windows->Count(); i++)
-	{
-		windows->Get(i)->Draw();
 	}
 }
 
