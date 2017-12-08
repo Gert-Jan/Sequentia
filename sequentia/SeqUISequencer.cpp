@@ -221,7 +221,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 				}
 				const ImVec2 newDragMouseDelta = ImGui::GetMouseDragDelta(0, 1.0f);
 				const float newZoom = zoom + (newDragMouseDelta.y - imContext->DragLastMouseDelta.y) / (100.f / zoom);
-				zoom = ImClamp(newZoom, 0.0001f, 100.f);
+				zoom = ImClamp(newZoom, 0.0001f, 1000.f);
 				position = dragStartPosition - PixelsToTime(relativeMouseX);
 				if (position < 0)
 				{
@@ -249,7 +249,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	int seconds = floor(position);
 	float firstOffset = -TimeToPixels(position - floor(position));
 	float scaledStep = pixelsPerSecond / zoom;
-	int secondStep = (int)ceil(60.f / scaledStep); // calc min second step so steps won't be too small for time labels
+	int secondStep = (int)ceil(80.f / scaledStep); // calc min second step so steps won't be too small for time labels
 	if (secondStep > 1 && secondStep % 2 != 0) // only have even numbered or single steps
 	{
 		secondStep += 1;
@@ -264,7 +264,14 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	{
 		drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + height - 1), lineColor, thickness);
 		ImGui::SetCursorScreenPos(ImVec2(x + style.FramePadding.x, origin.y));
-		ImGui::Text("%02d\:%02d\.%d", (seconds - (seconds % 60)), seconds % 60, 0);
+		int hours, mins, secs, us;
+		secs = seconds;
+		us = 0;
+		mins = secs / 60;
+		secs %= 60;
+		hours = mins / 60;
+		mins %= 60;
+		ImGui::Text("%02d:%02d:%02d.%d", hours, mins, secs, us);
 		seconds += secondStep;
 	}
 	ImGui::PopClipRect();
