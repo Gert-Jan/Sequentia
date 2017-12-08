@@ -1,10 +1,12 @@
 #include <imgui.h>
 #include <imgui_internal.h>
-#include "SeqUILibrary.h";
-#include "SeqProjectHeaders.h";
-#include "SeqVideoInfo.h";
-#include "SeqDialogs.h";
-#include "SeqString.h";
+#include "Sequentia.h"
+#include "SeqUILibrary.h"
+#include "SeqProjectHeaders.h"
+#include "SeqActionFactory.h"
+#include "SeqVideoInfo.h"
+#include "SeqDialogs.h"
+#include "SeqString.h"
 
 SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library) :
 	project(project),

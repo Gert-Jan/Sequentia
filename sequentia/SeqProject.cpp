@@ -1,17 +1,17 @@
 #include <imgui.h>
 #include <SDL.h>
 
-#include "SeqProjectHeaders.h";
-#include "SeqWindow.h";
-#include "SeqUILibrary.h";
-#include "SeqUISequencer.h";
-#include "SeqUIVideo.h";
-#include "SeqDialogs.h";
-#include "SeqSerializerBin.h";
-#include "SeqPath.h";
-#include "SeqUtils.h";
-#include "SeqString.h";
-#include "SeqList.h";
+#include "SeqProjectHeaders.h"
+#include "SeqWindow.h"
+#include "SeqUILibrary.h"
+#include "SeqUISequencer.h"
+#include "SeqUIVideo.h"
+#include "SeqDialogs.h"
+#include "SeqSerializerBin.h"
+#include "SeqPath.h"
+#include "SeqUtils.h"
+#include "SeqString.h"
+#include "SeqList.h"
 
 SeqProject::SeqProject()
 {

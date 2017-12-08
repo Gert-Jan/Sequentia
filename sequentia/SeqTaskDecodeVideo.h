@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SeqWorkerTask.h";
+#include "SeqWorkerTask.h"
 
 enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;

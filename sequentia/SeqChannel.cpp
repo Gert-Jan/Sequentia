@@ -1,7 +1,7 @@
-#include "SeqChannel.h";
-#include "SeqClip.h";
-#include "SeqSerializer.h";
-#include "SeqList.h";
+#include "SeqChannel.h"
+#include "SeqClip.h"
+#include "SeqSerializer.h"
+#include "SeqList.h"
 
 SeqChannel::SeqChannel(SeqLibrary *library, char *name, SeqChannelType type):
 	library(library),

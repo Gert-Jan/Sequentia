@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SeqSerializer.h";
+#include "SeqSerializer.h"
 struct SDL_RWops;
 
 class SeqSerializerBin : public SeqSerializer

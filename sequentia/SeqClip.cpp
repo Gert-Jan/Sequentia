@@ -1,8 +1,8 @@
-#include "SeqClip.h";
-#include "Sequentia.h";
-#include "SeqLibrary.h";
-#include "SeqChannel.h";
-#include "SeqSerializer.h";
+#include "SeqClip.h"
+#include "Sequentia.h"
+#include "SeqLibrary.h"
+#include "SeqChannel.h"
+#include "SeqSerializer.h"
 
 SeqClip::SeqClip(SeqLibrary *library, SeqChannel* parent, SeqLibraryLink *link):
 	library(library),

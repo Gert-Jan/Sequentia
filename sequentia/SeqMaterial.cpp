@@ -1,5 +1,5 @@
-#include "SeqMaterial.h";
-#include "SeqString.h";
+#include "SeqMaterial.h"
+#include "SeqString.h"
 #include "imgui.h"
 
 SeqMaterial::SeqMaterial() :

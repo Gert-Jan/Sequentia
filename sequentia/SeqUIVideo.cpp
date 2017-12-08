@@ -1,15 +1,15 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <SDL.h>
-#include "SeqUIVideo.h";
-#include "SeqProjectHeaders.h";
-#include "SeqWorkerManager.h";
-#include "SeqTaskDecodeVideo.h";
-#include "SeqVideoInfo.h";
-#include "SeqDecoder.h";
-#include "SeqString.h";
-#include "SeqRenderer.h";
-#include "SeqMaterial.h";
+#include "SeqUIVideo.h"
+#include "SeqProjectHeaders.h"
+#include "SeqWorkerManager.h"
+#include "SeqTaskDecodeVideo.h"
+#include "SeqVideoInfo.h"
+#include "SeqDecoder.h"
+#include "SeqString.h"
+#include "SeqRenderer.h"
+#include "SeqMaterial.h"
 
 extern "C"
 {

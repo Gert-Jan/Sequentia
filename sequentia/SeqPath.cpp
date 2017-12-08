@@ -1,6 +1,6 @@
-#include "SeqPath.h";
-#include "SeqList.h";
-#include "SeqString.h";
+#include "SeqPath.h"
+#include "SeqList.h"
+#include "SeqString.h"
 #include <SDL.h>
 #include <dirent.h>
 #include <direct.h>

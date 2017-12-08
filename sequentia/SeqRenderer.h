@@ -1,6 +1,6 @@
 #pragma once
-#include "SeqMaterial.h";
-#include "imgui.h";
+#include "SeqMaterial.h"
+#include "imgui.h"
 
 struct SDL_Window;
 struct ImDrawData;

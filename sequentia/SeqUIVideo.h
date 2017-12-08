@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SeqWindow.h";
-#include "SeqAction.h";
+#include "SeqWindow.h"
+#include "SeqAction.h"
 
 class SeqProject;
 class SeqLibrary;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SDL_config.h";
+#include "SDL_config.h"
 
 class SeqLibrary;
 class SeqChannel;

@@ -1,12 +1,12 @@
 #include <dirent.h>
 #include <SDL.h>
-#include "SeqLibrary.h";
-#include "SeqList.h";
-#include "SeqString.h";
-#include "SeqPath.h";
-#include "SeqSerializer.h";
-#include "SeqWorkerManager.h";
-#include "SeqTaskReadVideoInfo.h";
+#include "SeqLibrary.h"
+#include "SeqList.h"
+#include "SeqString.h"
+#include "SeqPath.h"
+#include "SeqSerializer.h"
+#include "SeqWorkerManager.h"
+#include "SeqTaskReadVideoInfo.h"
 
 SeqLibrary::SeqLibrary() :
 	lastLinkFocus(nullptr)

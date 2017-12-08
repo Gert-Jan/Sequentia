@@ -1,4 +1,4 @@
-#include <string>;
+#include <string>
 
 template<class T>
 SeqList<T>::SeqList() : SeqList(16)

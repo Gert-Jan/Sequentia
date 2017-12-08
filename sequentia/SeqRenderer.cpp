@@ -1,5 +1,5 @@
-#include "SeqRenderer.h";
-#include "SeqList.h";
+#include "SeqRenderer.h"
+#include "SeqList.h"
 #include "imgui.h"
 #include <GL/gl3w.h>
 extern "C"

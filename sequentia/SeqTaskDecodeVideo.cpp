@@ -1,7 +1,7 @@
-#include "SeqTaskDecodeVideo.h";
-#include "SeqLibrary.h";
-#include "SeqVideoInfo.h";
-#include "SeqDecoder.h";
+#include "SeqTaskDecodeVideo.h"
+#include "SeqLibrary.h"
+#include "SeqVideoInfo.h"
+#include "SeqDecoder.h"
 #include <SDL.h>
 
 SeqTaskDecodeVideo::SeqTaskDecodeVideo(SeqLibraryLink *link) :

@@ -1,10 +1,12 @@
 #include <imgui.h>
 
-#include "SeqDialogs.h";
-#include "SeqProjectHeaders.h";
-#include "SeqString.h";
-#include "SeqPath.h";
-#include "SeqUtils.h";
+#include "SeqDialogs.h"
+#include "SeqProjectHeaders.h"
+#include "SeqAction.h"
+#include "SeqActionFactory.h"
+#include "SeqString.h"
+#include "SeqPath.h"
+#include "SeqUtils.h"
 
 bool SeqDialogs::showError = false;
 bool SeqDialogs::showRequestProjectPath = false;

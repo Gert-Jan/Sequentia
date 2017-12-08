@@ -1,5 +1,5 @@
-#include "SeqDecoder.h";
-#include "SeqVideoInfo.h";
+#include "SeqDecoder.h"
+#include "SeqVideoInfo.h"
 #include <SDL.h>
 
 SeqDecoder::SeqDecoder():

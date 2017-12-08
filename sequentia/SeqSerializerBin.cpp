@@ -1,6 +1,6 @@
 #include <SDL.h>
 #include <string>
-#include "SeqSerializerBin.h";
+#include "SeqSerializerBin.h"
 
 SeqSerializerBin::SeqSerializerBin(SDL_RWops *stream):
 	stream(stream)

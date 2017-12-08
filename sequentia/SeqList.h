@@ -31,4 +31,4 @@ private:
 	int count;
 };
 
-#include "SeqListImpl.h"; 
+#include "SeqListImpl.h" 

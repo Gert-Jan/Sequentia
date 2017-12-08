@@ -1,5 +1,5 @@
-#include "SeqWorker.h";
-#include "SeqWorkerTask.h";
+#include "SeqWorker.h"
+#include "SeqWorkerTask.h"
 #include <SDL.h>
 
 SeqWorker::SeqWorker():

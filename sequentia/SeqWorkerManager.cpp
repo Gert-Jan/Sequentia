@@ -1,7 +1,7 @@
-#include "SeqWorkerManager.h";
-#include "SeqWorker.h";
-#include "SeqWorkerTask.h";
-#include "SeqList.h";
+#include "SeqWorkerManager.h"
+#include "SeqWorker.h"
+#include "SeqWorkerTask.h"
+#include "SeqList.h"
 
 SeqWorkerManager* SeqWorkerManager::Instance()
 {

@@ -1,6 +1,6 @@
-#include "SeqString.h";
-#include "SeqList.h";
-#include "SeqUtils.h";
+#include "SeqString.h"
+#include "SeqList.h"
+#include "SeqUtils.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <cstdarg>

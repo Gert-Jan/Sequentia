@@ -1,11 +1,12 @@
 #include <imgui.h>
 #include <imgui_internal.h>
-#include "SeqUISequencer.h";
-#include "Sequentia.h";
-#include "SeqProjectHeaders.h";
-#include "SeqSerializer.h";
-#include "SeqString.h";
-#include "SeqList.h";
+#include "SeqUISequencer.h"
+#include "Sequentia.h"
+#include "SeqProjectHeaders.h"
+#include "SeqActionFactory.h"
+#include "SeqSerializer.h"
+#include "SeqString.h"
+#include "SeqList.h"
 
 SeqUISequencer::SeqUISequencer(SeqProject *project):
 	project(project)

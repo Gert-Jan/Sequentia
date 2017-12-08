@@ -1,7 +1,9 @@
-#include "Sequentia.h";
-#include "SeqRenderer.h";
-#include "SeqProjectHeaders.h";
-#include "SeqWorkerManager.h";
+#include "Sequentia.h"
+#include "SeqRenderer.h"
+#include "SeqProjectHeaders.h"
+#include "SeqActionFactory.h"
+#include "SeqWorkerManager.h"
+#include "SeqUISequencer.h"
 #include "imgui.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
