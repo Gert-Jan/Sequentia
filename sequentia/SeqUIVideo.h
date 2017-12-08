@@ -5,7 +5,7 @@
 
 class SeqProject;
 class SeqLibrary;
-class SeqMaterial;
+struct SeqMaterial;
 class SeqSerializer;
 class SeqTaskDecodeVideo;
 struct AVFrame;

@@ -4,7 +4,7 @@
 
 class SeqLibrary;
 class SeqChannel;
-class SeqLibraryLink;
+struct SeqLibraryLink;
 class SeqSerializer;
 
 class SeqClip

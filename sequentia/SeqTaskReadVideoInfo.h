@@ -4,7 +4,7 @@
 
 enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;
-struct SeqVideoInfo;
+class SeqVideoInfo;
 
 class SeqTaskReadVideoInfo : public SeqWorkerTask
 {

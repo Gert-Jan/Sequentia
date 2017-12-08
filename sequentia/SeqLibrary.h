@@ -7,7 +7,7 @@ template<class T>
 class SeqList;
 class SeqSerializer;
 class SeqLibrary;
-struct SeqVideoInfo;
+class SeqVideoInfo;
 
 struct SeqLibraryLink
 {

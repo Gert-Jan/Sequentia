@@ -9,7 +9,7 @@ enum class SeqChannelType;
 
 class SeqWindow;
 
-class SeqAction;
+struct SeqAction;
 class SeqActionHandler;
 
 template<class T>

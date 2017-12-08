@@ -5,6 +5,8 @@ typedef union SDL_Event SDL_Event;
 
 class SeqProject;
 class SeqRenderer;
+class SeqLibrary;
+struct SeqLibraryLink;
 
 class Sequentia
 {

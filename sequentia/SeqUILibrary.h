@@ -5,7 +5,7 @@
 
 class SeqProject;
 class SeqLibrary;
-class SeqLibraryLink;
+struct SeqLibraryLink;
 class SeqSerializer;
 
 class SeqUILibrary : public SeqWindow, SeqActionHandler
