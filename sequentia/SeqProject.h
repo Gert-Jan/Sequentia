@@ -11,6 +11,7 @@ class SeqWindow;
 
 struct SeqAction;
 class SeqActionHandler;
+enum class SeqActionExecution;
 
 template<class T>
 class SeqList;
@@ -30,8 +31,11 @@ public:
 	char* GetPath();
 	void SetPath(char *fullPath);
 
+	SeqLibrary* GetLibrary();
+
 	int GetChannelCount();
 	SeqChannel* GetChannel(const int index);
+	int GetChannelIndexByActionId(const int id);
 
 	int NextWindowId();
 	void AddWindowSequencer();
@@ -58,8 +62,10 @@ public:
 	void UndoAction(const SeqAction action);
 
 private:
+	int NextActionId();
 	void AddChannel(SeqChannelType type, char *name);
 	void RemoveChannel(const int index);
+	void ExecuteAction(const SeqAction action, const SeqActionExecution execution);
 
 	int Serialize(SeqSerializer *serializer);
 	int Deserialize(SeqSerializer *serializer);
@@ -75,4 +81,5 @@ private:
 	SeqList<SeqActionHandler*> *actionHandlers;
 	SeqList<SeqAction> *actions;
 	int actionCursor = 0;
+	int nextActionId = 0;
 };

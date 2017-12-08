@@ -32,6 +32,7 @@ public:
 	int LinkCount();
 	SeqLibraryLink* GetLink(const int index);
 	SeqLibraryLink* GetLink(const char *fullPath);
+	int GetLinkIndex(const char *fullPath);
 	void SetLastLinkFocus(SeqLibraryLink *link);
 	SeqLibraryLink* GetLastLinkFocus();
 	void UpdatePaths(char *oldProjectFullPath, char *newProjectFullPath);
@@ -39,9 +40,6 @@ public:
 
 	void Serialize(SeqSerializer *serializer);
 	void Deserialize(SeqSerializer *serializer);
-
-private:
-	int GetLinkIndex(const char *fullPath);
 
 private:
 	SeqList<SeqLibraryLink*> *links;

@@ -163,6 +163,8 @@
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
     <ClCompile Include="libs\gl3w\GL\gl3w.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SeqAction.cpp" />
+    <ClCompile Include="SeqActionFactory.cpp" />
     <ClCompile Include="SeqChannel.cpp" />
     <ClCompile Include="SeqClip.cpp" />
     <ClCompile Include="SeqDecoder.cpp" />

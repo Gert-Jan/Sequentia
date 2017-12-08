@@ -23,14 +23,18 @@ public:
 	~SeqChannel();
 
 	void AddClip(SeqClip* clip);
+	void AddClipAt(SeqClip* clip, int const index);
 	void RemoveClip(SeqClip* clip);
+	void RemoveClip(const int index);
 	void MoveClip(SeqClip* clip, int64_t leftTime);
 	int ClipCount();
-	SeqClip* GetClip(int index);
+	SeqClip* GetClip(const int index);
+	int GetClipIndexByActionId(const int id);
 
 private:
 	void SortClip(int index);
-	void SwapClips(int index0, int index1);
+	void SwapClips(const int index0, const int index1);
+	int NextActionId();
 
 public:
 	void Serialize(SeqSerializer *serializer);
@@ -40,7 +44,9 @@ private:
 public:
 	SeqChannelType type;
 	char *name;
+	int actionId;
 private:
 	SeqLibrary *library;
 	SeqList<SeqClip*> *clips;
+	int nextActionId;
 };

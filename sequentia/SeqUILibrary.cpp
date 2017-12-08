@@ -73,14 +73,19 @@ void SeqUILibrary::Draw()
 		ImGui::Text("Duration"); ImGui::NextColumn();
 		ImGui::Separator();
 
-		int selected = -1;
 		for (int i = 0; i < library->LinkCount(); i++)
 		{
 			SeqLibraryLink *link = library->GetLink(i);
-			if (ImGui::Selectable(link->fullPath, selected == i, ImGuiSelectableFlags_SpanAllColumns))
+			if (ImGui::Selectable(link->fullPath, library->GetLastLinkFocus() == link, ImGuiSelectableFlags_SpanAllColumns))
 			{
-				selected = i;
 				library->SetLastLinkFocus(link);
+			}
+			if (ImGui::IsItemActive()) // is dragging
+			{
+				if (Sequentia::GetDragClip() == nullptr)
+				{
+					Sequentia::SetDragClip(library, link);
+				}
 			}
 			AddContextMenu(link);
 			ImGui::NextColumn();

@@ -5,6 +5,7 @@
 
 class SeqProject;
 class SeqChannel;
+class SeqClip;
 class SeqSerializer;
 template<class T>
 class SeqList;
@@ -20,6 +21,7 @@ public:
 	void ActionUndone(const SeqAction action);
 	SeqWindowType GetWindowType();
 	void Draw();
+	static void DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size);
 	void Serialize(SeqSerializer *serializer);
 
 private:
@@ -34,8 +36,9 @@ private:
 	void Deserialize(SeqSerializer *serializer);
 
 private:
-	ImU32 lineColor;
-	ImU32 backgroundColor;
+	static ImU32 lineColor;
+	static ImU32 backgroundColor;
+	static ImU32 clipBackgroundColor;
 	const float pixelsPerSecond = 100;
 	const float minSettingsPanelWidth = 40;
 	const float maxSettingsPanelWidth = 300;

@@ -16,6 +16,7 @@ bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
+SeqClip* Sequentia::dragClip = nullptr;
 
 int Sequentia::Run(char *openProject)
 {
@@ -75,45 +76,11 @@ int Sequentia::Run(char *openProject)
 		}
 
 		BeginFrame();
-
-		if (ImGui::BeginMainMenuBar())
-		{
-			if (ImGui::BeginMenu("Project"))
-			{
-				if (ImGui::MenuItem("New", "Ctrl+N")) { project->Clear(); }
-				if (ImGui::MenuItem("Open", "Ctrl+O")) { project->OpenFrom(); }
-				ImGui::Separator();
-				if (ImGui::MenuItem("Save", "Ctrl+S")) { project->Save(); }
-				if (ImGui::MenuItem("Save As", "")) { project->SaveAs(); }
-				ImGui::Separator();
-				if (ImGui::MenuItem("Exit", "")) { done = true; }
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Edit"))
-			{
-				if (ImGui::MenuItem("Undo", "Ctrl+Z")) { project->Undo(); }
-				if (ImGui::MenuItem("Redo", "Ctrl+Y")) { project->Redo(); }
-				ImGui::Separator();
-				if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {}
-				if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {}
-				if (ImGui::MenuItem("Paste", "CTRL+V", false, false)) {}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Window"))
-			{
-				if (ImGui::MenuItem("Video", "")) { project->AddWindowVideo(); }
-				if (ImGui::MenuItem("Sequencer", "")) { project->AddWindowSequencer(); }
-				if (ImGui::MenuItem("Library", "")) { project->AddWindowLibrary(); }
-				ImGui::Separator();
-				if (ImGui::MenuItem("ImGui Demo", "")) { showImGuiDemo = true; }
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
-		}
-
+		HandleMainMenuBar();
 		SeqWorkerManager::Instance()->Update();
 		project->Update();
 		project->Draw();
+		HandleDragging();
 
 		if (showImGuiDemo)
 		{
@@ -263,6 +230,7 @@ bool Sequentia::ImGuiProcessEvent(SDL_Event* event)
 			return false;
 		}
 	}
+	return false;
 };
 
 const char* Sequentia::ImGuiGetClipboardText(void*)
@@ -273,4 +241,84 @@ const char* Sequentia::ImGuiGetClipboardText(void*)
 void Sequentia::ImGuiSetClipboardText(void*, const char* text)
 {
 	SDL_SetClipboardText(text);
+};
+
+void Sequentia::HandleMainMenuBar()
+{
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("Project"))
+		{
+			if (ImGui::MenuItem("New", "Ctrl+N")) { project->Clear(); }
+			if (ImGui::MenuItem("Open", "Ctrl+O")) { project->OpenFrom(); }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Save", "Ctrl+S")) { project->Save(); }
+			if (ImGui::MenuItem("Save As", "")) { project->SaveAs(); }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Exit", "")) { done = true; }
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Undo", "Ctrl+Z")) { project->Undo(); }
+			if (ImGui::MenuItem("Redo", "Ctrl+Y")) { project->Redo(); }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {}
+			if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {}
+			if (ImGui::MenuItem("Paste", "CTRL+V", false, false)) {}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Window"))
+		{
+			if (ImGui::MenuItem("Video", "")) { project->AddWindowVideo(); }
+			if (ImGui::MenuItem("Sequencer", "")) { project->AddWindowSequencer(); }
+			if (ImGui::MenuItem("Library", "")) { project->AddWindowLibrary(); }
+			ImGui::Separator();
+			if (ImGui::MenuItem("ImGui Demo", "")) { showImGuiDemo = true; }
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+};
+
+SeqProject* Sequentia::GetCurrentProject()
+{
+	return project;
+}
+
+void Sequentia::HandleDragging()
+{
+	if (dragClip != nullptr)
+	{
+		const ImVec2 size = ImVec2(150, 50);
+		ImGui::BeginTooltip();
+		SeqUISequencer::DrawClip(dragClip, ImGui::GetCursorScreenPos(), size);
+		ImGui::EndTooltip();
+		if (ImGui::IsMouseReleased(0))
+		{
+			SeqChannel *channel = dragClip->GetParent();
+			if (channel != nullptr)
+				channel->RemoveClip(dragClip);
+			else
+				delete dragClip;
+			SetDragClip(nullptr);
+		}
+	}
+};
+
+void Sequentia::SetDragClip(SeqLibrary* library, SeqLibraryLink* link)
+{
+	SeqClip *clip = new SeqClip(library, link);
+	clip->isPreview = true;
+	Sequentia::SetDragClip(clip);
+}
+
+void Sequentia::SetDragClip(SeqClip *clip)
+{
+	dragClip = clip;
+};
+
+SeqClip* Sequentia::GetDragClip()
+{
+	return dragClip;
 };

@@ -1,22 +1,32 @@
 #pragma once
 
+#include "stdint.h"
+
 enum class SeqChannelType;
+class SeqClip;
 
 enum class SeqActionType
 {
 	AddChannel,
-	RemoveChannel,
 	AddLibraryLink,
-	RemoveLibraryLink,
+	AddClipToChannel,
 	COUNT
+};
+
+enum class SeqActionExecution
+{
+	Do,
+	Undo
 };
 
 struct SeqAction
 {
 	SeqActionType type;
+	SeqActionExecution execution;
 	void *data;
 	SeqAction() { }
-	SeqAction(SeqActionType type, void *data): type(type), data(data) { }
+	SeqAction(SeqActionType type, SeqActionExecution execution, void *data): 
+		type(type), execution(execution), data(data) { }
 };
 
 class SeqActionHandler
@@ -32,4 +42,15 @@ struct SeqActionAddChannel
 	char *name;
 	SeqActionAddChannel(SeqChannelType type, char *name): type(type), name(name) { }
 	~SeqActionAddChannel() { delete[] name; }
+};
+
+struct SeqActionAddClipToChannel
+{
+	int channelId;
+	int libraryLinkIndex;
+	int clipId;
+	int64_t leftTime;
+	int64_t rightTime;
+	int64_t startTime;
+	SeqActionAddClipToChannel(SeqClip* clip);
 };

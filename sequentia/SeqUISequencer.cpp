@@ -8,6 +8,10 @@
 #include "SeqString.h"
 #include "SeqList.h"
 
+ImU32 SeqUISequencer::clipBackgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_MenuBarBg]);
+ImU32 SeqUISequencer::lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
+ImU32 SeqUISequencer::backgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_ComboBg]);
+
 SeqUISequencer::SeqUISequencer(SeqProject *project):
 	project(project)
 {
@@ -25,10 +29,6 @@ SeqUISequencer::SeqUISequencer(SeqProject *project, SeqSerializer *serializer):
 
 void SeqUISequencer::Init()
 {
-	// set colors
-	const ImGuiStyle style = ImGui::GetStyle();
-	lineColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
-	backgroundColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_::ImGuiCol_ComboBg]);
 	// alloc memory
 	name = SeqString::Format("Sequencer##%d", project->NextWindowId());
 	channelHeights = new SeqList<int>();
@@ -318,19 +318,89 @@ void SeqUISequencer::DrawChannels()
 void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 contentSize, float height)
 {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + height));
+
+	bool isHovering = false;
+	SeqClip *dragClip = Sequentia::GetDragClip();
+	if (dragClip != nullptr)
+	{
+		if (ImGui::IsMouseHoveringRect(totalRect.Min, totalRect.Max))
+		{
+			if (ImGui::IsMouseDown(0))
+			{
+				isHovering = true;
+				if (dragClip->GetParent() != channel)
+					dragClip->SetParent(channel);
+			}
+			else
+			{
+				project->AddAction(SeqActionFactory::CreateAddClipToChannelAction(dragClip));
+			}
+		}
+		else if (dragClip->GetParent() == channel)
+		{
+			dragClip->SetParent(nullptr);
+		}
+	}
+
 	drawList->AddRectFilled(ImVec2(cursor.x + ImGui::GetScrollX(), cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + height), backgroundColor, rounding, 0x2 | 0x4);
 	drawList->AddRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + height), lineColor, rounding, 0x2 | 0x4, lineThickness);
-	//ImGui::SetCursorScreenPos(ImVec2(cursor.x + ImGui::GetScrollX() + 4, cursor.y + 4));
-	//ImGui::Text("%s %d", project->GetChannel(i).name, i);
+	
+	// calc left and right side of the visible part of the channel
+	const double start = position;
+	const double end = position + PixelsToTime(ImGui::GetContentRegionAvailWidth());
+	// draw clips
 	for (int i = 0; i < channel->ClipCount(); i++)
 	{
 		SeqClip *clip = channel->GetClip(i);
-		drawList->AddRect(
-			ImVec2(cursor.x + TimeToPixels(clip->leftTime / Sequentia::TimeBase), cursor.y),
-			ImVec2(cursor.x + TimeToPixels(clip->rightTime / Sequentia::TimeBase), cursor.y + height),
-			lineColor);
-		ImGui::SetCursorScreenPos(ImVec2(cursor.x + TimeToPixels(clip->leftTime / Sequentia::TimeBase), cursor.y));
-		ImGui::Text("%s", clip->GetLabel());
+		const double left = (double)clip->leftTime / Sequentia::TimeBase;
+		const double right = (double)clip->rightTime / Sequentia::TimeBase;
+		// culling
+		if (left > end)
+			break; // clips are sorted by left position, so we can exit the loop here
+		if (left >= start || right >= start)
+		{
+			const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
+			const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
+			DrawClip(clip, clipPosition, clipSize);
+		}
+	}
+}
+
+void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size)
+{
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	const ImVec2 tl = ImVec2(position.x, position.y);
+	const ImVec2 br = ImVec2(position.x + size.x, position.y + size.y);
+	SeqChannel *channel = clip->GetParent();
+	SeqString::FormatBuffer("context_channel%d_clip%d", channel == nullptr ? -1 : channel->actionId, clip->actionId);
+	ImGui::ItemSize(size);
+	if (ImGui::IsMouseHoveringRect(tl, br))
+	{
+		// clip hovered
+		drawList->AddRectFilled(tl, br, lineColor);
+		if (ImGui::IsMouseClicked(1))
+		{
+			// start context menu popup
+			ImGui::OpenPopupEx(SeqString::Buffer, false);
+		}
+	}
+	else
+	{
+		// clip not hovered (default)
+		drawList->AddRectFilled(tl, br, clipBackgroundColor);
+	}
+	drawList->AddRect(tl, br, lineColor);
+	ImGui::SetCursorScreenPos(position);
+	ImGui::Text("%s", clip->GetLabel());
+
+	// handle popup menu if has been opened in the past
+	if (ImGui::BeginPopupContextVoid(SeqString::Buffer))
+	{
+		if (ImGui::Selectable("Delete"))
+			Sequentia::GetCurrentProject()->AddAction(SeqActionFactory::CreateRemoveClipFromChannelAction(clip));
+		ImGui::EndPopup();
 	}
 }
 

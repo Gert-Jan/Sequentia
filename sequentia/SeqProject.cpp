@@ -133,10 +133,16 @@ void SeqProject::SetPath(char *fullPath)
 	library->UpdatePaths(oldPath, fullPath);
 }
 
+SeqLibrary* SeqProject::GetLibrary()
+{
+	return library;
+}
+
 void SeqProject::AddChannel(SeqChannelType type, char *name)
 {
 	SeqChannel* channel = new SeqChannel(library, name, type);
 	channels->Add(channel);
+	channel->actionId = NextActionId();
 }
 
 void SeqProject::RemoveChannel(const int index)
@@ -152,6 +158,14 @@ int SeqProject::GetChannelCount()
 SeqChannel* SeqProject::GetChannel(const int index)
 {
 	return channels->Get(index);
+}
+
+int SeqProject::GetChannelIndexByActionId(const int id)
+{
+	for (int i = 0; i < channels->Count(); i++)
+		if (channels->Get(i)->actionId == id)
+			return i;
+	return -1;
 }
 
 int SeqProject::NextWindowId()
@@ -197,6 +211,12 @@ void SeqProject::Draw()
 	{
 		windows->Get(i)->Draw();
 	}
+}
+
+int SeqProject::NextActionId()
+{
+	// TODO: on overflow rearrange action ids.
+	return nextActionId++;
 }
 
 void SeqProject::Undo()
@@ -259,32 +279,8 @@ SeqAction SeqProject::GetAction(const int index)
 
 void SeqProject::DoAction(const SeqAction action)
 {
-	switch (action.type)
-	{
-		case SeqActionType::AddChannel:
-		{
-			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-			AddChannel(data->type, SeqString::Copy(data->name));
-			break;
-		}
-		case SeqActionType::RemoveChannel:
-		{
-			RemoveChannel(channels->Count() - 1);
-			break;
-		}
-		case SeqActionType::AddLibraryLink:
-		{
-			char *fullPath = SeqString::Copy((char*)action.data);
-			library->AddLink(fullPath);
-			break;
-		}
-		case SeqActionType::RemoveLibraryLink:
-		{
-			char *fullPath = SeqString::Copy((char*)action.data);
-			library->RemoveLink(fullPath);
-			break;
-		}
-	}
+	// do the action
+	ExecuteAction(action, action.execution);
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
@@ -294,36 +290,73 @@ void SeqProject::DoAction(const SeqAction action)
 
 void SeqProject::UndoAction(const SeqAction action)
 {
-	switch (action.type)
-	{
-		case SeqActionType::AddChannel:
-		{
-			RemoveChannel(channels->Count() - 1);
-			break;
-		}
-		case SeqActionType::RemoveChannel:
-		{
-			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-			AddChannel(data->type, SeqString::Copy(data->name));
-			break;
-		}
-		case SeqActionType::AddLibraryLink:
-		{
-			char *fullPath = SeqString::Copy((char*)action.data);
-			library->RemoveLink(fullPath);
-			break;
-		}
-		case SeqActionType::RemoveLibraryLink:
-		{
-			char *fullPath = SeqString::Copy((char*)action.data);
-			library->AddLink(fullPath);
-			break;
-		}
-	}
+	// invert execution
+	SeqActionExecution execution = action.execution;
+	if (execution == SeqActionExecution::Do)
+		execution = SeqActionExecution::Undo;
+	else
+		execution = SeqActionExecution::Do;
+	// do the action
+	ExecuteAction(action, execution);
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
 		actionHandlers->Get(i)->ActionUndone(action);
+	}
+}
+
+void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution execution)
+{
+	switch (action.type)
+	{
+		case SeqActionType::AddChannel:
+		{
+			if (execution == SeqActionExecution::Do)
+			{
+				SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
+				AddChannel(data->type, SeqString::Copy(data->name));
+			}
+			else
+			{
+				RemoveChannel(channels->Count() - 1);
+			}
+			break;
+		}
+		case SeqActionType::AddLibraryLink:
+		{
+			if (execution == SeqActionExecution::Do)
+			{
+				char *fullPath = SeqString::Copy((char*)action.data);
+				library->AddLink(fullPath);
+			}
+			else
+			{
+				char *fullPath = SeqString::Copy((char*)action.data);
+				library->RemoveLink(fullPath);
+			}
+			break;
+		}
+		case SeqActionType::AddClipToChannel:
+		{
+			if (execution == SeqActionExecution::Do)
+			{
+				SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
+				SeqChannel* channel = GetChannel(data->channelId);
+				SeqClip* clip = new SeqClip(library, library->GetLink(data->libraryLinkIndex));
+				clip->leftTime = data->leftTime;
+				clip->rightTime = data->rightTime;
+				clip->startTime = data->startTime;
+				channel->AddClip(clip);
+				data->clipId = clip->actionId;
+			}
+			else
+			{
+				SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
+				SeqChannel *channel = GetChannel(GetChannelIndexByActionId(data->channelId));
+				channel->RemoveClip(channel->GetClipIndexByActionId(data->clipId));
+			}
+			break;
+		}
 	}
 }
 
@@ -370,8 +403,13 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 
 	// channels
 	count = serializer->ReadInt();
+	nextActionId = count;
 	for (int i = 0; i < count; i++)
-		channels->Add(new SeqChannel(library, serializer));
+	{
+		SeqChannel *channel = new SeqChannel(library, serializer);
+		channel->actionId = i;
+		channels->Add(channel);
+	}
 
 	// ui sequencers
 	count = serializer->ReadInt();

@@ -72,6 +72,12 @@
     <ClCompile Include="SeqClip.cpp">
       <Filter>data</Filter>
     </ClCompile>
+    <ClCompile Include="SeqAction.cpp">
+      <Filter>sys\action</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqActionFactory.cpp">
+      <Filter>sys\action</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
