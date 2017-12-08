@@ -60,7 +60,7 @@ void SeqProject::Clear()
 void SeqProject::Open()
 {
 
-	if (fullPath == "")
+	if (SeqString::IsEmpty(fullPath))
 	{
 		OpenFrom();
 		return;
@@ -88,7 +88,7 @@ void SeqProject::OpenFrom()
 
 void SeqProject::Save()
 {
-	if (fullPath == "")
+	if (SeqString::IsEmpty(fullPath))
 	{
 		SaveAs();
 		return;

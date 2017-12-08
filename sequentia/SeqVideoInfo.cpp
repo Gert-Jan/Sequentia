@@ -26,7 +26,7 @@ void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint64_t time)
 	{
 		int hours, mins, secs, us;
 		int64_t duration = time + (time <= INT64_MAX - 5000 ? 5000 : 0);
-		secs = duration / AV_TIME_BASE;
+		secs = (int)(duration / AV_TIME_BASE);
 		us = duration % AV_TIME_BASE;
 		mins = secs / 60;
 		secs %= 60;

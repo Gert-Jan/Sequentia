@@ -23,6 +23,7 @@ public:
 	static char* CopyBuffer();
 	static bool Equals(const char *string1, const char *string2);
 	static bool EqualsBuffer(const char *string);
+	static bool IsEmpty(const char *string);
 	static int Find(const char *string, const char *phrase, const int startAt = 0);
 	static int FindReverse(const char *string, const char *phrase, const int startAt = -1);
 	static void ReplaceBuffer(const char* phrase, const char *with);

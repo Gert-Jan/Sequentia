@@ -55,8 +55,6 @@ void SeqDecoder::Dispose()
 
 int SeqDecoder::ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo)
 {
-	int frameIndex = 0;
-
 	/* open input file, and allocate format context */
 	if (avformat_open_input(&videoInfo->formatContext, fullPath, nullptr, nullptr) < 0)
 	{
@@ -136,6 +134,7 @@ int SeqDecoder::Preload(SeqVideoInfo *info)
 	// prefetch a bunch of packets
 	packetBufferCursor = 0;
 	FillPacketBuffer();
+	return 0;
 }
 
 int SeqDecoder::Loop()
@@ -384,7 +383,7 @@ bool SeqDecoder::NextKeyFramePts(int64_t *result)
 	for (int i = 1; i < packetBufferSize; ++i)
 	{
 		AVPacket* pkt = &packetBuffer[(displayPacketCursor + i) % packetBufferSize];
-		if (pkt->stream_index == videoInfo->videoStreamIndex && pkt->flags & AV_PKT_FLAG_KEY > 0)
+		if (pkt->stream_index == videoInfo->videoStreamIndex && (pkt->flags & AV_PKT_FLAG_KEY) > 0)
 		{
 			*result = pkt->pts;
 			return true;
@@ -459,7 +458,7 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 		decoded = FFMIN(ret, pkt.size);
 		if (*frameIndex)
 		{
-			size_t unpaddedLinesize = target->nb_samples * av_get_bytes_per_sample((AVSampleFormat)target->format);
+			//size_t unpaddedLinesize = target->nb_samples * av_get_bytes_per_sample((AVSampleFormat)target->format);
 			//char buff[256];
 			//av_ts_make_time_string(buff, target->pts, &videoInfo.audioCodec->time_base);
 			//printf("audio_frame%s n:%d nb_samples:%d pts:%s\n",

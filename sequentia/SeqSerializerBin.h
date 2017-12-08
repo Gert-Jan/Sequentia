@@ -10,9 +10,9 @@ public:
 	~SeqSerializerBin();
 
 	int GetSerializedVersion();
-	void SetSerializedVersion(int serializedVersion);
+	void SetSerializedVersion(int version);
 	int GetApplicationVersion();
-	void SetApplicationVersion(int applicationVersion);
+	void SetApplicationVersion(int version);
 	
 	void Write(int32_t value);
 	int32_t ReadInt();

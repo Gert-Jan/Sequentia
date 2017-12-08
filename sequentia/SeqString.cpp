@@ -14,7 +14,7 @@ char SeqString::Buffer[1024] = "";
 void SeqString::SetBuffer(const char *string, const int count)
 {
 	int cappedCount = SDL_min(BufferLen - 1, count);
-	strncpy(Buffer, string, cappedCount);
+	strncpy_s(Buffer, string, cappedCount);
 	Buffer[cappedCount] = 0;
 }
 
@@ -85,10 +85,15 @@ bool SeqString::EqualsBuffer(const char *string)
 	return strcmp(string, Buffer) == 0;
 }
 
+bool SeqString::IsEmpty(const char *string)
+{
+	return string[0] == '\0';
+}
+
 int SeqString::Find(const char *string, const char *phrase, int startAt)
 {
 	int phrasePos = 0;
-	int phraseLen = strlen(phrase);
+	int phraseLen = (int)strlen(phrase);
 	int current = startAt;
 	while (string[current] != 0)
 	{
@@ -109,9 +114,9 @@ int SeqString::Find(const char *string, const char *phrase, int startAt)
 
 int SeqString::FindReverse(const char *string, const char *phrase, const int startAt)
 {
-	int phraseLen = strlen(phrase);
+	int phraseLen = (int)strlen(phrase);
 	int phrasePos = phraseLen - 1;
-	int current = startAt == -1 ? strlen(string) : startAt;
+	int current = startAt == -1 ? (int)strlen(string) : startAt;
 	while (current >= 0)
 	{
 		if (string[current] == phrase[phrasePos])
@@ -132,10 +137,10 @@ int SeqString::FindReverse(const char *string, const char *phrase, const int sta
 void SeqString::ReplaceBuffer(const char* phrase, const char *with)
 {
 	int pos = Find(Buffer, phrase, 0);
-	int phraseLen = strlen(phrase);
-	int withLen = strlen(with);
+	int phraseLen = (int)strlen(phrase);
+	int withLen = (int)strlen(with);
 	int delta = withLen - phraseLen;
-	int len = strlen(Buffer) + 1;
+	int len = (int)strlen(Buffer) + 1;
 
 	while (pos > -1)
 	{
@@ -152,7 +157,7 @@ SeqList<SeqList<char>*>* SeqString::Split(const char *string, const char *separa
 {
 	int previousSplit = 0;
 	int splitIndex = 0;
-	int separatorLen = strlen(separator);
+	int separatorLen = (int)strlen(separator);
 	int separatorPos = Find(string, separator, 0);
 
 	// prepare the result buffer
@@ -168,7 +173,7 @@ SeqList<SeqList<char>*>* SeqString::Split(const char *string, const char *separa
 		separatorPos = Find(string, separator, previousSplit);
 	}
 	// add the last 
-	AddToSplitResultBuffer(splitIndex, string, strlen(string) - previousSplit, previousSplit);
+	AddToSplitResultBuffer(splitIndex, string, (int)strlen(string) - previousSplit, previousSplit);
 	return SplitResultBuffer;
 }
 

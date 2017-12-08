@@ -117,7 +117,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	// draw settings panels
 	for (int i = 0; i < project->GetChannelCount(); i++)
 	{
-		float channelHeight = channelHeights->Get(i);
+		int channelHeight = channelHeights->Get(i);
 		// only draw if visible
 		if (cursor.y - origin.y + channelHeight >= scroll.y &&
 			cursor.y - origin.y < scroll.y + size.y)
@@ -136,7 +136,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	ImGuiContext* g = ImGui::GetCurrentContext();
 	for (int i = 0; i < project->GetChannelCount(); i++)
 	{
-		float channelHeight = channelHeights->Get(i);
+		int channelHeight = channelHeights->Get(i);
 		cursor.y += channelHeight;
 		// if visible
 		if (cursor.y - origin.y >= scroll.y && 
@@ -159,10 +159,9 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 			{
 				if (g->ActiveIdIsJustActivated)
 					g->ActiveIdClickOffset.y -= 4;   // Store from center of row line (we used a 8 high rect for row clicking)
-				
-				ImGuiWindow* window = ImGui::GetCurrentWindowRead();
+
 				float newHeight = ImClamp(g->IO.MousePos.y - (cursor.y - channelHeight - scroll.y) - g->ActiveIdClickOffset.y, minChannelHeight, maxChannelHeight);
-				channelHeights->Set(i, newHeight);
+				channelHeights->Set(i, (int)newHeight);
 			}
 		}
 		cursor.y += channelVerticalSpacing;
@@ -246,7 +245,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	drawList->AddLine(ImVec2(origin.x, origin.y + height - 2), ImVec2(origin.x + width, origin.y + height - 2), lineColor, thickness);
 
 	// seconds lines
-	int seconds = floor(position);
+	int seconds = (int)floor(position);
 	float firstOffset = -TimeToPixels(position - floor(position));
 	float scaledStep = pixelsPerSecond / zoom;
 	int secondStep = (int)ceil(80.f / scaledStep); // calc min second step so steps won't be too small for time labels
@@ -283,7 +282,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 void SeqUISequencer::DrawChannels()
 {
 	const ImGuiStyle style = ImGui::GetStyle();
-	const ImVec2 contentSize = ImVec2(TimeToPixels(project->GetLength()), TotalChannelHeight() + 100);
+	const ImVec2 contentSize = ImVec2(TimeToPixels(project->GetLength()), (float)TotalChannelHeight() + 100);
 	const ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x - style.ScrollbarSize, ImGui::GetContentRegionAvail().y - style.ScrollbarSize);
 	ImGui::SetNextWindowContentSize(contentSize);
 	ImGui::BeginChild("channels", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
@@ -300,12 +299,10 @@ void SeqUISequencer::DrawChannels()
 
 		const ImVec2 origin = ImGui::GetCursorScreenPos();
 
-		ImDrawList* drawList = ImGui::GetWindowDrawList();
-
 		ImVec2 cursor = origin;
 		for (int i = 0; i < project->GetChannelCount(); i++)
 		{
-			float channelHeight = channelHeights->Get(i);
+			int channelHeight = channelHeights->Get(i);
 			// only draw if visible
 			if (cursor.y - origin.y + channelHeight >= scroll.y && 
 				cursor.y - origin.y < scroll.y + size.y)

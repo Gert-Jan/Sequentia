@@ -16,11 +16,11 @@ char* SeqPath::Normalize(char *path)
 int SeqPath::CreateDir(char *path)
 {
 	int error = 0;
-	int pos = SeqString::Find(path, "/", 0);
+	size_t pos = SeqString::Find(path, "/", 0);
 	while (pos > -1)
 	{
 		SeqString::SetBuffer(path, pos);
-		error = mkdir(SeqString::Buffer);
+		error = _mkdir(SeqString::Buffer);
 		if (error == -1)
 			error = errno;
 		pos = SeqString::Find(path, "/", pos + 1);
@@ -33,3 +33,4 @@ bool SeqPath::FileExists(char *path)
 	struct stat buffer;
 	return stat(path, &buffer) == 0;
 }
+

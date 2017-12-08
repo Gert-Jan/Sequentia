@@ -16,7 +16,7 @@ extern "C"
 	#include "libavformat/avformat.h"
 }
 
-SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library) :
+SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library):
 	project(project),
 	library(library),
 	decoderTask(nullptr),
@@ -28,7 +28,7 @@ SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library) :
 	Init();
 }
 
-SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer) :
+SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer):
 	project(project),
 	library(library),
 	decoderTask(nullptr),
@@ -38,7 +38,9 @@ SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *
 	startVideoTime(0)
 {
 	Init();
+	Deserialize(serializer);
 }
+
 void SeqUIVideo::Init()
 {
 	// alloc memory
@@ -186,7 +188,7 @@ void SeqUIVideo::Draw()
 						isSeeking = false;
 					}
 					seekVideoTime = videoTime;
-					if (ImGui::SliderInt("##seek", &seekVideoTime, 0, decoderTask->GetLink()->duration / 1000, ""))
+					if (ImGui::SliderInt("##seek", &seekVideoTime, 0, (int)(decoderTask->GetLink()->duration / 1000), ""))
 					{
 						isSeeking = true;
 					}

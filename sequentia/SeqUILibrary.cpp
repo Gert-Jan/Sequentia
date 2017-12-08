@@ -20,6 +20,7 @@ SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializ
 	library(library)
 {
 	Init();
+	Deserialize(serializer);
 }
 
 void SeqUILibrary::Init()

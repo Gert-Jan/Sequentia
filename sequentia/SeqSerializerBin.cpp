@@ -16,9 +16,9 @@ int SeqSerializerBin::GetSerializedVersion()
 	return serializedVersion;
 }
 
-void SeqSerializerBin::SetSerializedVersion(int serializedVersion)
+void SeqSerializerBin::SetSerializedVersion(int version)
 {
-	this->serializedVersion = serializedVersion;
+	serializedVersion = version;
 }
 
 int SeqSerializerBin::GetApplicationVersion()
@@ -26,9 +26,9 @@ int SeqSerializerBin::GetApplicationVersion()
 	return applicationVersion;
 }
 
-void SeqSerializerBin::SetApplicationVersion(int applicationVersion)
+void SeqSerializerBin::SetApplicationVersion(int version)
 {
-	this->applicationVersion = applicationVersion;
+	applicationVersion = version;
 }
 
 void SeqSerializerBin::Write(int32_t value)
