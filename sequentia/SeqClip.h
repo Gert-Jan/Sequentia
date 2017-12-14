@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL_config.h"
+#include "SeqClipLocation.h"
 
 class SeqLibrary;
 class SeqChannel;
@@ -26,14 +27,12 @@ private:
 	void Deserialize(SeqSerializer *serializer);
 
 public:
-	bool isPreview;
-	int64_t leftTime;
-	int64_t rightTime;
-	int64_t startTime;
+	bool isHidden;
+	SeqClipLocation location;
 	int actionId;
-
 private:
 	SeqLibrary *library;
-	SeqChannel *parent;
 	SeqLibraryLink *link;
 };
+
+

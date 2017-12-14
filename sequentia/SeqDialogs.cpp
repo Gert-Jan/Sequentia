@@ -90,7 +90,7 @@ void SeqDialogs::Draw(SeqProject *project)
 			{
 				if (result == SeqDialogOption::OK)
 				{
-					project->AddAction(SeqActionFactory::CreateAddLibraryLinkAction(path));
+					project->AddAction(SeqActionFactory::AddLibraryLink(path));
 				}
 				showRequestProjectPath = false;
 			}

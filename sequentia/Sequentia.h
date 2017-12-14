@@ -6,6 +6,7 @@ typedef union SDL_Event SDL_Event;
 class SeqProject;
 class SeqRenderer;
 class SeqClip;
+class SeqClipProxy;
 class SeqLibrary;
 struct SeqLibraryLink;
 
@@ -14,8 +15,10 @@ class Sequentia
 public:
 	static int Run(char *openProject);
 	static SeqProject* GetCurrentProject();
-	static SeqClip* GetDragClip();
+	static bool IsDragging();
+	static SeqClipProxy* GetDragClipProxy();
 	static void SetDragClip(SeqLibrary *library, SeqLibraryLink *link);
+	static void SetDragClip(SeqClip *clip);
 
 private:
 	static void InitImGui();
@@ -25,7 +28,6 @@ private:
 	static const char* ImGuiGetClipboardText(void*);
 	static void HandleMainMenuBar();
 	static void HandleDragging();
-	static void SetDragClip(SeqClip *clip);
 
 public:
 	static const int TimeBase = 1000000;
@@ -38,5 +40,5 @@ private:
 	static double time;
 	static bool mousePressed[3];
 	static float mouseWheel;
-	static SeqClip *dragClip;
+	static SeqClipProxy *dragClipProxy;
 };

@@ -3,6 +3,12 @@ BEFORE SHIPPING
 - Add a warning when creating a new project or opening a new project while there are unsaved changes in the current project.
 - Validate command arguments
 
+Library
+- When not able to load a video (FileNotFound/Corrupt) add error code to library link, show in red.
+	- try relative path on FileNotFound, notify on possible resolve.
+	- allow retargeting in SeqUILibrary contect menu, when a new folder is targeted for a file:
+		- try to apply on other FileNotFound errored files as well.
+
 UI
 - Library - video collection
 	- Allow dragging folders and files to library windows
@@ -31,3 +37,9 @@ Graphics
 
 Development
 - Test dev environment on another machine, write a setup guide in the README.txt
+
+Ideas
+- Add concept of 'Scenes' between SeqProject and SeqChannel
+	- When dragging one or multiple clips into the 'void' a temp scene can be spawned in a new SeqUISequencer window.
+	- This could allow for intermediate editing between dragging and dropping.
+	- Furthermore having different scenes allows for doing quick non destructive edits.

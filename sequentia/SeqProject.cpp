@@ -17,6 +17,7 @@ SeqProject::SeqProject()
 {
 	library = new SeqLibrary();
 	channels = new SeqList<SeqChannel*>();
+	clipProxyPool = new SeqList<SeqClipProxy*>();
 
 	windows = new SeqList<SeqWindow*>();
 
@@ -33,6 +34,7 @@ SeqProject::~SeqProject()
 	delete actions;
 	delete actionHandlers;
 	delete channels;
+	delete clipProxyPool;
 	delete library;
 	delete[] fullPath;
 }
@@ -48,10 +50,14 @@ void SeqProject::Clear()
 	for (int i = 0; i < channels->Count(); i++)
 		delete channels->Get(i);
 
+	for (int i = 0; i < clipProxyPool->Count(); i++)
+		delete clipProxyPool->Get(i);
+
 	windows->Clear();
 	actions->Clear();
 	actionHandlers->Clear();
 	channels->Clear();
+	clipProxyPool->Clear();
 	library->Clear();
 
 	nextWindowId = 0;
@@ -142,7 +148,10 @@ void SeqProject::AddChannel(SeqChannelType type, char *name)
 {
 	SeqChannel* channel = new SeqChannel(library, name, type);
 	channels->Add(channel);
-	channel->actionId = NextActionId();
+	if (channel->actionId == -1)
+		channel->actionId = NextActionId();
+	else if (channel->actionId >= nextActionId)
+		nextActionId = channel->actionId + 1;
 }
 
 void SeqProject::RemoveChannel(const int index)
@@ -166,6 +175,29 @@ int SeqProject::GetChannelIndexByActionId(const int id)
 		if (channels->Get(i)->actionId == id)
 			return i;
 	return -1;
+}
+
+SeqClipProxy* SeqProject::NextClipProxy()
+{
+	// reuse proxy
+	for (int i = 0; i < clipProxyPool->Count(); i++)
+	{
+		SeqClipProxy *proxy = clipProxyPool->Get(i);
+		if (!proxy->IsActive())
+		{
+			return proxy;
+		}
+	}
+	// make new proxy
+	SeqClipProxy *proxy = new SeqClipProxy();
+	clipProxyPool->Add(proxy);
+	return proxy;
+}
+
+void SeqProject::DeactivateAllClipProxies()
+{
+	for (int i = 0; i < clipProxyPool->Count(); i++)
+		clipProxyPool->Get(i)->Deactivate();
 }
 
 int SeqProject::NextWindowId()
@@ -324,36 +356,63 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 		}
 		case SeqActionType::AddLibraryLink:
 		{
+			char *fullPath = SeqString::Copy((char*)action.data);
 			if (execution == SeqActionExecution::Do)
 			{
-				char *fullPath = SeqString::Copy((char*)action.data);
 				library->AddLink(fullPath);
 			}
 			else
 			{
-				char *fullPath = SeqString::Copy((char*)action.data);
 				library->RemoveLink(fullPath);
 			}
 			break;
 		}
 		case SeqActionType::AddClipToChannel:
 		{
+			SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
+			SeqChannel* channel = GetChannel(GetChannelIndexByActionId(data->channelId));
 			if (execution == SeqActionExecution::Do)
 			{
-				SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
-				SeqChannel* channel = GetChannel(data->channelId);
 				SeqClip* clip = new SeqClip(library, library->GetLink(data->libraryLinkIndex));
-				clip->leftTime = data->leftTime;
-				clip->rightTime = data->rightTime;
-				clip->startTime = data->startTime;
+				clip->location.leftTime = data->leftTime;
+				clip->location.rightTime = data->rightTime;
+				clip->location.startTime = data->startTime;
 				channel->AddClip(clip);
-				data->clipId = clip->actionId;
+				if (data->clipId == -1)
+					data->clipId = clip->actionId;
+				else
+					clip->actionId = data->clipId;
 			}
 			else
 			{
-				SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
-				SeqChannel *channel = GetChannel(GetChannelIndexByActionId(data->channelId));
-				channel->RemoveClip(channel->GetClipIndexByActionId(data->clipId));
+				int clipIndex = channel->GetClipIndexByActionId(data->clipId);
+				SeqClip *clip = channel->GetClip(clipIndex);
+				channel->RemoveClipAt(clipIndex);
+				delete clip;
+			}
+			break;
+		}
+		case SeqActionType::MoveClipToChannel:
+		{
+			SeqActionMoveClipToChannel *data = (SeqActionMoveClipToChannel*)action.data;
+			SeqChannel* fromChannel = GetChannel(GetChannelIndexByActionId(data->fromChannelId));
+			SeqChannel* toChannel = GetChannel(GetChannelIndexByActionId(data->toChannelId));
+			if (execution == SeqActionExecution::Do)
+			{
+				SeqClip* clip = fromChannel->GetClip(fromChannel->GetClipIndexByActionId(data->fromClipId));
+				clip->SetParent(toChannel);
+				if (data->toClipId == -1)
+					data->toClipId = clip->actionId;
+				else
+					clip->actionId = data->toClipId;
+				clip->isHidden = false;
+			}
+			else
+			{
+				SeqClip* clip = toChannel->GetClip(toChannel->GetClipIndexByActionId(data->toClipId));
+				clip->SetParent(fromChannel);
+				clip->actionId = data->fromClipId;
+				clip->isHidden = false;
 			}
 			break;
 		}

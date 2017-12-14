@@ -6,6 +6,7 @@ class SeqSerializer;
 class SeqLibrary;
 class SeqChannel;
 enum class SeqChannelType;
+class SeqClipProxy;
 
 class SeqWindow;
 
@@ -36,6 +37,9 @@ public:
 	int GetChannelCount();
 	SeqChannel* GetChannel(const int index);
 	int GetChannelIndexByActionId(const int id);
+
+	SeqClipProxy* NextClipProxy();
+	void DeactivateAllClipProxies();
 
 	int NextWindowId();
 	void AddWindowSequencer();
@@ -76,6 +80,7 @@ private:
 	int nextWindowId;
 	SeqLibrary *library;
 	SeqList<SeqChannel*> *channels;
+	SeqList<SeqClipProxy*> *clipProxyPool;
 	SeqList<SeqWindow*> *windows;
 
 	SeqList<SeqActionHandler*> *actionHandlers;

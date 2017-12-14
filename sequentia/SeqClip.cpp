@@ -4,25 +4,24 @@
 #include "SeqChannel.h"
 #include "SeqSerializer.h"
 
-SeqClip::SeqClip(SeqLibrary *library, SeqLibraryLink *link):
+SeqClip::SeqClip(SeqLibrary *library, SeqLibraryLink *link) :
 	library(library),
-	parent(nullptr),
 	link(link),
-	isPreview(false),
-	leftTime(0),
-	rightTime(Sequentia::TimeBase), // default 1 second long clips
-	startTime(0),
-	actionId(0)
+	isHidden(false),
+	location(SeqClipLocation()),
+	actionId(-1)
 {
 	if (link->metaDataLoaded)
-		rightTime = link->duration;
+		location.rightTime = link->duration;
+	else
+		location.rightTime = Sequentia::TimeBase; // default 1 second long clips
 }
 
 SeqClip::SeqClip(SeqLibrary *library, SeqSerializer *serializer) :
 	library(library),
-	parent(nullptr),
-	isPreview(false),
-	actionId(0)
+	isHidden(false),
+	location(SeqClipLocation()),
+	actionId(-1)
 {
 	Deserialize(serializer);
 }
@@ -33,16 +32,19 @@ SeqClip::~SeqClip()
 
 void SeqClip::SetPosition(int64_t leftTime)
 {
-	parent->MoveClip(this, leftTime);
+	location.parent->MoveClip(this, leftTime);
 }
 
 void SeqClip::SetParent(SeqChannel* channel)
 {
-	if (parent != channel)
+	if (location.parent != channel)
 	{
-		if (parent != nullptr)
-			parent->RemoveClip(this);
-		parent = channel;
+		// remove the clip from current parent
+		if (location.parent != nullptr)
+			location.parent->RemoveClip(this);
+		// set new parent
+		location.parent = channel;
+		// add clip to new parent
 		if (channel != nullptr)
 			channel->AddClip(this);
 	}
@@ -50,7 +52,7 @@ void SeqClip::SetParent(SeqChannel* channel)
 
 SeqChannel* SeqClip::GetParent()
 {
-	return parent;
+	return location.parent;
 }
 
 char* SeqClip::GetLabel()
@@ -66,15 +68,11 @@ SeqLibraryLink* SeqClip::GetLink()
 void SeqClip::Serialize(SeqSerializer *serializer)
 {
 	serializer->Write(link->fullPath);
-	serializer->Write(leftTime);
-	serializer->Write(rightTime);
-	serializer->Write(startTime);
+	location.Serialize(serializer);
 }
 
 void SeqClip::Deserialize(SeqSerializer *serializer)
 {
 	link = library->GetLink(serializer->ReadString());
-	leftTime = serializer->ReadLong();
-	rightTime = serializer->ReadLong();
-	startTime = serializer->ReadLong();
+	location.Deserialize(serializer);
 }

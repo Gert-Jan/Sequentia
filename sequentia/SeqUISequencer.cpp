@@ -326,25 +326,32 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + height));
 
 	bool isHovering = false;
-	SeqClip *dragClip = Sequentia::GetDragClip();
-	if (dragClip != nullptr)
+	SeqClipProxy *dragClipProxy = Sequentia::GetDragClipProxy();
+	if (dragClipProxy != nullptr)
 	{
 		if (ImGui::IsMouseHoveringRect(totalRect.Min, totalRect.Max))
 		{
 			if (ImGui::IsMouseDown(0))
 			{
 				isHovering = true;
-				if (dragClip->GetParent() != channel)
-					dragClip->SetParent(channel);
+				if (dragClipProxy->GetParent() != channel)
+					dragClipProxy->SetParent(channel);
 			}
 			else
 			{
-				project->AddAction(SeqActionFactory::CreateAddClipToChannelAction(dragClip));
+				if (dragClipProxy->IsNewClip())
+				{
+					project->AddAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+				}
+				else
+				{
+					project->AddAction(SeqActionFactory::MoveClipToChannel(dragClipProxy));
+				}
 			}
 		}
-		else if (dragClip->GetParent() == channel)
+		else if (dragClipProxy->GetParent() == channel)
 		{
-			dragClip->SetParent(nullptr);
+			dragClipProxy->SetParent(nullptr);
 		}
 	}
 
@@ -358,16 +365,35 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 	for (int i = 0; i < channel->ClipCount(); i++)
 	{
 		SeqClip *clip = channel->GetClip(i);
-		const double left = (double)clip->leftTime / Sequentia::TimeBase;
-		const double right = (double)clip->rightTime / Sequentia::TimeBase;
+		if (!clip->isHidden)
+		{
+			const double left = (double)clip->location.leftTime / Sequentia::TimeBase;
+			const double right = (double)clip->location.rightTime / Sequentia::TimeBase;
+			// culling
+			if (left > end)
+				break; // clips are sorted by left position, so we can exit the loop here
+			if (left >= start || right >= start)
+			{
+				const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
+				const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
+				DrawClip(clip, clipPosition, clipSize);
+			}
+		}
+	}
+	// draw clip proxies
+	for (int i = 0; i < channel->ClipProxyCount(); i++)
+	{
+		SeqClipProxy *proxy = channel->GetClipProxy(i);
+		const double left = (double)proxy->location.leftTime / Sequentia::TimeBase;
+		const double right = (double)proxy->location.rightTime / Sequentia::TimeBase;
 		// culling
 		if (left > end)
-			break; // clips are sorted by left position, so we can exit the loop here
+			break; // clip proxies are sorted by left position, so we can exit the loop here
 		if (left >= start || right >= start)
 		{
 			const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
 			const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
-			DrawClip(clip, clipPosition, clipSize);
+			DrawClip(proxy->GetClip(), clipPosition, clipSize);
 		}
 	}
 }
@@ -389,6 +415,10 @@ void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2
 			// start context menu popup
 			ImGui::OpenPopupEx(SeqString::Buffer, false);
 		}
+		if (ImGui::IsMouseDown(0) && !Sequentia::IsDragging())
+		{
+			Sequentia::SetDragClip(clip);
+		}
 	}
 	else
 	{
@@ -403,7 +433,7 @@ void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2
 	if (ImGui::BeginPopupContextVoid(SeqString::Buffer))
 	{
 		if (ImGui::Selectable("Delete"))
-			Sequentia::GetCurrentProject()->AddAction(SeqActionFactory::CreateRemoveClipFromChannelAction(clip));
+			Sequentia::GetCurrentProject()->AddAction(SeqActionFactory::RemoveClipFromChannel(clip));
 		ImGui::EndPopup();
 	}
 }

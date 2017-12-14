@@ -7,6 +7,7 @@ template<class T>
 class SeqList;
 class SeqLibrary;
 class SeqClip;
+class SeqClipProxy;
 
 enum class SeqChannelType
 {
@@ -18,22 +19,34 @@ enum class SeqChannelType
 class SeqChannel
 {
 public:
-	SeqChannel(SeqLibrary* library, char *name, SeqChannelType type);
-	SeqChannel(SeqLibrary* library, SeqSerializer *serializer);
+	SeqChannel(SeqLibrary *library, char *name, SeqChannelType type);
+	SeqChannel(SeqLibrary *library, SeqSerializer *serializer);
 	~SeqChannel();
 
-	void AddClip(SeqClip* clip);
-	void AddClipAt(SeqClip* clip, int const index);
-	void RemoveClip(SeqClip* clip);
-	void RemoveClip(const int index);
-	void MoveClip(SeqClip* clip, int64_t leftTime);
+	void AddClip(SeqClip *clip);
+	void AddClipAt(SeqClip *clip, int const index);
+	void RemoveClip(SeqClip *clip);
+	void RemoveClipAt(const int index);
+	void MoveClip(SeqClip *clip, int64_t leftTime);
 	int ClipCount();
 	SeqClip* GetClip(const int index);
 	int GetClipIndexByActionId(const int id);
 
+	void AddClipProxy(SeqClipProxy *proxy);
+	void AddClipProxyAt(SeqClipProxy *proxy, int const index);
+	void RemoveClipProxy(SeqClipProxy *proxy);
+	void RemoveClipProxyAt(const int index);
+	void MoveClipProxy(SeqClipProxy *proxy, int64_t leftTime);
+	int ClipProxyCount();
+	SeqClipProxy* GetClipProxy(const int index);
+
 private:
 	void SortClip(int index);
 	void SwapClips(const int index0, const int index1);
+
+	void SortClipProxy(int index);
+	void SwapClipProxies(const int index0, const int index1);
+
 	int NextActionId();
 
 public:
@@ -48,5 +61,6 @@ public:
 private:
 	SeqLibrary *library;
 	SeqList<SeqClip*> *clips;
+	SeqList<SeqClipProxy*> *clipProxies;
 	int nextActionId;
 };

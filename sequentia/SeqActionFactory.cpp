@@ -3,7 +3,7 @@
 #include "SeqProjectHeaders.h"
 #include "SeqString.h"
 
-SeqAction SeqActionFactory::CreateAddChannelAction(SeqChannelType type, char* name)
+SeqAction SeqActionFactory::AddChannel(SeqChannelType type, char* name)
 {
 	return SeqAction(
 		SeqActionType::AddChannel,
@@ -11,7 +11,7 @@ SeqAction SeqActionFactory::CreateAddChannelAction(SeqChannelType type, char* na
 		new SeqActionAddChannel(type, name));
 }
 
-SeqAction SeqActionFactory::CreateRemoveChannelAction(SeqChannel* channel)
+SeqAction SeqActionFactory::RemoveChannel(SeqChannel* channel)
 {
 	return SeqAction(
 		SeqActionType::AddChannel,
@@ -19,7 +19,7 @@ SeqAction SeqActionFactory::CreateRemoveChannelAction(SeqChannel* channel)
 		new SeqActionAddChannel(channel->type, channel->name));
 }
 
-SeqAction SeqActionFactory::CreateAddLibraryLinkAction(char *fullPath)
+SeqAction SeqActionFactory::AddLibraryLink(char *fullPath)
 {
 	return SeqAction(
 		SeqActionType::AddLibraryLink,
@@ -27,7 +27,7 @@ SeqAction SeqActionFactory::CreateAddLibraryLinkAction(char *fullPath)
 		SeqString::Copy(fullPath));
 }
 
-SeqAction SeqActionFactory::CreateRemoveLibraryLinkAction(char *fullPath)
+SeqAction SeqActionFactory::RemoveLibraryLink(char *fullPath)
 {
 	return SeqAction(
 		SeqActionType::AddLibraryLink,
@@ -35,18 +35,26 @@ SeqAction SeqActionFactory::CreateRemoveLibraryLinkAction(char *fullPath)
 		SeqString::Copy(fullPath));
 }
 
-SeqAction SeqActionFactory::CreateAddClipToChannelAction(SeqClip* previewClip)
+SeqAction SeqActionFactory::AddClipToChannel(SeqClipProxy* clipProxy)
 {
 	return SeqAction(
 		SeqActionType::AddClipToChannel,
 		SeqActionExecution::Do,
-		new SeqActionAddClipToChannel(previewClip));
+		new SeqActionAddClipToChannel(clipProxy));
 }
 
-SeqAction SeqActionFactory::CreateRemoveClipFromChannelAction(SeqClip* clip)
+SeqAction SeqActionFactory::RemoveClipFromChannel(SeqClip* clip)
 {
 	return SeqAction(
 		SeqActionType::AddClipToChannel,
 		SeqActionExecution::Undo,
 		new SeqActionAddClipToChannel(clip));
+}
+
+SeqAction SeqActionFactory::MoveClipToChannel(SeqClipProxy* clipProxy)
+{
+	return SeqAction(
+		SeqActionType::MoveClipToChannel,
+		SeqActionExecution::Do,
+		new SeqActionMoveClipToChannel(clipProxy));
 }

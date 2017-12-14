@@ -83,7 +83,7 @@ void SeqUILibrary::Draw()
 			}
 			if (ImGui::IsItemActive()) // is dragging
 			{
-				if (Sequentia::GetDragClip() == nullptr)
+				if (Sequentia::GetDragClipProxy() == nullptr)
 				{
 					Sequentia::SetDragClip(library, link);
 				}
@@ -109,7 +109,7 @@ void SeqUILibrary::Draw()
 			bool opened = true;
 			if (!opened)
 			{
-				project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(library->GetLink(i)->fullPath));
+				project->AddAction(SeqActionFactory::RemoveLibraryLink(library->GetLink(i)->fullPath));
 			}
 		}
 		ImGui::Columns(1);
@@ -128,7 +128,7 @@ void SeqUILibrary::AddContextMenu(SeqLibraryLink *link)
 	if (ImGui::BeginPopupContextItem(link->fullPath))
 	{
 		if (ImGui::Selectable("Delete"))
-			project->AddAction(SeqActionFactory::CreateRemoveLibraryLinkAction(link->fullPath));
+			project->AddAction(SeqActionFactory::RemoveLibraryLink(link->fullPath));
 		ImGui::EndPopup();
 	}
 }
