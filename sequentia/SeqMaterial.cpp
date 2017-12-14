@@ -99,4 +99,4 @@ void SeqMaterial::Dispose()
 		ImGui::GetIO().Fonts->TexID = 0;
 		textureCount = 0;
 	}
-};
+}

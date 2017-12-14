@@ -100,7 +100,7 @@ int Sequentia::Run(char *openProject)
 	SDL_Quit();
 
 	return 0;
-};
+}
 
 void Sequentia::InitImGui()
 {
@@ -138,7 +138,7 @@ void Sequentia::InitImGui()
 #else
 	(void)window;
 #endif
-};
+}
 
 void Sequentia::BeginFrame()
 {
@@ -181,7 +181,7 @@ void Sequentia::BeginFrame()
 
 	// Start the frame
 	ImGui::NewFrame();
-};
+}
 
 bool Sequentia::ImGuiProcessEvent(SDL_Event* event)
 {
@@ -231,17 +231,17 @@ bool Sequentia::ImGuiProcessEvent(SDL_Event* event)
 		}
 	}
 	return false;
-};
+}
 
 const char* Sequentia::ImGuiGetClipboardText(void*)
 {
 	return SDL_GetClipboardText();
-};
+}
 
 void Sequentia::ImGuiSetClipboardText(void*, const char* text)
 {
 	SDL_SetClipboardText(text);
-};
+}
 
 void Sequentia::HandleMainMenuBar()
 {
@@ -279,7 +279,7 @@ void Sequentia::HandleMainMenuBar()
 		}
 		ImGui::EndMainMenuBar();
 	}
-};
+}
 
 SeqProject* Sequentia::GetCurrentProject()
 {
@@ -302,7 +302,7 @@ void Sequentia::HandleDragging()
 			SetDragClip(nullptr);
 		}
 	}
-};
+}
 
 void Sequentia::SetDragClip(SeqLibrary* library, SeqLibraryLink* link)
 {
@@ -330,7 +330,7 @@ void Sequentia::SetDragClip(SeqClip *clip)
 				// if dragged from a library window
 				delete dragClipProxy->GetClip();
 			}
-			else if(dragClipProxy->GetParent() == nullptr)
+			else if (dragClipProxy->GetParent() == nullptr)
 			{
 				// if dragged from a sequencer window to the void
 				project->AddAction(SeqActionFactory::RemoveClipFromChannel(dragClipProxy->GetClip()));
@@ -339,7 +339,7 @@ void Sequentia::SetDragClip(SeqClip *clip)
 			dragClipProxy = nullptr;
 		}
 	}
-};
+}
 
 bool Sequentia::IsDragging()
 {
@@ -349,4 +349,4 @@ bool Sequentia::IsDragging()
 SeqClipProxy* Sequentia::GetDragClipProxy()
 {
 	return dragClipProxy;
-};
+}

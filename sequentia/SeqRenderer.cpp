@@ -20,13 +20,13 @@ void SeqRenderer::InitGL()
 	av_register_all();
 	gl3wInit();
 	RefreshDeviceObjects();
-};
+}
 
 void SeqRenderer::RefreshDeviceObjects()
 {
 	if (materials->Count() == 0)
 		CreateDeviceObjects();
-};
+}
 
 void SeqRenderer::CreateDeviceObjects()
 {
@@ -129,7 +129,7 @@ void SeqRenderer::CreateDeviceObjects()
 	glBindTexture(GL_TEXTURE_2D, last_texture);
 	glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
 	glBindVertexArray(last_vertex_array);
-};
+}
 
 void SeqRenderer::InvalidateDeviceObjects()
 {
@@ -145,7 +145,7 @@ void SeqRenderer::InvalidateDeviceObjects()
 	for (int i = 0; i < materials->Count(); i++)
 		materials->Get(i)->Dispose();
 	videoMaterial.Dispose();
-};
+}
 
 void SeqRenderer::Render()
 {
@@ -252,19 +252,19 @@ void SeqRenderer::Render()
 	if (lastEnableScissorTest) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
 	glViewport(lastViewport[0], lastViewport[1], (GLsizei)lastViewport[2], (GLsizei)lastViewport[3]);
 	glScissor(lastScissorBox[0], lastScissorBox[1], (GLsizei)lastScissorBox[2], (GLsizei)lastScissorBox[3]);
-};
+}
 
 void SeqRenderer::Shutdown()
 {
 	InvalidateDeviceObjects();
-};
+}
 
 SeqMaterial* SeqRenderer::GetVideoMaterial()
 {
 	SeqMaterial* material = new SeqMaterial(videoMaterial);
 	materials->Add(material);
 	return material;
-};
+}
 
 void SeqRenderer::CreateFontsTexture()
 {
@@ -290,7 +290,7 @@ void SeqRenderer::CreateFontsTexture()
 
 	// Restore state
 	glBindTexture(GL_TEXTURE_2D, lastTexture);
-};
+}
 
 void SeqRenderer::CreateVideoTextures(AVFrame* frame, GLuint texId[3])
 {

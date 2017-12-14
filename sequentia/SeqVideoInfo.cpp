@@ -11,14 +11,14 @@ SeqVideoInfo::SeqVideoInfo() :
 	videoFrameCount(0),
 	audioFrameCount(0)
 {
-};
+}
 
 SeqVideoInfo::~SeqVideoInfo()
 {
 	avcodec_free_context(&videoCodec);
 	avcodec_free_context(&audioCodec);
 	avformat_close_input(&formatContext);
-};
+}
 
 void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint64_t time)
 {
@@ -38,7 +38,7 @@ void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint64_t time)
 	{
 		strcpy_s(buffer, bufferLen, "N/A");
 	}
-};
+}
 
 void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint32_t time)
 {
@@ -50,4 +50,4 @@ void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint32_t time)
 	hours = mins / 60;
 	mins %= 60;
 	snprintf(buffer, bufferLen, "%02d:%02d:%02d.%02d", hours, mins, secs, (100 * us) / 1000);
-};
+}
