@@ -54,21 +54,21 @@ public:
 	void DrawDialogs();
 
 	void Undo();
+	bool CanUndo();
 	void Redo();
+	bool CanRedo();
 
 	void AddAction(const SeqAction action);
 	void AddActionHandler(SeqActionHandler *handler);
 	void RemoveActionHandler(SeqActionHandler *handler);
-	int GetActionCount();
-	int GetActionCursor();
-	SeqAction GetAction(const int index);
-	void DoAction(const SeqAction action);
-	void UndoAction(const SeqAction action);
 
 private:
 	int NextActionId();
 	void AddChannel(SeqChannelType type, char *name);
 	void RemoveChannel(const int index);
+
+	void DoAction(const SeqAction action);
+	void UndoAction(const SeqAction action);
 	void ExecuteAction(const SeqAction action, const SeqActionExecution execution);
 
 	int Serialize(SeqSerializer *serializer);

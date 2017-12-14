@@ -76,6 +76,7 @@ int Sequentia::Run(char *openProject)
 		}
 
 		BeginFrame();
+		HandleShortcuts();
 		HandleMainMenuBar();
 		SeqWorkerManager::Instance()->Update();
 		project->Update();
@@ -243,6 +244,19 @@ void Sequentia::ImGuiSetClipboardText(void*, const char* text)
 	SDL_SetClipboardText(text);
 }
 
+void Sequentia::HandleShortcuts()
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.KeyCtrl)
+	{
+		if (ImGui::IsKeyPressed(SDLK_n, false)) { project->Clear(); }
+		if (ImGui::IsKeyPressed(SDLK_o, false)) { project->OpenFrom(); }
+		if (ImGui::IsKeyPressed(SDLK_s, false)) { project->Save(); }
+		if (ImGui::IsKeyPressed(SDLK_z, false)) { project->Undo(); }
+		if (ImGui::IsKeyPressed(SDLK_y, false)) { project->Redo(); }
+	}
+}
+
 void Sequentia::HandleMainMenuBar()
 {
 	if (ImGui::BeginMainMenuBar())
@@ -260,8 +274,8 @@ void Sequentia::HandleMainMenuBar()
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
-			if (ImGui::MenuItem("Undo", "Ctrl+Z")) { project->Undo(); }
-			if (ImGui::MenuItem("Redo", "Ctrl+Y")) { project->Redo(); }
+			if (ImGui::MenuItem("Undo", "Ctrl+Z", false, project->CanUndo())) { project->Undo(); }
+			if (ImGui::MenuItem("Redo", "Ctrl+Y", false, project->CanRedo())) { project->Redo(); }
 			ImGui::Separator();
 			if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {}
 			if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {}

@@ -253,20 +253,30 @@ int SeqProject::NextActionId()
 
 void SeqProject::Undo()
 {
-	if (actionCursor > 0)
+	if (CanUndo())
 	{
 		actionCursor--;
 		UndoAction(actions->Get(actionCursor));
 	}
 }
 
+bool SeqProject::CanUndo()
+{
+	return actionCursor > 0;
+}
+
 void SeqProject::Redo()
 {
-	if (actionCursor < actions->Count())
+	if (CanRedo())
 	{
 		DoAction(actions->Get(actionCursor));
 		actionCursor++;
 	}
+}
+
+bool SeqProject::CanRedo()
+{
+	return actionCursor < actions->Count();
 }
 
 void SeqProject::AddAction(SeqAction action)
@@ -292,21 +302,6 @@ void SeqProject::AddActionHandler(SeqActionHandler *handler)
 void SeqProject::RemoveActionHandler(SeqActionHandler *handler)
 {
 	actionHandlers->Remove(handler);
-}
-
-int SeqProject::GetActionCount()
-{
-	return actions->Count();
-}
-
-int SeqProject::GetActionCursor()
-{
-	return actionCursor;
-}
-
-SeqAction SeqProject::GetAction(const int index)
-{
-	return actions->Get(index);
 }
 
 void SeqProject::DoAction(const SeqAction action)

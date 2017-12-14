@@ -26,6 +26,7 @@ private:
 	static bool ImGuiProcessEvent(SDL_Event *event);
 	static void ImGuiSetClipboardText(void*, const char *text);
 	static const char* ImGuiGetClipboardText(void*);
+	static void HandleShortcuts();
 	static void HandleMainMenuBar();
 	static void HandleDragging();
 
