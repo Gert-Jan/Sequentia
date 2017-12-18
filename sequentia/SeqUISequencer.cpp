@@ -199,7 +199,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 		return;
 	}
 
-	if (imContext->ActiveId != id && 
+	if (imContext->ActiveId != id && !Sequentia::IsDragging() && 
 		ImGui::IsItemHovered() && ImGui::IsMouseDown(0))
 	{
 		ImGui::SetActiveID(id, window);
@@ -336,6 +336,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 				isHovering = true;
 				if (dragClipProxy->GetParent() != channel)
 					dragClipProxy->SetParent(channel);
+				dragClipProxy->location.SetPosition((position + PixelsToTime(ImGui::GetMousePos().x - cursor.x)) * Sequentia::TimeBase - dragClipProxy->grip);
 			}
 			else
 			{
@@ -343,9 +344,9 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 				{
 					project->AddAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
 				}
-				else
+				else if (dragClipProxy->IsMoved())
 				{
-					project->AddAction(SeqActionFactory::MoveClipToChannel(dragClipProxy));
+					project->AddAction(SeqActionFactory::MoveClip(dragClipProxy));
 				}
 			}
 		}
@@ -376,7 +377,9 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 			{
 				const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
 				const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
-				DrawClip(clip, clipPosition, clipSize);
+				bool isHovered = false;
+				if (ClipInteraction(clip, clipPosition, clipSize, &isHovered))
+					DrawClip(clip, clipPosition, clipSize, isHovered);
 			}
 		}
 	}
@@ -393,49 +396,64 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 		{
 			const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
 			const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
-			DrawClip(proxy->GetClip(), clipPosition, clipSize);
+			DrawClip(proxy->GetClip(), clipPosition, clipSize, true);
 		}
 	}
 }
 
-void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size)
+bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const ImVec2 size, bool *isHovered)
 {
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	bool clipExists = true;
 	const ImVec2 tl = ImVec2(position.x, position.y);
 	const ImVec2 br = ImVec2(position.x + size.x, position.y + size.y);
 	SeqChannel *channel = clip->GetParent();
 	SeqString::FormatBuffer("context_channel%d_clip%d", channel == nullptr ? -1 : channel->actionId, clip->actionId);
-	ImGui::ItemSize(size);
-	if (ImGui::IsMouseHoveringRect(tl, br))
-	{
-		// clip hovered
-		drawList->AddRectFilled(tl, br, lineColor);
-		if (ImGui::IsMouseClicked(1))
-		{
-			// start context menu popup
-			ImGui::OpenPopupEx(SeqString::Buffer, false);
-		}
-		if (ImGui::IsMouseDown(0) && !Sequentia::IsDragging())
-		{
-			Sequentia::SetDragClip(clip);
-		}
-	}
-	else
-	{
-		// clip not hovered (default)
-		drawList->AddRectFilled(tl, br, clipBackgroundColor);
-	}
-	drawList->AddRect(tl, br, lineColor);
-	ImGui::SetCursorScreenPos(position);
-	ImGui::Text("%s", clip->GetLabel());
 
 	// handle popup menu if has been opened in the past
 	if (ImGui::BeginPopupContextVoid(SeqString::Buffer))
 	{
 		if (ImGui::Selectable("Delete"))
+		{
 			Sequentia::GetCurrentProject()->AddAction(SeqActionFactory::RemoveClipFromChannel(clip));
+			clipExists = false;
+		}
 		ImGui::EndPopup();
 	}
+	else // if there is no context menu active
+	{
+		*isHovered = ImGui::IsMouseHoveringRect(tl, br);
+		if (*isHovered)
+		{
+			// clip hovered
+			if (ImGui::IsMouseClicked(1))
+			{
+				// start context menu popup
+				ImGui::OpenPopupEx(SeqString::Buffer, false);
+			}
+			if (ImGui::IsMouseDown(0) && !Sequentia::IsDragging())
+			{
+				// start dragging clip
+				Sequentia::SetDragClip(clip, PixelsToTime(ImGui::GetMousePos().x - position.x) * Sequentia::TimeBase);
+			}
+		}
+	}
+
+	return clipExists;
+}
+
+void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered)
+{
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	const ImVec2 tl = ImVec2(position.x, position.y);
+	const ImVec2 br = ImVec2(position.x + size.x, position.y + size.y);
+	ImGui::ItemSize(size);
+	if (isHovered)
+		drawList->AddRectFilled(tl, br, lineColor);
+	else
+		drawList->AddRectFilled(tl, br, clipBackgroundColor);
+	drawList->AddRect(tl, br, lineColor);
+	ImGui::SetCursorScreenPos(position);
+	ImGui::Text("%s", clip->GetLabel());
 }
 
 int SeqUISequencer::TotalChannelHeight()

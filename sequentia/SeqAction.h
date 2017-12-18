@@ -11,7 +11,7 @@ enum class SeqActionType
 	AddChannel,
 	AddLibraryLink,
 	AddClipToChannel,
-	MoveClipToChannel,
+	MoveClip,
 	COUNT
 };
 
@@ -58,11 +58,13 @@ struct SeqActionAddClipToChannel
 	SeqActionAddClipToChannel(SeqClip* clip);
 };
 
-struct SeqActionMoveClipToChannel
+struct SeqActionMoveClip
 {
 	int fromChannelId;
 	int fromClipId;
+	int64_t fromLeftTime;
 	int toChannelId;
 	int toClipId;
-	SeqActionMoveClipToChannel(SeqClipProxy* proxy);
+	int64_t toLeftTime;
+	SeqActionMoveClip(SeqClipProxy* proxy);
 };

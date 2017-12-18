@@ -1,6 +1,7 @@
 #include <imgui.h>
 #include <SDL.h>
 
+#include "Sequentia.h"
 #include "SeqProjectHeaders.h"
 #include "SeqWindow.h"
 #include "SeqUILibrary.h"
@@ -382,14 +383,19 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 			{
 				int clipIndex = channel->GetClipIndexByActionId(data->clipId);
 				SeqClip *clip = channel->GetClip(clipIndex);
+				SeqClipProxy *dragProxy = Sequentia::GetDragClipProxy();
+				if (dragProxy != nullptr && dragProxy->GetClip() == clip)
+				{
+					Sequentia::SetDragClip(nullptr);
+				}
 				channel->RemoveClipAt(clipIndex);
 				delete clip;
 			}
 			break;
 		}
-		case SeqActionType::MoveClipToChannel:
+		case SeqActionType::MoveClip:
 		{
-			SeqActionMoveClipToChannel *data = (SeqActionMoveClipToChannel*)action.data;
+			SeqActionMoveClip *data = (SeqActionMoveClip*)action.data;
 			SeqChannel* fromChannel = GetChannel(GetChannelIndexByActionId(data->fromChannelId));
 			SeqChannel* toChannel = GetChannel(GetChannelIndexByActionId(data->toChannelId));
 			if (execution == SeqActionExecution::Do)
@@ -400,6 +406,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 					data->toClipId = clip->actionId;
 				else
 					clip->actionId = data->toClipId;
+				clip->SetPosition(data->toLeftTime);
 				clip->isHidden = false;
 			}
 			else
@@ -407,6 +414,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 				SeqClip* clip = toChannel->GetClip(toChannel->GetClipIndexByActionId(data->toClipId));
 				clip->SetParent(fromChannel);
 				clip->actionId = data->fromClipId;
+				clip->SetPosition(data->fromLeftTime);
 				clip->isHidden = false;
 			}
 			break;

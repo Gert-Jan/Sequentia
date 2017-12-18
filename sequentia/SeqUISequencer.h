@@ -21,7 +21,7 @@ public:
 	void ActionUndone(const SeqAction action);
 	SeqWindowType GetWindowType();
 	void Draw();
-	static void DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size);
+	static void DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered = false);
 	void Serialize(SeqSerializer *serializer);
 
 private:
@@ -30,6 +30,7 @@ private:
 	void DrawSequencerRuler(float height);
 	void DrawChannels();
 	void DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 contentSize, float height);
+	bool ClipInteraction(SeqClip *clip, const ImVec2 position, const ImVec2 size, bool *isHovered);
 	int TotalChannelHeight();
 	double PixelsToTime(float pixels);
 	float TimeToPixels(double time);

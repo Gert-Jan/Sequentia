@@ -28,11 +28,13 @@ SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClip* clip)
 	startTime = clip->location.startTime;
 }
 
-SeqActionMoveClipToChannel::SeqActionMoveClipToChannel(SeqClipProxy* proxy)
+SeqActionMoveClip::SeqActionMoveClip(SeqClipProxy* proxy)
 {
 	SeqClip *clip = proxy->GetClip();
 	fromChannelId = clip->GetParent()->actionId;
 	fromClipId = clip->actionId;
+	fromLeftTime = clip->location.leftTime;
 	toChannelId = proxy->GetParent()->actionId;
 	toClipId = -1; // filled after moving the clip
+	toLeftTime = proxy->location.leftTime;
 }

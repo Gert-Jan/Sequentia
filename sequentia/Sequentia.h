@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SDL_config.h"
+
 struct SDL_Window;
 typedef union SDL_Event SDL_Event;
 
@@ -18,7 +20,7 @@ public:
 	static bool IsDragging();
 	static SeqClipProxy* GetDragClipProxy();
 	static void SetDragClip(SeqLibrary *library, SeqLibraryLink *link);
-	static void SetDragClip(SeqClip *clip);
+	static void SetDragClip(SeqClip *clip, const int64_t grip = 0);
 
 private:
 	static void InitImGui();

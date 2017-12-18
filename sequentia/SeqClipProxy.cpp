@@ -4,6 +4,7 @@
 
 SeqClipProxy::SeqClipProxy() :
 	isActive(false),
+	grip(0),
 	location(SeqClipLocation()),
 	clip(clip)
 {
@@ -25,6 +26,7 @@ void SeqClipProxy::Deactivate()
 	if (location.parent != nullptr)
 		location.parent->RemoveClipProxy(this);
 	location.Reset();
+	grip = 0;
 	clip = nullptr;
 }
 
@@ -36,6 +38,13 @@ bool SeqClipProxy::IsActive()
 bool SeqClipProxy::IsNewClip()
 {
 	return clip->GetParent() == nullptr;
+}
+
+bool SeqClipProxy::IsMoved()
+{
+	return
+		clip->GetParent() != GetParent() ||
+		clip->location.leftTime != location.leftTime;
 }
 
 SeqClip* SeqClipProxy::GetClip()

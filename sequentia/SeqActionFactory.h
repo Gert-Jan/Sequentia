@@ -15,5 +15,5 @@ public:
 	static SeqAction RemoveLibraryLink(char *fullPath);
 	static SeqAction AddClipToChannel(SeqClipProxy* clipProxy);
 	static SeqAction RemoveClipFromChannel(SeqClip* clip);
-	static SeqAction MoveClipToChannel(SeqClipProxy* clipProxy);
+	static SeqAction MoveClip(SeqClipProxy* clipProxy);
 };

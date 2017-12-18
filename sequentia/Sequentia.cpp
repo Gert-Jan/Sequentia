@@ -324,7 +324,7 @@ void Sequentia::SetDragClip(SeqLibrary* library, SeqLibraryLink* link)
 	Sequentia::SetDragClip(clip);
 }
 
-void Sequentia::SetDragClip(SeqClip *clip)
+void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 {
 	if (dragClipProxy == nullptr || dragClipProxy->GetClip() != clip)
 	{
@@ -332,27 +332,33 @@ void Sequentia::SetDragClip(SeqClip *clip)
 		{
 			project->DeactivateAllClipProxies();
 			dragClipProxy = project->NextClipProxy();
+			dragClipProxy->location.leftTime = clip->location.leftTime;
 			dragClipProxy->location.rightTime = clip->location.rightTime;
 			dragClipProxy->location.startTime = clip->location.startTime;
 			clip->isHidden = true;
+			dragClipProxy->grip = grip;
+			dragClipProxy->SetParent(clip->GetParent());
 			dragClipProxy->Activate(clip);
 		}
-		else
+		else // set drag clip to nullptr
 		{
+			SeqClip *dragClip = dragClipProxy->GetClip();
 			if (dragClipProxy->IsNewClip())
 			{
 				// if dragged from a library window
-				delete dragClipProxy->GetClip();
+				delete dragClip;
 			}
 			else if (dragClipProxy->GetParent() == nullptr)
 			{
+				// make sure the remove action will not call SetDragClip(nullptr) again.
+				dragClipProxy = nullptr;
 				// if dragged from a sequencer window to the void
-				project->AddAction(SeqActionFactory::RemoveClipFromChannel(dragClipProxy->GetClip()));
+				project->AddAction(SeqActionFactory::RemoveClipFromChannel(dragClip));
 			}
 			else
 			{
 				// nothing happened, unhide original clip
-				dragClipProxy->GetClip()->isHidden = false;
+				dragClip->isHidden = false;
 			}
 			project->DeactivateAllClipProxies();
 			dragClipProxy = nullptr;

@@ -51,10 +51,10 @@ SeqAction SeqActionFactory::RemoveClipFromChannel(SeqClip* clip)
 		new SeqActionAddClipToChannel(clip));
 }
 
-SeqAction SeqActionFactory::MoveClipToChannel(SeqClipProxy* clipProxy)
+SeqAction SeqActionFactory::MoveClip(SeqClipProxy* clipProxy)
 {
 	return SeqAction(
-		SeqActionType::MoveClipToChannel,
+		SeqActionType::MoveClip,
 		SeqActionExecution::Do,
-		new SeqActionMoveClipToChannel(clipProxy));
+		new SeqActionMoveClip(clipProxy));
 }

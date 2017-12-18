@@ -1,5 +1,4 @@
 #pragma once
-
 #include "SDL_config.h"
 #include "SeqClipLocation.h"
 
@@ -16,6 +15,7 @@ public:
 	void Deactivate();
 	bool IsActive();
 	bool IsNewClip();
+	bool IsMoved();
 
 	SeqClip* GetClip();
 	SeqChannel* GetParent();
@@ -23,6 +23,7 @@ public:
 	void SetParent(SeqChannel *channel);
 
 public:
+	int64_t grip;
 	SeqClipLocation location;
 private:
 	bool isActive;
