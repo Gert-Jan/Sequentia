@@ -349,6 +349,11 @@ void Sequentia::SetDragClip(SeqClip *clip)
 				// if dragged from a sequencer window to the void
 				project->AddAction(SeqActionFactory::RemoveClipFromChannel(dragClipProxy->GetClip()));
 			}
+			else
+			{
+				// nothing happened, unhide original clip
+				dragClipProxy->GetClip()->isHidden = false;
+			}
 			project->DeactivateAllClipProxies();
 			dragClipProxy = nullptr;
 		}
