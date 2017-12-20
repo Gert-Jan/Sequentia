@@ -4,20 +4,20 @@
 #include "SeqSerializer.h"
 #include "SeqList.h"
 
-SeqChannel::SeqChannel(SeqLibrary *library, char *name, SeqChannelType type):
-	library(library),
+SeqChannel::SeqChannel(SeqScene *parent, char *name, SeqChannelType type):
+	scene(parent),
 	type(type),
 	name(name),
-	actionId(0),
+	actionId(-1),
 	nextActionId(-1)
 {
 	clips = new SeqList<SeqClip*>();
 	clipProxies = new SeqList<SeqClipProxy*>();
 }
 
-SeqChannel::SeqChannel(SeqLibrary *library, SeqSerializer *serializer):
-	library(library),
-	actionId(0),
+SeqChannel::SeqChannel(SeqScene *parent, SeqSerializer *serializer) :
+	scene(parent),
+	actionId(-1),
 	nextActionId(-1)
 {
 	clips = new SeqList<SeqClip*>();
@@ -30,6 +30,11 @@ SeqChannel::~SeqChannel()
 	for (int i = 0; i < clips->Count(); i++)
 		delete clips->Get(i);
 	clipProxies->Clear(); // proxies should be deleted in the SeqProject Proxy pool
+}
+
+SeqScene* SeqChannel::GetParent()
+{
+	return scene;
 }
 
 void SeqChannel::AddClip(SeqClip *clip)
@@ -244,7 +249,7 @@ void SeqChannel::Deserialize(SeqSerializer *serializer)
 	nextActionId = count;
 	for (int i = 0; i < count; i++)
 	{
-		SeqClip *clip = new SeqClip(library, serializer);
+		SeqClip *clip = new SeqClip(serializer);
 		clip->actionId = i;
 		clip->SetParent(this);
 	}

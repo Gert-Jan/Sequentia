@@ -12,14 +12,14 @@ ImU32 SeqUISequencer::clipBackgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui
 ImU32 SeqUISequencer::lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
 ImU32 SeqUISequencer::backgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_ComboBg]);
 
-SeqUISequencer::SeqUISequencer(SeqProject *project):
-	project(project)
+SeqUISequencer::SeqUISequencer(SeqScene *scene):
+	scene(scene)
 {
 	Init();
 }
 
-SeqUISequencer::SeqUISequencer(SeqProject *project, SeqSerializer *serializer):
-	project(project)
+SeqUISequencer::SeqUISequencer(SeqScene *scene, SeqSerializer *serializer):
+	scene(scene)
 {
 	Init();
 	Deserialize(serializer);
@@ -30,9 +30,10 @@ SeqUISequencer::SeqUISequencer(SeqProject *project, SeqSerializer *serializer):
 void SeqUISequencer::Init()
 {
 	// alloc memory
+	SeqProject *project = Sequentia::GetProject();
 	name = SeqString::Format("Sequencer##%d", project->NextWindowId());
 	channelHeights = new SeqList<int>();
-	for (int i = 0; i < project->GetChannelCount(); i++)
+	for (int i = 0; i < scene->GetChannelCount(); i++)
 		channelHeights->Add(initialChannelHeight);
 	// start listening for project changes
 	project->AddActionHandler(this);
@@ -41,6 +42,7 @@ void SeqUISequencer::Init()
 SeqUISequencer::~SeqUISequencer()
 {
 	// stop listening for project changes
+	SeqProject *project = Sequentia::GetProject();
 	project->RemoveActionHandler(this);
 	// free memory
 	delete[] name;
@@ -92,7 +94,7 @@ void SeqUISequencer::Draw()
 	}
 	ImGui::End();
 	if (!isOpen)
-		project->RemoveWindow(this);
+		Sequentia::GetProject()->RemoveWindow(this);
 }
 
 void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
@@ -115,7 +117,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	cursor.y += rulerHeight + 1;
 	ImGui::PushClipRect(cursor, ImVec2(cursor.x + size.x, cursor.y + size.y - rulerHeight - style.ScrollbarSize), false);
 	// draw settings panels
-	for (int i = 0; i < project->GetChannelCount(); i++)
+	for (int i = 0; i < scene->GetChannelCount(); i++)
 	{
 		int channelHeight = channelHeights->Get(i);
 		// only draw if visible
@@ -125,7 +127,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 			drawList->AddRectFilled(ImVec2(cursor.x, cursor.y - scroll.y), ImVec2(cursor.x + size.x, cursor.y - scroll.y + channelHeight), backgroundColor, rounding, 0x1 | 0x8);
 			drawList->AddRect(ImVec2(cursor.x, cursor.y - scroll.y), ImVec2(cursor.x + size.x, cursor.y - scroll.y + channelHeight), lineColor, rounding, 0x1 | 0x8, lineThickness);
 			ImGui::SetCursorScreenPos(ImVec2(cursor.x + 4, cursor.y - scroll.y + 4));
-			ImGui::Text("%s %d", project->GetChannel(i)->name, i);
+			ImGui::Text("%s %d", scene->GetChannel(i)->name, i);
 		}
 		cursor.y += channelHeight + channelVerticalSpacing;
 	}
@@ -134,7 +136,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	cursor = origin;
 	cursor.y += rulerHeight;
 	ImGuiContext* g = ImGui::GetCurrentContext();
-	for (int i = 0; i < project->GetChannelCount(); i++)
+	for (int i = 0; i < scene->GetChannelCount(); i++)
 	{
 		int channelHeight = channelHeights->Get(i);
 		cursor.y += channelHeight;
@@ -282,7 +284,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 void SeqUISequencer::DrawChannels()
 {
 	const ImGuiStyle style = ImGui::GetStyle();
-	const ImVec2 contentSize = ImVec2(TimeToPixels(project->GetLength()), (float)TotalChannelHeight() + 100);
+	const ImVec2 contentSize = ImVec2(TimeToPixels(scene->GetLength()), (float)TotalChannelHeight() + 100);
 	const ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x - style.ScrollbarSize, ImGui::GetContentRegionAvail().y - style.ScrollbarSize);
 	ImGui::SetNextWindowContentSize(contentSize);
 	ImGui::BeginChild("channels", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
@@ -300,14 +302,14 @@ void SeqUISequencer::DrawChannels()
 		const ImVec2 origin = ImGui::GetCursorScreenPos();
 
 		ImVec2 cursor = origin;
-		for (int i = 0; i < project->GetChannelCount(); i++)
+		for (int i = 0; i < scene->GetChannelCount(); i++)
 		{
 			int channelHeight = channelHeights->Get(i);
 			// only draw if visible
 			if (cursor.y - origin.y + channelHeight >= scroll.y && 
 				cursor.y - origin.y < scroll.y + size.y)
 			{
-				DrawChannel(project->GetChannel(i), cursor, contentSize, channelHeight);
+				DrawChannel(scene->GetChannel(i), cursor, contentSize, channelHeight);
 			}
 			cursor.y += channelHeight + channelVerticalSpacing;
 		}
@@ -342,11 +344,11 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 			{
 				if (dragClipProxy->IsNewClip())
 				{
-					project->AddAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+					Sequentia::GetProject()->AddAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
 				}
 				else if (dragClipProxy->IsMoved())
 				{
-					project->AddAction(SeqActionFactory::MoveClip(dragClipProxy));
+					Sequentia::GetProject()->AddAction(SeqActionFactory::MoveClip(dragClipProxy));
 				}
 			}
 		}
@@ -414,7 +416,7 @@ bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const
 	{
 		if (ImGui::Selectable("Delete"))
 		{
-			Sequentia::GetCurrentProject()->AddAction(SeqActionFactory::RemoveClipFromChannel(clip));
+			Sequentia::GetProject()->AddAction(SeqActionFactory::RemoveClipFromChannel(clip));
 			clipExists = false;
 		}
 		ImGui::EndPopup();

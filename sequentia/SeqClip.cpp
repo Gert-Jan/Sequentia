@@ -4,8 +4,7 @@
 #include "SeqChannel.h"
 #include "SeqSerializer.h"
 
-SeqClip::SeqClip(SeqLibrary *library, SeqLibraryLink *link) :
-	library(library),
+SeqClip::SeqClip(SeqLibraryLink *link):
 	link(link),
 	isHidden(false),
 	location(SeqClipLocation()),
@@ -17,8 +16,7 @@ SeqClip::SeqClip(SeqLibrary *library, SeqLibraryLink *link) :
 		location.rightTime = Sequentia::TimeBase; // default 1 second long clips
 }
 
-SeqClip::SeqClip(SeqLibrary *library, SeqSerializer *serializer) :
-	library(library),
+SeqClip::SeqClip(SeqSerializer *serializer):
 	isHidden(false),
 	location(SeqClipLocation()),
 	actionId(-1)
@@ -73,6 +71,6 @@ void SeqClip::Serialize(SeqSerializer *serializer)
 
 void SeqClip::Deserialize(SeqSerializer *serializer)
 {
-	link = library->GetLink(serializer->ReadString());
+	link = Sequentia::GetLibrary()->GetLink(serializer->ReadString());
 	location.Deserialize(serializer);
 }

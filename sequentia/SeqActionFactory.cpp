@@ -3,20 +3,20 @@
 #include "SeqProjectHeaders.h"
 #include "SeqString.h"
 
-SeqAction SeqActionFactory::AddChannel(SeqChannelType type, char* name)
+SeqAction SeqActionFactory::AddChannel(SeqScene *scene, SeqChannelType type, char* name)
 {
 	return SeqAction(
 		SeqActionType::AddChannel,
 		SeqActionExecution::Do,
-		new SeqActionAddChannel(type, name));
+		new SeqActionAddChannel(scene->id, type, name));
 }
 
-SeqAction SeqActionFactory::RemoveChannel(SeqChannel* channel)
+SeqAction SeqActionFactory::RemoveChannel(SeqScene *scene, SeqChannel* channel)
 {
 	return SeqAction(
 		SeqActionType::AddChannel,
 		SeqActionExecution::Undo,
-		new SeqActionAddChannel(channel->type, channel->name));
+		new SeqActionAddChannel(scene->id, channel->type, channel->name));
 }
 
 SeqAction SeqActionFactory::AddLibraryLink(char *fullPath)

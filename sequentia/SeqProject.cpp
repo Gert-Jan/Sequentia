@@ -14,18 +14,20 @@
 #include "SeqString.h"
 #include "SeqList.h"
 
-SeqProject::SeqProject()
+SeqProject::SeqProject():
+	nextWindowId(0),
+	actionCursor(0),
+	nextSceneId(0),
+	fullPath("")
 {
 	library = new SeqLibrary();
-	channels = new SeqList<SeqChannel*>();
+	scenes = new SeqList<SeqScene*>();
 	clipProxyPool = new SeqList<SeqClipProxy*>();
 
 	windows = new SeqList<SeqWindow*>();
 
 	actionHandlers = new SeqList<SeqActionHandler*>();
 	actions = new SeqList<SeqAction>();
-	
-	fullPath = "";
 }
 
 SeqProject::~SeqProject()
@@ -34,7 +36,7 @@ SeqProject::~SeqProject()
 	delete windows;
 	delete actions;
 	delete actionHandlers;
-	delete channels;
+	delete scenes;
 	delete clipProxyPool;
 	delete library;
 	delete[] fullPath;
@@ -48,8 +50,8 @@ void SeqProject::Clear()
 	for (int i = 0; i < actions->Count(); i++)
 		delete actions->Get(i).data;
 
-	for (int i = 0; i < channels->Count(); i++)
-		delete channels->Get(i);
+	for (int i = 0; i < scenes->Count(); i++)
+		delete scenes->Get(i);
 
 	for (int i = 0; i < clipProxyPool->Count(); i++)
 		delete clipProxyPool->Get(i);
@@ -57,7 +59,7 @@ void SeqProject::Clear()
 	windows->Clear();
 	actions->Clear();
 	actionHandlers->Clear();
-	channels->Clear();
+	scenes->Clear();
 	clipProxyPool->Clear();
 	library->Clear();
 
@@ -145,37 +147,37 @@ SeqLibrary* SeqProject::GetLibrary()
 	return library;
 }
 
-void SeqProject::AddChannel(SeqChannelType type, char *name)
+SeqScene* SeqProject::CreateScene(char *name)
 {
-	SeqChannel* channel = new SeqChannel(library, name, type);
-	channels->Add(channel);
-	if (channel->actionId == -1)
-		channel->actionId = NextActionId();
-	else if (channel->actionId >= nextActionId)
-		nextActionId = channel->actionId + 1;
+	return new SeqScene(NextSceneId(), name);
 }
 
-void SeqProject::RemoveChannel(const int index)
+void SeqProject::AddScene(SeqScene *scene)
 {
-	channels->RemoveAt(index);
+	scenes->Add(scene);
 }
 
-int SeqProject::GetChannelCount()
+void SeqProject::RemoveScene(SeqScene *scene)
 {
-	return channels->Count();
+	scenes->Remove(scene);
 }
 
-SeqChannel* SeqProject::GetChannel(const int index)
+int SeqProject::GetSceneCount()
 {
-	return channels->Get(index);
+	return scenes->Count();
 }
 
-int SeqProject::GetChannelIndexByActionId(const int id)
+SeqScene* SeqProject::GetScene(const int index)
 {
-	for (int i = 0; i < channels->Count(); i++)
-		if (channels->Get(i)->actionId == id)
-			return i;
-	return -1;
+	return scenes->Get(index);
+}
+
+SeqScene* SeqProject::GetSceneById(const int id)
+{
+	for (int i = 0; i < scenes->Count(); i++)
+		if (scenes->Get(i)->id == id)
+			return scenes->Get(i);
+	return nullptr;
 }
 
 SeqClipProxy* SeqProject::NextClipProxy()
@@ -208,7 +210,7 @@ int SeqProject::NextWindowId()
 
 void SeqProject::AddWindowSequencer()
 {
-	windows->Add(new SeqUISequencer(this));
+	windows->Add(new SeqUISequencer(scenes->Get(0)));
 }
 
 void SeqProject::AddWindowLibrary()
@@ -227,11 +229,6 @@ void SeqProject::RemoveWindow(SeqWindow *window)
 	delete window;
 }
 
-double SeqProject::GetLength()
-{
-	return 60.54321;
-}
-
 void SeqProject::Update()
 {
 	library->Update();
@@ -246,10 +243,9 @@ void SeqProject::Draw()
 	}
 }
 
-int SeqProject::NextActionId()
+int SeqProject::NextSceneId()
 {
-	// TODO: on overflow rearrange action ids.
-	return nextActionId++;
+	return nextSceneId++;
 }
 
 void SeqProject::Undo()
@@ -339,14 +335,15 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 	{
 		case SeqActionType::AddChannel:
 		{
+			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
+			SeqScene* scene = GetSceneById(data->sceneId);
 			if (execution == SeqActionExecution::Do)
 			{
-				SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-				AddChannel(data->type, SeqString::Copy(data->name));
+				scene->AddChannel(data->type, SeqString::Copy(data->name));
 			}
 			else
 			{
-				RemoveChannel(channels->Count() - 1);
+				scene->RemoveChannel(scene->GetChannelCount() - 1);
 			}
 			break;
 		}
@@ -366,10 +363,11 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 		case SeqActionType::AddClipToChannel:
 		{
 			SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
-			SeqChannel* channel = GetChannel(GetChannelIndexByActionId(data->channelId));
+			SeqScene* scene = GetSceneById(data->sceneId);
+			SeqChannel* channel = scene->GetChannelByActionId(data->channelId);
 			if (execution == SeqActionExecution::Do)
 			{
-				SeqClip* clip = new SeqClip(library, library->GetLink(data->libraryLinkIndex));
+				SeqClip* clip = new SeqClip(library->GetLink(data->libraryLinkIndex));
 				clip->location.leftTime = data->leftTime;
 				clip->location.rightTime = data->rightTime;
 				clip->location.startTime = data->startTime;
@@ -396,8 +394,10 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 		case SeqActionType::MoveClip:
 		{
 			SeqActionMoveClip *data = (SeqActionMoveClip*)action.data;
-			SeqChannel* fromChannel = GetChannel(GetChannelIndexByActionId(data->fromChannelId));
-			SeqChannel* toChannel = GetChannel(GetChannelIndexByActionId(data->toChannelId));
+			SeqScene *fromScene = GetSceneById(data->fromSceneId);
+			SeqScene *toScene = GetSceneById(data->toSceneId);
+			SeqChannel* fromChannel = fromScene->GetChannelByActionId(data->fromChannelId);
+			SeqChannel* toChannel = toScene->GetChannelByActionId(data->toChannelId);
 			if (execution == SeqActionExecution::Do)
 			{
 				SeqClip* clip = fromChannel->GetClip(fromChannel->GetClipIndexByActionId(data->fromClipId));
@@ -434,10 +434,10 @@ int SeqProject::Serialize(SeqSerializer *serializer)
 	// library
 	library->Serialize(serializer);
 	
-	// channels
-	serializer->Write(channels->Count());
-	for (int i = 0; i < channels->Count(); i++)
-		channels->Get(i)->Serialize(serializer);
+	// scenes
+	serializer->Write(scenes->Count());
+	for (int i = 0; i < scenes->Count(); i++)
+		scenes->Get(i)->Serialize(serializer);
 	
 	// windows
 	serializer->Write(windows->Count());
@@ -463,14 +463,13 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 	// library
 	library->Deserialize(serializer);
 
-	// channels
+	// scenes
 	count = serializer->ReadInt();
-	nextActionId = count;
 	for (int i = 0; i < count; i++)
 	{
-		SeqChannel *channel = new SeqChannel(library, serializer);
-		channel->actionId = i;
-		channels->Add(channel);
+		SeqScene *scene = new SeqScene(serializer);
+		scenes->Add(scene);
+		nextSceneId = SDL_max(scene->id, nextSceneId) + 1;
 	}
 
 	// ui sequencers
@@ -487,7 +486,7 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 				windows->Add(new SeqUIVideo(this, library, serializer));
 				break;
 			case SeqWindowType::Sequencer:
-				windows->Add(new SeqUISequencer(this, serializer));
+				windows->Add(new SeqUISequencer(scenes->Get(0), serializer));
 				break;
 		}
 	}

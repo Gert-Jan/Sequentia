@@ -176,6 +176,7 @@
     <ClCompile Include="SeqPath.cpp" />
     <ClCompile Include="SeqProject.cpp" />
     <ClCompile Include="SeqRenderer.cpp" />
+    <ClCompile Include="SeqScene.cpp" />
     <ClCompile Include="SeqSerializerBin.cpp" />
     <ClCompile Include="SeqString.cpp" />
     <ClCompile Include="SeqTaskDecodeVideo.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="SeqPath.h" />
     <ClInclude Include="SeqProject.h" />
     <ClInclude Include="SeqRenderer.h" />
+    <ClInclude Include="SeqScene.h" />
     <ClInclude Include="SeqSerializer.h" />
     <ClInclude Include="SeqSerializerBin.h" />
     <ClInclude Include="SeqString.h" />

@@ -3,7 +3,7 @@
 #include "SeqWindow.h"
 #include "SeqAction.h"
 
-class SeqProject;
+class SeqScene;
 class SeqChannel;
 class SeqClip;
 class SeqSerializer;
@@ -13,8 +13,8 @@ class SeqList;
 class SeqUISequencer : public SeqWindow, SeqActionHandler
 {
 public:
-	SeqUISequencer(SeqProject *project);
-	SeqUISequencer(SeqProject *project, SeqSerializer *serializer);
+	SeqUISequencer(SeqScene *scene);
+	SeqUISequencer(SeqScene *scene, SeqSerializer *serializer);
 	~SeqUISequencer();
 
 	void ActionDone(const SeqAction action);
@@ -51,7 +51,7 @@ private:
 	const float lineThickness = 1.0f;
 	const float rounding = 6.0f;
 	char *name;
-	SeqProject *project;
+	SeqScene *scene;
 	SeqList<int> *channelHeights;
 	double position;
 	float zoom = 1;

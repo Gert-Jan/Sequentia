@@ -84,6 +84,9 @@
     <ClCompile Include="SeqClipLocation.cpp">
       <Filter>data</Filter>
     </ClCompile>
+    <ClCompile Include="SeqScene.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -193,6 +196,9 @@
       <Filter>data</Filter>
     </ClInclude>
     <ClInclude Include="SeqClipLocation.h">
+      <Filter>data</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqScene.h">
       <Filter>data</Filter>
     </ClInclude>
   </ItemGroup>

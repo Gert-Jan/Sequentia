@@ -6,20 +6,21 @@ struct SDL_Window;
 typedef union SDL_Event SDL_Event;
 
 class SeqProject;
+class SeqLibrary;
 class SeqRenderer;
 class SeqClip;
 class SeqClipProxy;
-class SeqLibrary;
 struct SeqLibraryLink;
 
 class Sequentia
 {
 public:
 	static int Run(char *openProject);
-	static SeqProject* GetCurrentProject();
+	static SeqProject* GetProject();
+	static SeqLibrary* GetLibrary();
 	static bool IsDragging();
 	static SeqClipProxy* GetDragClipProxy();
-	static void SetDragClip(SeqLibrary *library, SeqLibraryLink *link);
+	static void SetDragClipNew(SeqLibraryLink *link);
 	static void SetDragClip(SeqClip *clip, const int64_t grip = 0);
 
 private:

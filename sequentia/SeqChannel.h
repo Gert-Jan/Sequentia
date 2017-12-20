@@ -6,6 +6,7 @@ class SeqSerializer;
 template<class T>
 class SeqList;
 class SeqLibrary;
+class SeqScene;
 class SeqClip;
 class SeqClipProxy;
 
@@ -19,9 +20,11 @@ enum class SeqChannelType
 class SeqChannel
 {
 public:
-	SeqChannel(SeqLibrary *library, char *name, SeqChannelType type);
-	SeqChannel(SeqLibrary *library, SeqSerializer *serializer);
+	SeqChannel(SeqScene *parent, char *name, SeqChannelType type);
+	SeqChannel(SeqScene *parent, SeqSerializer *serializer);
 	~SeqChannel();
+
+	SeqScene* GetParent();
 
 	void AddClip(SeqClip *clip);
 	void AddClipAt(SeqClip *clip, int const index);
@@ -59,7 +62,7 @@ public:
 	char *name;
 	int actionId;
 private:
-	SeqLibrary *library;
+	SeqScene *scene;
 	SeqList<SeqClip*> *clips;
 	SeqList<SeqClipProxy*> *clipProxies;
 	int nextActionId;

@@ -85,7 +85,7 @@ void SeqUILibrary::Draw()
 			{
 				if (Sequentia::GetDragClipProxy() == nullptr)
 				{
-					Sequentia::SetDragClip(library, link);
+					Sequentia::SetDragClipNew(link);
 				}
 			}
 			AddContextMenu(link);

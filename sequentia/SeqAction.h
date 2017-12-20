@@ -40,14 +40,16 @@ public:
 
 struct SeqActionAddChannel
 {
+	int sceneId;
 	SeqChannelType type;
 	char *name;
-	SeqActionAddChannel(SeqChannelType type, char *name): type(type), name(name) { }
+	SeqActionAddChannel(int sceneId, SeqChannelType type, char *name): sceneId(sceneId), type(type), name(name) { }
 	~SeqActionAddChannel() { delete[] name; }
 };
 
 struct SeqActionAddClipToChannel
 {
+	int sceneId;
 	int channelId;
 	int libraryLinkIndex;
 	int clipId;
@@ -60,9 +62,11 @@ struct SeqActionAddClipToChannel
 
 struct SeqActionMoveClip
 {
+	int fromSceneId;
 	int fromChannelId;
 	int fromClipId;
 	int64_t fromLeftTime;
+	int toSceneId;
 	int toChannelId;
 	int toClipId;
 	int64_t toLeftTime;

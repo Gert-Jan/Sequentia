@@ -4,8 +4,7 @@ struct SDL_RWops;
 class SeqSerializer;
 
 class SeqLibrary;
-class SeqChannel;
-enum class SeqChannelType;
+class SeqScene;
 class SeqClipProxy;
 
 class SeqWindow;
@@ -34,9 +33,12 @@ public:
 
 	SeqLibrary* GetLibrary();
 
-	int GetChannelCount();
-	SeqChannel* GetChannel(const int index);
-	int GetChannelIndexByActionId(const int id);
+	SeqScene* CreateScene(char *name);
+	void AddScene(SeqScene *scene);
+	void RemoveScene(SeqScene *scene);
+	int GetSceneCount();
+	SeqScene* GetScene(const int index);
+	SeqScene* GetSceneById(const int id);
 
 	SeqClipProxy* NextClipProxy();
 	void DeactivateAllClipProxies();
@@ -46,8 +48,6 @@ public:
 	void AddWindowLibrary();
 	void AddWindowVideo();
 	void RemoveWindow(SeqWindow *window);
-
-	double GetLength();
 
 	void Update();
 	void Draw();
@@ -63,9 +63,7 @@ public:
 	void RemoveActionHandler(SeqActionHandler *handler);
 
 private:
-	int NextActionId();
-	void AddChannel(SeqChannelType type, char *name);
-	void RemoveChannel(const int index);
+	int NextSceneId();
 
 	void DoAction(const SeqAction action);
 	void UndoAction(const SeqAction action);
@@ -79,12 +77,12 @@ private:
 	char *fullPath;
 	int nextWindowId;
 	SeqLibrary *library;
-	SeqList<SeqChannel*> *channels;
+	SeqList<SeqScene*> *scenes;
 	SeqList<SeqClipProxy*> *clipProxyPool;
 	SeqList<SeqWindow*> *windows;
 
 	SeqList<SeqActionHandler*> *actionHandlers;
 	SeqList<SeqAction> *actions;
 	int actionCursor = 0;
-	int nextActionId = 0;
+	int nextSceneId = 0;
 };

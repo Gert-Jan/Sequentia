@@ -3,7 +3,6 @@
 #include "SDL_config.h"
 #include "SeqClipLocation.h"
 
-class SeqLibrary;
 class SeqChannel;
 struct SeqLibraryLink;
 class SeqSerializer;
@@ -11,8 +10,8 @@ class SeqSerializer;
 class SeqClip
 {
 public:
-	SeqClip(SeqLibrary *library, SeqLibraryLink *link);
-	SeqClip(SeqLibrary *library, SeqSerializer *serializer);
+	SeqClip(SeqLibraryLink *link);
+	SeqClip(SeqSerializer *serializer);
 	~SeqClip();
 
 	void SetPosition(int64_t leftTime);
@@ -31,7 +30,6 @@ public:
 	SeqClipLocation location;
 	int actionId;
 private:
-	SeqLibrary *library;
 	SeqLibraryLink *link;
 };
 

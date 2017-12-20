@@ -43,3 +43,4 @@ Ideas
 	- When dragging one or multiple clips into the 'void' a temp scene can be spawned in a new SeqUISequencer window.
 	- This could allow for intermediate editing between dragging and dropping.
 	- Furthermore having different scenes allows for doing quick non destructive edits.
+	- Scenes could be quick/temp instanced with a single channel for video previews. This way the same video player can be used for everything.

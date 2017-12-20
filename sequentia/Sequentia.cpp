@@ -55,10 +55,12 @@ int Sequentia::Run(char *openProject)
 	{
 		// test data
 		project = new SeqProject();
-		for (int i = 0; i < 20; i++)
+		SeqScene *scene = project->CreateScene("master");
+		project->AddScene(scene);
+		for (int i = 0; i < 5; i++)
 		{
-			project->AddAction(SeqActionFactory::AddChannel(SeqChannelType::Video, "Video"));
-			project->AddAction(SeqActionFactory::AddChannel(SeqChannelType::Audio, "Audio"));
+			project->AddAction(SeqActionFactory::AddChannel(scene, SeqChannelType::Video, "Video"));
+			project->AddAction(SeqActionFactory::AddChannel(scene, SeqChannelType::Audio, "Audio"));
 		}
 		project->AddWindowSequencer();
 		project->AddWindowLibrary();
@@ -295,9 +297,14 @@ void Sequentia::HandleMainMenuBar()
 	}
 }
 
-SeqProject* Sequentia::GetCurrentProject()
+SeqProject* Sequentia::GetProject()
 {
 	return project;
+}
+
+SeqLibrary* Sequentia::GetLibrary()
+{
+	return project->GetLibrary();
 }
 
 void Sequentia::HandleDragging()
@@ -318,9 +325,9 @@ void Sequentia::HandleDragging()
 	}
 }
 
-void Sequentia::SetDragClip(SeqLibrary* library, SeqLibraryLink* link)
+void Sequentia::SetDragClipNew(SeqLibraryLink* link)
 {
-	SeqClip *clip = new SeqClip(library, link);
+	SeqClip *clip = new SeqClip(link);
 	Sequentia::SetDragClip(clip);
 }
 
