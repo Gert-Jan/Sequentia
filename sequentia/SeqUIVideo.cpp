@@ -2,6 +2,7 @@
 #include <imgui_internal.h>
 #include <SDL.h>
 #include "SeqUIVideo.h"
+#include "Sequentia.h"
 #include "SeqProjectHeaders.h"
 #include "SeqWorkerManager.h"
 #include "SeqTaskDecodeVideo.h"
@@ -16,9 +17,7 @@ extern "C"
 	#include "libavformat/avformat.h"
 }
 
-SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library):
-	project(project),
-	library(library),
+SeqUIVideo::SeqUIVideo():
 	decoderTask(nullptr),
 	previousFrame(nullptr),
 	isSeeking(false),
@@ -28,9 +27,7 @@ SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library):
 	Init();
 }
 
-SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer):
-	project(project),
-	library(library),
+SeqUIVideo::SeqUIVideo(SeqSerializer *serializer):
 	decoderTask(nullptr),
 	previousFrame(nullptr),
 	isSeeking(false),
@@ -43,6 +40,7 @@ SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *
 
 void SeqUIVideo::Init()
 {
+	SeqProject *project = Sequentia::GetProject();
 	// alloc memory
 	SeqString::Temp->Format("Video##%d", project->NextWindowId());
 	name = SeqString::Temp->Copy();
@@ -54,6 +52,7 @@ void SeqUIVideo::Init()
 
 SeqUIVideo::~SeqUIVideo()
 {
+	SeqProject *project = Sequentia::GetProject();
 	// stop listening for project changes
 	project->RemoveActionHandler(this);
 	// free memory
@@ -82,6 +81,7 @@ SeqWindowType SeqUIVideo::GetWindowType()
 void SeqUIVideo::Draw()
 {
 	const ImGuiStyle style = ImGui::GetStyle();
+	SeqLibrary *library = Sequentia::GetLibrary();
 
 	// detect if another video was focussed
 	if ((decoderTask == nullptr && library->GetLastLinkFocus() != nullptr) ||
@@ -239,7 +239,7 @@ void SeqUIVideo::Draw()
 	ImGui::End();
 
 	if (!isOpen)
-		project->RemoveWindow(this);
+		Sequentia::GetProject()->RemoveWindow(this);
 }
 
 void SeqUIVideo::Serialize(SeqSerializer *serializer)

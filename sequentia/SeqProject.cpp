@@ -214,12 +214,12 @@ void SeqProject::AddWindowSequencer()
 
 void SeqProject::AddWindowLibrary()
 {
-	windows->Add(new SeqUILibrary(this, library));
+	windows->Add(new SeqUILibrary());
 }
 
 void SeqProject::AddWindowVideo()
 {
-	windows->Add(new SeqUIVideo(this, library));
+	windows->Add(new SeqUIVideo());
 }
 
 void SeqProject::RemoveWindow(SeqWindow *window)
@@ -235,7 +235,7 @@ void SeqProject::Update()
 
 void SeqProject::Draw()
 {
-	SeqDialogs::Draw(this);
+	SeqDialogs::Draw();
 	for (int i = 0; i < windows->Count(); i++)
 	{
 		windows->Get(i)->Draw();
@@ -479,10 +479,10 @@ int SeqProject::Deserialize(SeqSerializer *serializer)
 		switch ((SeqWindowType)windowType)
 		{
 			case SeqWindowType::Library:
-				windows->Add(new SeqUILibrary(this, library, serializer));
+				windows->Add(new SeqUILibrary(serializer));
 				break;
 			case SeqWindowType::Video:
-				windows->Add(new SeqUIVideo(this, library, serializer));
+				windows->Add(new SeqUIVideo(serializer));
 				break;
 			case SeqWindowType::Sequencer:
 				windows->Add(new SeqUISequencer(scenes->Get(0), serializer));

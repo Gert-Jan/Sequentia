@@ -23,7 +23,7 @@ class SeqDialogs
 public:
 	static void ShowError(const char *message, ...);
 	static void ShowRequestProjectPath(const char *currentPath, RequestPathAction action);
-	static void Draw(SeqProject *project);
+	static void Draw();
 
 private:
 	static bool ShowFileBrowseDialog(const char *title);

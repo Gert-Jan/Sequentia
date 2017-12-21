@@ -8,16 +8,12 @@
 #include "SeqDialogs.h"
 #include "SeqString.h"
 
-SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library) :
-	project(project),
-	library(library)
+SeqUILibrary::SeqUILibrary()
 {
 	Init();
 }
 
-SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer) :
-	project(project),
-	library(library)
+SeqUILibrary::SeqUILibrary(SeqSerializer *serializer)
 {
 	Init();
 	Deserialize(serializer);
@@ -25,6 +21,7 @@ SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializ
 
 void SeqUILibrary::Init()
 {
+	SeqProject *project = Sequentia::GetProject();
 	// alloc memory
 	SeqString::Temp->Format("Library##%d", project->NextWindowId());
 	name = SeqString::Temp->Copy();
@@ -34,6 +31,7 @@ void SeqUILibrary::Init()
 
 SeqUILibrary::~SeqUILibrary()
 {
+	SeqProject *project = Sequentia::GetProject();
 	// stop listening for project changes
 	project->RemoveActionHandler(this);
 	// free memory
@@ -61,6 +59,9 @@ SeqWindowType SeqUILibrary::GetWindowType()
 
 void SeqUILibrary::Draw()
 {
+	SeqProject *project = Sequentia::GetProject();
+	SeqLibrary *library = Sequentia::GetLibrary();
+
 	bool isWindowNew = false;
 	if (!ImGui::FindWindowByName(name))
 		isWindowNew = true;
@@ -129,7 +130,7 @@ void SeqUILibrary::AddContextMenu(SeqLibraryLink *link)
 	if (ImGui::BeginPopupContextItem(link->fullPath))
 	{
 		if (ImGui::Selectable("Delete"))
-			project->AddAction(SeqActionFactory::RemoveLibraryLink(link->fullPath));
+			Sequentia::GetProject()->AddAction(SeqActionFactory::RemoveLibraryLink(link->fullPath));
 		ImGui::EndPopup();
 	}
 }

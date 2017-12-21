@@ -13,8 +13,8 @@ struct AVFrame;
 class SeqUIVideo : public SeqWindow, SeqActionHandler
 {
 public:
-	SeqUIVideo(SeqProject *project, SeqLibrary *library);
-	SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *serializer);
+	SeqUIVideo();
+	SeqUIVideo(SeqSerializer *serializer);
 	~SeqUIVideo();
 
 	void ActionDone(const SeqAction action);
@@ -29,8 +29,6 @@ private:
 
 private:
 	char *name;
-	SeqProject *project;
-	SeqLibrary *library;
 	SeqMaterial *material;
 	SeqTaskDecodeVideo *decoderTask;
 	AVFrame *previousFrame;

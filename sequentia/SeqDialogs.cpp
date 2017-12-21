@@ -1,6 +1,7 @@
 #include <imgui.h>
 
 #include "SeqDialogs.h"
+#include "Sequentia.h"
 #include "SeqProjectHeaders.h"
 #include "SeqAction.h"
 #include "SeqActionFactory.h"
@@ -32,8 +33,10 @@ void SeqDialogs::ShowRequestProjectPath(const char *currentPath, RequestPathActi
 	showRequestProjectPath = true;
 }
 
-void SeqDialogs::Draw(SeqProject *project)
+void SeqDialogs::Draw()
 {
+	SeqProject *project = Sequentia::GetProject();
+
 	if (showError)
 	{
 		if (ShowMessage("Error##General", SeqDialogOption::OK))
