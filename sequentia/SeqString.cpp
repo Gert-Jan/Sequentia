@@ -13,7 +13,7 @@ SeqString::SeqString(int initLen)
 	Buffer = new char[BufferLen];
 }
 
-SeqString::SeqString(char *string)
+SeqString::SeqString(const char *string)
 {
 	BufferLen = strlen(string);
 	Buffer = new char[BufferLen];

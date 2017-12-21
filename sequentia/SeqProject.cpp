@@ -134,7 +134,7 @@ char* SeqProject::GetPath()
 	return this->fullPath;
 }
 
-void SeqProject::SetPath(char *fullPath)
+void SeqProject::SetPath(const char *fullPath)
 {
 	char *oldPath = this->fullPath;
 	this->fullPath = SeqPath::Normalize(fullPath);
@@ -146,7 +146,7 @@ SeqLibrary* SeqProject::GetLibrary()
 	return library;
 }
 
-SeqScene* SeqProject::CreateScene(char *name)
+SeqScene* SeqProject::CreateScene(const char *name)
 {
 	return new SeqScene(NextSceneId(), name);
 }
@@ -348,7 +348,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 		}
 		case SeqActionType::AddLibraryLink:
 		{
-			char *fullPath = SeqString::Copy((char*)action.data);
+			char *fullPath = (char*)action.data;
 			if (execution == SeqActionExecution::Do)
 			{
 				library->AddLink(fullPath);

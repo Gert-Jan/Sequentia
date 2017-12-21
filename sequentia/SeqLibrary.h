@@ -26,16 +26,16 @@ public:
 
 	void Clear();
 	
-	void AddLink(char *fullPath);
+	void AddLink(const char *fullPath);
 	void RemoveLink(const int index);
-	void RemoveLink(char *fullPath);
+	void RemoveLink(const char *fullPath);
 	int LinkCount();
 	SeqLibraryLink* GetLink(const int index);
 	SeqLibraryLink* GetLink(const char *fullPath);
 	int GetLinkIndex(const char *fullPath);
 	void SetLastLinkFocus(SeqLibraryLink *link);
 	SeqLibraryLink* GetLastLinkFocus();
-	void UpdatePaths(char *oldProjectFullPath, char *newProjectFullPath);
+	void UpdatePaths(const char *oldProjectFullPath, const char *newProjectFullPath);
 	void Update();
 
 	void Serialize(SeqSerializer *serializer);

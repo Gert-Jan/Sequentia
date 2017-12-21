@@ -6,7 +6,7 @@ struct SeqMaterial
 public:
 	SeqMaterial();
 	~SeqMaterial();
-	void Init(const GLchar* vertShaderSource, const GLchar* fragShaderSource, int textureCount);
+	void Init(const GLchar *vertShaderSource, const GLchar *fragShaderSource, int textureCount);
 	void Begin(const float projMat[4][4], unsigned int g_VaoHandle);
 	void BindTextures();
 	void Dispose();

@@ -53,7 +53,7 @@ void SeqDecoder::Dispose()
 	}
 }
 
-int SeqDecoder::ReadVideoInfo(char *fullPath, SeqVideoInfo *videoInfo)
+int SeqDecoder::ReadVideoInfo(const char *fullPath, SeqVideoInfo *videoInfo)
 {
 	/* open input file, and allocate format context */
 	if (avformat_open_input(&videoInfo->formatContext, fullPath, nullptr, nullptr) < 0)
@@ -527,7 +527,7 @@ int SeqDecoder::OpenCodecContext(int *streamIndex, AVCodecContext **codec, AVFor
 	return 0;
 }
 
-void SeqDecoder::PrintAVError(char *message, int error)
+void SeqDecoder::PrintAVError(const char *message, int error)
 {
 	char buff[256];
 	av_strerror(error, buff, 256);

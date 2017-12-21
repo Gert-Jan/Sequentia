@@ -3,7 +3,7 @@
 #include "SeqProjectHeaders.h"
 #include "SeqString.h"
 
-SeqAction SeqActionFactory::AddChannel(SeqScene *scene, SeqChannelType type, char* name)
+SeqAction SeqActionFactory::AddChannel(SeqScene *scene, SeqChannelType type, const char *name)
 {
 	return SeqAction(
 		SeqActionType::AddChannel,
@@ -19,7 +19,7 @@ SeqAction SeqActionFactory::RemoveChannel(SeqScene *scene, SeqChannel* channel)
 		new SeqActionAddChannel(scene->id, channel->type, channel->name));
 }
 
-SeqAction SeqActionFactory::AddLibraryLink(char *fullPath)
+SeqAction SeqActionFactory::AddLibraryLink(const char *fullPath)
 {
 	return SeqAction(
 		SeqActionType::AddLibraryLink,
@@ -27,7 +27,7 @@ SeqAction SeqActionFactory::AddLibraryLink(char *fullPath)
 		SeqString::Copy(fullPath));
 }
 
-SeqAction SeqActionFactory::RemoveLibraryLink(char *fullPath)
+SeqAction SeqActionFactory::RemoveLibraryLink(const char *fullPath)
 {
 	return SeqAction(
 		SeqActionType::AddLibraryLink,

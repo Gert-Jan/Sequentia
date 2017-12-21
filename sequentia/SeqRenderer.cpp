@@ -51,7 +51,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
 		"}\n";
 
-	const GLchar* fragment_shader_default =
+	const GLchar *fragment_shader_default =
 		"#version 330\n"
 		"uniform sampler2D Texture0;\n"
 		"in vec2 Frag_UV;\n"
@@ -62,7 +62,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"	Out_Color = Frag_Color * texture( Texture0, Frag_UV.st);\n"
 		"}\n";
 
-	const GLchar* fragment_shader_video =
+	const GLchar *fragment_shader_video =
 		"#version 330\n"
 		"uniform sampler2D Texture0;\n"
 		"uniform sampler2D Texture1;\n"
@@ -270,7 +270,7 @@ void SeqRenderer::CreateFontsTexture()
 {
 	// Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
-	unsigned char* pixels;
+	unsigned char *pixels;
 	int width, height;
 	// Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);

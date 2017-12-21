@@ -16,7 +16,7 @@ RequestPathAction SeqDialogs::requestPathAction = RequestPathAction::Open;
 SeqString *SeqDialogs::path = new SeqString(256);
 SeqString *SeqDialogs::message = new SeqString(1024);
 
-void SeqDialogs::ShowError(char *errorMessage, ...)
+void SeqDialogs::ShowError(const char *errorMessage, ...)
 {
 	va_list args;
 	va_start(args, errorMessage);
@@ -25,7 +25,7 @@ void SeqDialogs::ShowError(char *errorMessage, ...)
 	showError = true;
 }
 
-void SeqDialogs::ShowRequestProjectPath(char *currentPath, RequestPathAction action)
+void SeqDialogs::ShowRequestProjectPath(const char *currentPath, RequestPathAction action)
 {
 	path->Set(currentPath);
 	requestPathAction = action;

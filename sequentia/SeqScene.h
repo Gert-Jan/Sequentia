@@ -10,11 +10,11 @@ class SeqList;
 class SeqScene
 {
 public:
-	SeqScene(int id, char *name);
+	SeqScene(int id, const char *sceneName);
 	SeqScene(SeqSerializer *serializer);
 	~SeqScene();
 	 
-	void AddChannel(SeqChannelType type, char *name);
+	void AddChannel(SeqChannelType type, const char *name);
 	void RemoveChannel(const int index);
 	int GetChannelCount();
 	SeqChannel* GetChannel(const int index);

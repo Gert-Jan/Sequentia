@@ -7,7 +7,7 @@ class SeqString
 {
 public:
 	SeqString(int initLen = 32);
-	SeqString(char *string);
+	SeqString(const char *string);
 	void Set(const char *string, const int count);
 	void Set(const char *string);
 	void Clear();

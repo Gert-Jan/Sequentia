@@ -17,7 +17,7 @@ SeqMaterial::~SeqMaterial()
 {
 }
 
-void SeqMaterial::Init(const GLchar* vertShaderSource, const GLchar* fragShaderSource, int textureCount)
+void SeqMaterial::Init(const GLchar *vertShaderSource, const GLchar *fragShaderSource, int textureCount)
 {
 	this->textureCount = textureCount;
 	glGenTextures(textureCount, &textureHandles[0]);

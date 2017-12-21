@@ -6,14 +6,14 @@
 #include <direct.h>
 #include <errno.h>
 
-char* SeqPath::Normalize(char *path)
+char* SeqPath::Normalize(const char *path)
 {
 	SeqString::Temp->Set(path);
 	SeqString::Temp->Replace("\\", "/");
 	return SeqString::Temp->Copy();
 }
 
-int SeqPath::CreateDir(char *path)
+int SeqPath::CreateDir(const char *path)
 {
 	int error = 0;
 	size_t pos = SeqString::Find(path, "/", 0);
@@ -28,13 +28,13 @@ int SeqPath::CreateDir(char *path)
 	return error;
 }
 
-bool SeqPath::FileExists(char *path)
+bool SeqPath::FileExists(const char *path)
 {
 	struct stat buffer;
 	return stat(path, &buffer) == 0;
 }
 
-bool SeqPath::IsDir(char *normalizedPath)
+bool SeqPath::IsDir(const char *normalizedPath)
 {
 	return normalizedPath[strlen(normalizedPath)] == '/';
 }

@@ -1,6 +1,14 @@
 #include "SeqAction.h"
 #include "Sequentia.h"
 #include "SeqProjectHeaders.h"
+#include "SeqString.h"
+
+SeqActionAddChannel::SeqActionAddChannel(int sceneId, SeqChannelType type, const char *channelName):
+	sceneId(sceneId),
+	type(type)
+{
+	name = SeqString::Copy(channelName);
+}
 
 // on add
 SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClipProxy* proxy)

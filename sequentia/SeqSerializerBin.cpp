@@ -31,7 +31,7 @@ void SeqSerializerBin::SetApplicationVersion(int version)
 	applicationVersion = version;
 }
 
-void SeqSerializerBin::Write(int32_t value)
+void SeqSerializerBin::Write(const int32_t value)
 {
 	stream->write(stream, &value, 4, 1);
 }
@@ -43,7 +43,7 @@ int32_t SeqSerializerBin::ReadInt()
 	return value;
 }
 
-void SeqSerializerBin::Write(int64_t value)
+void SeqSerializerBin::Write(const int64_t value)
 {
 	stream->write(stream, &value, 8, 1);
 }
@@ -55,7 +55,7 @@ int64_t SeqSerializerBin::ReadLong()
 	return value;
 }
 
-void SeqSerializerBin::Write(float value)
+void SeqSerializerBin::Write(const float value)
 {
 	// TODO: Make sure to have a standard binary representation for floats. 
 	stream->write(stream, &value, 4, 1);
@@ -69,7 +69,7 @@ float SeqSerializerBin::ReadFloat()
 	return value;
 }
 
-void SeqSerializerBin::Write(double value)
+void SeqSerializerBin::Write(const double value)
 {
 	// TODO: Make sure to have a standard binary representation for doubles.
 	stream->write(stream, &value, 8, 1);
@@ -83,7 +83,7 @@ double SeqSerializerBin::ReadDouble()
 	return value;
 }
 
-void SeqSerializerBin::Write(char *string)
+void SeqSerializerBin::Write(const char *string)
 {
 	// TODO: Research if everything will work well here in case UTF-8 encoding is used.
 	int length = strlen(string);

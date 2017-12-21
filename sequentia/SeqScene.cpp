@@ -1,12 +1,13 @@
 #include "SeqProjectHeaders.h"
 #include "SeqList.h"
 #include "SeqSerializer.h";
+#include "SeqString.h";
 
-SeqScene::SeqScene(int id, char *name) :
+SeqScene::SeqScene(int id, const char *sceneName) :
 	id(id),
-	name(name),
 	nextActionId(0)
 {
+	name = SeqString::Copy(sceneName);
 	channels = new SeqList<SeqChannel*>();
 }
 
@@ -27,7 +28,7 @@ SeqScene::~SeqScene()
 	delete[] name;
 }
 
-void SeqScene::AddChannel(SeqChannelType type, char *name)
+void SeqScene::AddChannel(SeqChannelType type, const char *name)
 {
 	SeqChannel *channel = new SeqChannel(this, name, type);
 	AddChannel(channel);

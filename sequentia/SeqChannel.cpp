@@ -3,14 +3,15 @@
 #include "SeqClipProxy.h"
 #include "SeqSerializer.h"
 #include "SeqList.h"
+#include "SeqString.h"
 
-SeqChannel::SeqChannel(SeqScene *parent, char *name, SeqChannelType type):
+SeqChannel::SeqChannel(SeqScene *parent, const char *channelName, SeqChannelType type):
 	scene(parent),
 	type(type),
-	name(name),
 	actionId(-1),
 	nextActionId(-1)
 {
+	name = SeqString::Copy(channelName);
 	clips = new SeqList<SeqClip*>();
 	clipProxies = new SeqList<SeqClipProxy*>();
 }
@@ -30,6 +31,7 @@ SeqChannel::~SeqChannel()
 	for (int i = 0; i < clips->Count(); i++)
 		delete clips->Get(i);
 	clipProxies->Clear(); // proxies should be deleted in the SeqProject Proxy pool
+	delete[] name;
 }
 
 SeqScene* SeqChannel::GetParent()

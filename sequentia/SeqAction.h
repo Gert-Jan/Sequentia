@@ -43,7 +43,7 @@ struct SeqActionAddChannel
 	int sceneId;
 	SeqChannelType type;
 	char *name;
-	SeqActionAddChannel(int sceneId, SeqChannelType type, char *name): sceneId(sceneId), type(type), name(name) { }
+	SeqActionAddChannel(int sceneId, SeqChannelType type, const char *channelName);
 	~SeqActionAddChannel() { delete[] name; }
 };
 

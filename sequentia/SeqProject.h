@@ -29,11 +29,11 @@ public:
 	void SaveAs();
 
 	char* GetPath();
-	void SetPath(char *fullPath);
+	void SetPath(const char *fullPath);
 
 	SeqLibrary* GetLibrary();
 
-	SeqScene* CreateScene(char *name);
+	SeqScene* CreateScene(const char *name);
 	void AddScene(SeqScene *scene);
 	void RemoveScene(SeqScene *scene);
 	int GetSceneCount();

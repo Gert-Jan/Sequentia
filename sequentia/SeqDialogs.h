@@ -21,8 +21,8 @@ enum SeqDialogOption
 class SeqDialogs
 {
 public:
-	static void ShowError(char *message, ...);
-	static void ShowRequestProjectPath(char *currentPath, RequestPathAction action);
+	static void ShowError(const char *message, ...);
+	static void ShowRequestProjectPath(const char *currentPath, RequestPathAction action);
 	static void Draw(SeqProject *project);
 
 private:

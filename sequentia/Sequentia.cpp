@@ -18,7 +18,7 @@ bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
 SeqClipProxy* Sequentia::dragClipProxy = nullptr;
 
-int Sequentia::Run(char *openProject)
+int Sequentia::Run(const char *openProject)
 {
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)

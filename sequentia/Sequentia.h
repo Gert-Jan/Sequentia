@@ -15,7 +15,7 @@ struct SeqLibraryLink;
 class Sequentia
 {
 public:
-	static int Run(char *openProject);
+	static int Run(const char *openProject);
 	static SeqProject* GetProject();
 	static SeqLibrary* GetLibrary();
 	static bool IsDragging();

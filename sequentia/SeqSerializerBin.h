@@ -14,15 +14,15 @@ public:
 	int GetApplicationVersion();
 	void SetApplicationVersion(int version);
 	
-	void Write(int32_t value);
+	void Write(const int32_t value);
 	int32_t ReadInt();
-	void Write(int64_t value);
+	void Write(const int64_t value);
 	int64_t ReadLong();
-	void Write(float value);
+	void Write(const float value);
 	float ReadFloat();
-	void Write(double value);
+	void Write(const double value);
 	double ReadDouble();
-	void Write(char *string);
+	void Write(const char *string);
 	char* ReadString();
 
 private:

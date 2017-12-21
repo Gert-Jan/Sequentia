@@ -20,7 +20,7 @@ enum class SeqChannelType
 class SeqChannel
 {
 public:
-	SeqChannel(SeqScene *parent, char *name, SeqChannelType type);
+	SeqChannel(SeqScene *parent, const char *channelName, SeqChannelType type);
 	SeqChannel(SeqScene *parent, SeqSerializer *serializer);
 	~SeqChannel();
 

@@ -31,7 +31,7 @@ void SeqLibrary::Clear()
 	Update();
 }
 
-void SeqLibrary::AddLink(char *fullPath)
+void SeqLibrary::AddLink(const char *fullPath)
 {
 	SeqLibraryLink *link = new SeqLibraryLink();
 	link->fullPath = SeqPath::Normalize(fullPath);
@@ -47,7 +47,7 @@ void SeqLibrary::RemoveLink(const int index)
 	links->RemoveAt(index);
 }
 
-void SeqLibrary::RemoveLink(char *fullPath)
+void SeqLibrary::RemoveLink(const char *fullPath)
 {
 	int index = GetLinkIndex(fullPath);
 	if (index > -1)
@@ -95,7 +95,7 @@ SeqLibraryLink* SeqLibrary::GetLastLinkFocus()
 	return lastLinkFocus;
 }
 
-void SeqLibrary::UpdatePaths(char *oldProjectFullPath, char *newProjectFullPath)
+void SeqLibrary::UpdatePaths(const char *oldProjectFullPath, const char *newProjectFullPath)
 {
 	// TODO: update paths based on the new project path
 }
