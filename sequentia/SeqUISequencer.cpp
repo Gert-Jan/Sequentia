@@ -112,7 +112,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 		ImGui::SetColumnOffset(1, settingsPanelWidth + 7);
 
 	// debug text
-	ImGui::Text("%s", name);
+	ImGui::Text("%s", scene->name);
 
 	ImVec2 cursor = origin;
 	cursor.y += rulerHeight + 1;
