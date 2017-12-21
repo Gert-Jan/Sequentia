@@ -10,7 +10,6 @@
 #include "SeqDialogs.h"
 #include "SeqSerializerBin.h"
 #include "SeqPath.h"
-#include "SeqUtils.h"
 #include "SeqString.h"
 #include "SeqList.h"
 

@@ -44,7 +44,8 @@ SeqUIVideo::SeqUIVideo(SeqProject *project, SeqLibrary *library, SeqSerializer *
 void SeqUIVideo::Init()
 {
 	// alloc memory
-	name = SeqString::Format("Video##%d", project->NextWindowId());
+	SeqString::Temp->Format("Video##%d", project->NextWindowId());
+	name = SeqString::Temp->Copy();
 	// start listening for project changes
 	project->AddActionHandler(this);
 	// prepare material
@@ -194,13 +195,13 @@ void SeqUIVideo::Draw()
 					}
 
 					// render time
-					SeqVideoInfo::GetTimeString(SeqString::Buffer, SeqString::BufferLen, videoTime);
-					ImGui::Text(SeqString::Buffer);
+					SeqVideoInfo::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, videoTime);
+					ImGui::Text(SeqString::Temp->Buffer);
 					ImGui::SameLine();
 					ImGui::Text("/");
 					ImGui::SameLine();
-					SeqVideoInfo::GetTimeString(SeqString::Buffer, SeqString::BufferLen, decoderTask->GetLink()->duration);
-					ImGui::Text(SeqString::Buffer);
+					SeqVideoInfo::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, decoderTask->GetLink()->duration);
+					ImGui::Text(SeqString::Temp->Buffer);
 
 					// some buttons that will likely later be removed
 					ImGui::SameLine();

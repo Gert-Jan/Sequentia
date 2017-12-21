@@ -8,9 +8,9 @@
 
 char* SeqPath::Normalize(char *path)
 {
-	SeqString::SetBuffer(path, strlen(path));
-	SeqString::ReplaceBuffer("\\", "/");
-	return SeqString::CopyBuffer();
+	SeqString::Temp->Set(path);
+	SeqString::Temp->Replace("\\", "/");
+	return SeqString::Temp->Copy();
 }
 
 int SeqPath::CreateDir(char *path)
@@ -19,8 +19,8 @@ int SeqPath::CreateDir(char *path)
 	size_t pos = SeqString::Find(path, "/", 0);
 	while (pos > -1)
 	{
-		SeqString::SetBuffer(path, pos);
-		error = _mkdir(SeqString::Buffer);
+		SeqString::Temp->Set(path, pos);
+		error = _mkdir(SeqString::Temp->Buffer);
 		if (error == -1)
 			error = errno;
 		pos = SeqString::Find(path, "/", pos + 1);
@@ -34,3 +34,7 @@ bool SeqPath::FileExists(char *path)
 	return stat(path, &buffer) == 0;
 }
 
+bool SeqPath::IsDir(char *normalizedPath)
+{
+	return normalizedPath[strlen(normalizedPath)] == '/';
+}

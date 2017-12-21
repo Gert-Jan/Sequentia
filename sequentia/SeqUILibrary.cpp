@@ -26,7 +26,8 @@ SeqUILibrary::SeqUILibrary(SeqProject *project, SeqLibrary *library, SeqSerializ
 void SeqUILibrary::Init()
 {
 	// alloc memory
-	name = SeqString::Format("Library##%d", project->NextWindowId());
+	SeqString::Temp->Format("Library##%d", project->NextWindowId());
+	name = SeqString::Temp->Copy();
 	// start listening for project changes
 	project->AddActionHandler(this);
 }
@@ -92,11 +93,11 @@ void SeqUILibrary::Draw()
 			ImGui::NextColumn();
 			if (link->metaDataLoaded)
 			{
-				SeqString::FormatBuffer("%ix%i", link->width, link->height);
-				ImGui::Text(SeqString::Buffer);
+				SeqString::Temp->Format("%ix%i", link->width, link->height);
+				ImGui::Text(SeqString::Temp->Buffer);
 				ImGui::NextColumn();
-				SeqVideoInfo::GetTimeString(SeqString::Buffer, SeqString::BufferLen, link->duration);
-				ImGui::Text(SeqString::Buffer);
+				SeqVideoInfo::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, link->duration);
+				ImGui::Text(SeqString::Temp->Buffer);
 				ImGui::NextColumn();
 			}
 			else

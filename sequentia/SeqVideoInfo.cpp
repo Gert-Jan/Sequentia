@@ -1,6 +1,5 @@
 #include "SeqVideoInfo.h"
 #include "SeqString.h"
-#include "SeqUtils.h"
 
 SeqVideoInfo::SeqVideoInfo() :
 	formatContext(nullptr),

@@ -31,7 +31,8 @@ void SeqUISequencer::Init()
 {
 	// alloc memory
 	SeqProject *project = Sequentia::GetProject();
-	name = SeqString::Format("Sequencer##%d", project->NextWindowId());
+	SeqString::Temp->Format("Sequencer##%d", project->NextWindowId());
+	name = SeqString::Temp->Copy();
 	channelHeights = new SeqList<int>();
 	for (int i = 0; i < scene->GetChannelCount(); i++)
 		channelHeights->Add(initialChannelHeight);
@@ -409,10 +410,10 @@ bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const
 	const ImVec2 tl = ImVec2(position.x, position.y);
 	const ImVec2 br = ImVec2(position.x + size.x, position.y + size.y);
 	SeqChannel *channel = clip->GetParent();
-	SeqString::FormatBuffer("context_channel%d_clip%d", channel == nullptr ? -1 : channel->actionId, clip->actionId);
+	SeqString::Temp->Format("context_channel%d_clip%d", channel == nullptr ? -1 : channel->actionId, clip->actionId);
 
 	// handle popup menu if has been opened in the past
-	if (ImGui::BeginPopupContextVoid(SeqString::Buffer))
+	if (ImGui::BeginPopupContextVoid(SeqString::Temp->Buffer))
 	{
 		if (ImGui::Selectable("Delete"))
 		{
@@ -430,7 +431,7 @@ bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const
 			if (ImGui::IsMouseClicked(1))
 			{
 				// start context menu popup
-				ImGui::OpenPopupEx(SeqString::Buffer, false);
+				ImGui::OpenPopupEx(SeqString::Temp->Buffer, false);
 			}
 			if (ImGui::IsMouseDown(0) && !Sequentia::IsDragging())
 			{

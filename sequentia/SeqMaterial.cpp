@@ -35,8 +35,8 @@ void SeqMaterial::Init(const GLchar* vertShaderSource, const GLchar* fragShaderS
 
 	for (int i = 0; i < textureCount; i++)
 	{
-		SeqString::FormatBuffer("Texture%d", i);
-		textureAttribLoc[i] = glGetUniformLocation(programHandle, SeqString::Buffer);
+		SeqString::Temp->Format("Texture%d", i);
+		textureAttribLoc[i] = glGetUniformLocation(programHandle, SeqString::Temp->Buffer);
 	}
 	projMatAttribLoc = glGetUniformLocation(programHandle, "ProjMtx");
 	positionAttribLoc = glGetAttribLocation(programHandle, "Position");

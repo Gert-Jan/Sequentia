@@ -6,7 +6,6 @@
 #include "SeqActionFactory.h"
 #include "SeqString.h"
 #include "SeqPath.h"
-#include "SeqUtils.h"
 
 bool SeqDialogs::showError = false;
 bool SeqDialogs::showRequestProjectPath = false;
@@ -14,22 +13,21 @@ bool SeqDialogs::showWarningOverwrite = false;
 
 SeqDialogOption SeqDialogs::result = SeqDialogOption::OK;
 RequestPathAction SeqDialogs::requestPathAction = RequestPathAction::Open;
-char *SeqDialogs::path = nullptr;
-char *SeqDialogs::message = nullptr;
+SeqString *SeqDialogs::path = new SeqString(256);
+SeqString *SeqDialogs::message = new SeqString(1024);
 
 void SeqDialogs::ShowError(char *errorMessage, ...)
 {
 	va_list args;
 	va_start(args, errorMessage);
-	message = SeqString::Format(errorMessage, args);
+	message->Format(errorMessage, args);
 	va_end(args);
 	showError = true;
 }
 
 void SeqDialogs::ShowRequestProjectPath(char *currentPath, RequestPathAction action)
 {
-	SeqString::SetBuffer(currentPath, strlen(currentPath));
-	path = currentPath;
+	path->Set(currentPath);
 	requestPathAction = action;
 	showRequestProjectPath = true;
 }
@@ -53,14 +51,14 @@ void SeqDialogs::Draw(SeqProject *project)
 			{
 				if (result == SeqDialogOption::OK)
 				{
-					if (SeqPath::FileExists(path))
+					if (SeqPath::FileExists(path->Buffer))
 					{
-						message = SeqString::Format("You are about to overwrite %s\nAre you sure?", path);
+						message->Format("You are about to overwrite %s\nAre you sure?", path);
 						showWarningOverwrite = true;
 					}
 					else
 					{
-						project->SetPath(path);
+						project->SetPath(path->Copy());
 						project->Save();
 					}
 				}
@@ -72,9 +70,9 @@ void SeqDialogs::Draw(SeqProject *project)
 			{
 				if (result == SeqDialogOption::OK)
 				{
-					if (SeqPath::FileExists(path))
+					if (SeqPath::FileExists(path->Buffer))
 					{
-						project->SetPath(path);
+						project->SetPath(path->Copy());
 						project->Open();
 					}
 					else
@@ -90,7 +88,7 @@ void SeqDialogs::Draw(SeqProject *project)
 			{
 				if (result == SeqDialogOption::OK)
 				{
-					project->AddAction(SeqActionFactory::AddLibraryLink(path));
+					project->AddAction(SeqActionFactory::AddLibraryLink(path->Copy()));
 				}
 				showRequestProjectPath = false;
 			}
@@ -107,7 +105,7 @@ void SeqDialogs::Draw(SeqProject *project)
 		{
 			if (result == SeqDialogOption::Yes)
 			{
-				project->SetPath(path);
+				project->SetPath(path->Copy());
 				project->Save();
 				showWarningOverwrite = false;
 			}
@@ -131,11 +129,11 @@ bool SeqDialogs::ShowFileBrowseDialog(const char *title)
 
 		ImGui::Text("Filepath");
 		ImGui::PushItemWidth(-1);
-		ImGui::InputText("", SeqString::Buffer, SEQ_COUNT(SeqString::Buffer));
+		ImGui::InputText("", path->Buffer, path->BufferLen);
 		ImGui::PopItemWidth();
 		if (ImGui::Button("OK", ImVec2(120, 0)))
 		{
-			path = SeqPath::Normalize(SeqString::CopyBuffer());
+			path->Set(SeqPath::Normalize(path->Buffer));
 			result = SeqDialogOption::OK;
 			isDone = true;
 			ImGui::CloseCurrentPopup();
@@ -159,7 +157,7 @@ bool SeqDialogs::ShowMessage(const char *title, int options)
 	ImGui::OpenPopup(title);
 	if (ImGui::BeginPopupModal(title, NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		ImGui::Text(message);
+		ImGui::Text(message->Buffer);
 		isDone = isDone || ShowMessageButton("OK", options, SeqDialogOption::OK);
 		isDone = isDone || ShowMessageButton("Cancel", options, SeqDialogOption::Cancel);
 		isDone = isDone || ShowMessageButton("Yes", options, SeqDialogOption::Yes);

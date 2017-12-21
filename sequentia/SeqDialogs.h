@@ -1,6 +1,7 @@
 #pragma once
 
 class SeqProject;
+class SeqString;
 
 enum class RequestPathAction
 {
@@ -36,6 +37,6 @@ private:
 
 	static SeqDialogOption result;
 	static RequestPathAction requestPathAction;
-	static char *path;
-	static char *message;
+	static SeqString *path;
+	static SeqString *message;
 };

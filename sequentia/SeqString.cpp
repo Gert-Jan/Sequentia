@@ -1,62 +1,61 @@
 #include "SeqString.h"
 #include "SeqList.h"
-#include "SeqUtils.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <cstdarg>
 #include <string>
 
-SeqList<SeqList<char>*>* SeqString::SplitResultBuffer = new SeqList<SeqList<char>*>();
-int SeqString::SplitResultBufferCount = 0;
-int SeqString::BufferLen = 1024;
-char SeqString::Buffer[1024] = "";
+SeqString* SeqString::Temp = new SeqString(1024);
 
-void SeqString::SetBuffer(const char *string, const int count)
+SeqString::SeqString(int initLen)
 {
-	int cappedCount = SDL_min(BufferLen - 1, count);
-	strncpy_s(Buffer, string, cappedCount);
-	Buffer[cappedCount] = 0;
+	BufferLen = SDL_max(initLen, 4);
+	Buffer = new char[BufferLen];
 }
 
-void SeqString::SetBuffer(const char *string)
+SeqString::SeqString(char *string)
 {
-	SetBuffer(string, strlen(string));
+	BufferLen = strlen(string);
+	Buffer = new char[BufferLen];
+	strcpy_s(Buffer, BufferLen, string);
 }
 
-char* SeqString::Format(const char *format, ...)
+void SeqString::Set(const char *string, const int count)
+{
+	EnsureCapacity(count);
+	memcpy_s(Buffer, BufferLen, string, count);
+	Buffer[count] = 0;
+}
+
+void SeqString::Set(const char *string)
+{
+	Set(string, strlen(string));
+}
+
+void SeqString::Clear()
+{
+	Buffer[0] = 0;
+}
+
+void SeqString::Format(const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	int length = vsnprintf((char*)&Buffer, BufferLen, format, args);
-	va_end(args);
+	int length = vsnprintf(Buffer, BufferLen, format, args);
+	// handle errors
 	if (length < 0)
 	{
-		return "ERROR in SeqStringFormat";
+		Set("ERROR in SeqString::Format()");
+		return;
 	}
-	else
+	// increase buffer size if needed and retry
+	else if (EnsureCapacity(length))
 	{
-		char* string = new char[length + 1];
-		memcpy(string, &Buffer, length);
-		string[length] = 0;
-		Buffer[0] = 0;
-		return string;
+		length = vsnprintf(Buffer, BufferLen, format, args);
 	}
-}
-
-void SeqString::FormatBuffer(const char *format, ...)
-{
-	va_list args;
-	va_start(args, format);
-	int length = vsnprintf((char*)&Buffer, BufferLen, format, args);
 	va_end(args);
-	if (length < 0)
-	{
-		SetBuffer("ERROR in SeqStringFormat");
-	}
-	else
-	{
-		Buffer[length] = 0;
-	}
+	// end string with /0
+	Buffer[length] = 0;
 }
 
 char* SeqString::Copy(const char *string)
@@ -67,7 +66,7 @@ char* SeqString::Copy(const char *string)
 	return copy;
 }
 
-char* SeqString::CopyBuffer()
+char* SeqString::Copy()
 {
 	size_t size = strlen(Buffer) + 1;
 	char* copy = new char[size];
@@ -80,7 +79,7 @@ bool SeqString::Equals(const char *string1, const char *string2)
 	return strcmp(string1, string2) == 0;
 }
 
-bool SeqString::EqualsBuffer(const char *string)
+bool SeqString::Equals(const char *string)
 {
 	return strcmp(string, Buffer) == 0;
 }
@@ -134,7 +133,7 @@ int SeqString::FindReverse(const char *string, const char *phrase, const int sta
 	return -1;
 }
 
-void SeqString::ReplaceBuffer(const char* phrase, const char *with)
+void SeqString::Replace(const char* phrase, const char *with)
 {
 	int pos = Find(Buffer, phrase, 0);
 	int phraseLen = (int)strlen(phrase);
@@ -146,6 +145,7 @@ void SeqString::ReplaceBuffer(const char* phrase, const char *with)
 	{
 		if (delta != 0)
 		{
+			EnsureCapacity(BufferLen + delta);
 			memcpy(&Buffer[pos + phraseLen + delta], &Buffer[pos + phraseLen], len - (pos + phraseLen));
 		}
 		memcpy(&Buffer[pos], with, withLen);
@@ -153,41 +153,22 @@ void SeqString::ReplaceBuffer(const char* phrase, const char *with)
 	}
 }
 
-SeqList<SeqList<char>*>* SeqString::Split(const char *string, const char *separator)
+bool SeqString::EnsureCapacity(int requiredLen)
 {
-	int previousSplit = 0;
-	int splitIndex = 0;
-	int separatorLen = (int)strlen(separator);
-	int separatorPos = Find(string, separator, 0);
-
-	// prepare the result buffer
-	SplitResultBuffer->Clear();
-	
-	// find all split positions
-	while (separatorPos > -1)
+	if (BufferLen < requiredLen + 1)
 	{
-		// add split string to buffer
-		AddToSplitResultBuffer(splitIndex, string, separatorPos - previousSplit, previousSplit);
-		previousSplit = separatorPos + separatorLen;
-		splitIndex++;
-		separatorPos = Find(string, separator, previousSplit);
+		int newLen = BufferLen;
+		while (newLen < requiredLen + 1)
+			newLen = newLen * 2;
+		char *newBuffer = new char[newLen];
+		memcpy_s(newBuffer, newLen, Buffer, BufferLen);
+		delete[] Buffer;
+		Buffer = newBuffer;
+		BufferLen = newLen;
+		return true;
 	}
-	// add the last 
-	AddToSplitResultBuffer(splitIndex, string, (int)strlen(string) - previousSplit, previousSplit);
-	return SplitResultBuffer;
-}
-
-void SeqString::AddToSplitResultBuffer(const int index, const char *string, const int count, const int offset)
-{
-	// ensure the result buffer is ready  
-	if (index >= SplitResultBufferCount)
+	else
 	{
-		SplitResultBuffer->Add(new SeqList<char>(count + 1));
-		SplitResultBufferCount++;
+		return false;
 	}
-	SeqList<char>* result = SplitResultBuffer->Get(index);
-	result->Clear();
-	// copy in result
-	result->AddCopy(string, count, offset);
-	result->Add(0);
 }
