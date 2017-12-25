@@ -85,7 +85,7 @@ void SeqUILibrary::Draw()
 			}
 			if (ImGui::IsItemActive()) // is dragging
 			{
-				if (Sequentia::GetDragClipProxy() == nullptr)
+				if (!Sequentia::IsDragging())
 				{
 					Sequentia::SetDragClipNew(link);
 				}

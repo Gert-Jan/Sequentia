@@ -9,6 +9,7 @@
 #include <SDL_syswm.h>
 #include <stdio.h>
 
+SeqDragMode Sequentia::DragMode = SeqDragMode::None;
 bool Sequentia::done = false;
 SDL_Window* Sequentia::window = nullptr;
 SeqProject* Sequentia::project = nullptr;
@@ -309,7 +310,7 @@ SeqLibrary* Sequentia::GetLibrary()
 
 void Sequentia::HandleDragging()
 {
-	if (dragClipProxy != nullptr)
+	if (DragMode == SeqDragMode::Clip)
 	{
 		const ImVec2 size = ImVec2(150, 50);
 		if (dragClipProxy->GetParent() == nullptr)
@@ -337,6 +338,7 @@ void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 	{
 		if (clip != nullptr)
 		{
+			DragMode = SeqDragMode::Clip;
 			project->DeactivateAllClipProxies();
 			dragClipProxy = project->NextClipProxy();
 			dragClipProxy->location.leftTime = clip->location.leftTime;
@@ -369,13 +371,14 @@ void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 			}
 			project->DeactivateAllClipProxies();
 			dragClipProxy = nullptr;
+			DragMode = SeqDragMode::None;
 		}
 	}
 }
 
 bool Sequentia::IsDragging()
 {
-	return dragClipProxy != nullptr;
+	return DragMode != SeqDragMode::None;
 }
 
 SeqClipProxy* Sequentia::GetDragClipProxy()

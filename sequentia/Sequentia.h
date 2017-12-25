@@ -12,6 +12,13 @@ class SeqClip;
 class SeqClipProxy;
 struct SeqLibraryLink;
 
+enum class SeqDragMode
+{
+	None,
+	Clip,
+	Ruler
+};
+
 class Sequentia
 {
 public:
@@ -32,6 +39,9 @@ private:
 	static void HandleShortcuts();
 	static void HandleMainMenuBar();
 	static void HandleDragging();
+
+public:
+	static SeqDragMode DragMode;
 
 private:
 	static bool done;

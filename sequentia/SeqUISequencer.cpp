@@ -207,6 +207,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 		ImGui::IsItemHovered() && ImGui::IsMouseDown(0))
 	{
 		ImGui::SetActiveID(id, window);
+		Sequentia::DragMode = SeqDragMode::Ruler;
 	}
 
 	if (imContext->ActiveId == id)
@@ -239,6 +240,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 		else
 		{
 			ImGui::ClearActiveID();
+			Sequentia::DragMode = SeqDragMode::None;
 		}
 	}
 
@@ -384,7 +386,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 				const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
 				bool isHovered = false;
 				if (ClipInteraction(clip, clipPosition, clipSize, &isHovered))
-					DrawClip(clip, clipPosition, clipSize, isHovered);
+					DrawClip(clip, clipPosition, clipSize, isHovered && !Sequentia::IsDragging());
 			}
 		}
 	}
