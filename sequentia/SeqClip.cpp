@@ -3,6 +3,7 @@
 #include "SeqLibrary.h"
 #include "SeqChannel.h"
 #include "SeqSerializer.h"
+#include "SeqTime.h"
 
 SeqClip::SeqClip(SeqLibraryLink *link):
 	link(link),
@@ -13,7 +14,7 @@ SeqClip::SeqClip(SeqLibraryLink *link):
 	if (link->metaDataLoaded)
 		location.rightTime = link->duration;
 	else
-		location.rightTime = Sequentia::TimeBase; // default 1 second long clips
+		location.rightTime = SEQ_TIME_BASE; // default 1 second long clips
 }
 
 SeqClip::SeqClip(SeqSerializer *serializer):

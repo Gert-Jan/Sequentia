@@ -21,7 +21,7 @@ public:
 	SeqChannel* GetChannelByActionId(const int id);
 	int GetChannelIndexByActionId(const int id);
 
-	double GetLength();
+	int64_t GetLength();
 
 private:
 	int NextActionId();

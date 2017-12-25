@@ -33,9 +33,6 @@ private:
 	static void HandleMainMenuBar();
 	static void HandleDragging();
 
-public:
-	static const int TimeBase = 1000000;
-
 private:
 	static bool done;
 	static SDL_Window *window;

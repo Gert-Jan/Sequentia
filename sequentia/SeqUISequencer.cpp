@@ -7,6 +7,7 @@
 #include "SeqSerializer.h"
 #include "SeqString.h"
 #include "SeqList.h"
+#include "SeqTime.h"
 
 ImU32 SeqUISequencer::clipBackgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_MenuBarBg]);
 ImU32 SeqUISequencer::lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
@@ -248,10 +249,11 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	drawList->AddLine(ImVec2(origin.x, origin.y + height - 2), ImVec2(origin.x + width, origin.y + height - 2), lineColor, thickness);
 
 	// seconds lines
-	int seconds = (int)floor(position);
-	float firstOffset = -TimeToPixels(position - floor(position));
+	int seconds = SEQ_TIME_FLOOR_IN_SECONDS(position);
+	float firstOffset = -TimeToPixels(position - SEQ_TIME_FLOOR(position));
 	float scaledStep = pixelsPerSecond / zoom;
 	int secondStep = (int)ceil(80.f / scaledStep); // calc min second step so steps won't be too small for time labels
+
 	if (secondStep > 1 && secondStep % 2 != 0) // only have even numbered or single steps
 	{
 		secondStep += 1;
@@ -339,7 +341,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 				isHovering = true;
 				if (dragClipProxy->GetParent() != channel)
 					dragClipProxy->SetParent(channel);
-				dragClipProxy->location.SetPosition((position + PixelsToTime(ImGui::GetMousePos().x - cursor.x)) * Sequentia::TimeBase - dragClipProxy->grip);
+				dragClipProxy->location.SetPosition((position + PixelsToTime(ImGui::GetMousePos().x - cursor.x)) - dragClipProxy->grip);
 			}
 			else
 			{
@@ -371,8 +373,8 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 		SeqClip *clip = channel->GetClip(i);
 		if (!clip->isHidden)
 		{
-			const double left = (double)clip->location.leftTime / Sequentia::TimeBase;
-			const double right = (double)clip->location.rightTime / Sequentia::TimeBase;
+			const double left = (double)clip->location.leftTime;
+			const double right = (double)clip->location.rightTime;
 			// culling
 			if (left > end)
 				break; // clips are sorted by left position, so we can exit the loop here
@@ -390,8 +392,8 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 	for (int i = 0; i < channel->ClipProxyCount(); i++)
 	{
 		SeqClipProxy *proxy = channel->GetClipProxy(i);
-		const double left = (double)proxy->location.leftTime / Sequentia::TimeBase;
-		const double right = (double)proxy->location.rightTime / Sequentia::TimeBase;
+		const double left = (double)proxy->location.leftTime;
+		const double right = (double)proxy->location.rightTime;
 		// culling
 		if (left > end)
 			break; // clip proxies are sorted by left position, so we can exit the loop here
@@ -436,7 +438,7 @@ bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const
 			if (ImGui::IsMouseDown(0) && !Sequentia::IsDragging())
 			{
 				// start dragging clip
-				Sequentia::SetDragClip(clip, PixelsToTime(ImGui::GetMousePos().x - position.x) * Sequentia::TimeBase);
+				Sequentia::SetDragClip(clip, PixelsToTime(ImGui::GetMousePos().x - position.x));
 			}
 		}
 	}
@@ -469,14 +471,14 @@ int SeqUISequencer::TotalChannelHeight()
 	return totalHeight;
 }
 
-double SeqUISequencer::PixelsToTime(float pixels)
+int64_t SeqUISequencer::PixelsToTime(float pixels)
 {
-	return pixels / (pixelsPerSecond / zoom);
+	return SEQ_TIME(pixels / (pixelsPerSecond / zoom));
 }
 
-float SeqUISequencer::TimeToPixels(double time)
+float SeqUISequencer::TimeToPixels(int64_t time)
 {
-	return time * (pixelsPerSecond / zoom);
+	return time * (pixelsPerSecond / zoom) / SEQ_TIME_BASE;
 }
 
 void SeqUISequencer::Serialize(SeqSerializer *serializer)

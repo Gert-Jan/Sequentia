@@ -1,7 +1,8 @@
 #include "SeqProjectHeaders.h"
 #include "SeqList.h"
-#include "SeqSerializer.h";
-#include "SeqString.h";
+#include "SeqSerializer.h"
+#include "SeqString.h"
+#include "SeqTime.h"
 
 SeqScene::SeqScene(int id, const char *sceneName) :
 	id(id),
@@ -71,9 +72,9 @@ int SeqScene::GetChannelIndexByActionId(const int id)
 	return -1;
 }
 
-double SeqScene::GetLength()
+int64_t SeqScene::GetLength()
 {
-	return 60.54321;
+	return SEQ_TIME(60.54321);
 }
 
 int SeqScene::NextActionId()

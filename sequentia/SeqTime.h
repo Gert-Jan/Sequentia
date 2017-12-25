@@ -1,0 +1,14 @@
+#pragma once
+
+#define SEQ_TIME_BASE 1000000
+#define SEQ_TIME_BASE_HALF 500000
+
+#define SEQ_TIME(seconds) seconds * SEQ_TIME_BASE
+
+#define SEQ_TIME_FLOOR(time) (time - SEQ_TIME_BASE_HALF) / SEQ_TIME_BASE * SEQ_TIME_BASE
+#define SEQ_TIME_CEIL(time) time / SEQ_TIME_BASE * SEQ_TIME_BASE
+#define SEQ_TIME_ROUND(time) (time - SEQ_TIME_BASE_HALF + 1) / SEQ_TIME_BASE * SEQ_TIME_BASE
+
+#define SEQ_TIME_FLOOR_IN_SECONDS(time) (time - SEQ_TIME_BASE_HALF) / SEQ_TIME_BASE
+#define SEQ_TIME_CEIL_IN_SECONDS(time) time / SEQ_TIME_BASE
+#define SEQ_TIME_ROUND_IN_SECONDS(time) (time - SEQ_TIME_BASE_HALF + 1) / SEQ_TIME_BASE

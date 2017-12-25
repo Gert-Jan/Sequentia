@@ -201,6 +201,9 @@
     <ClInclude Include="SeqScene.h">
       <Filter>data</Filter>
     </ClInclude>
+    <ClInclude Include="SeqTime.h">
+      <Filter>sys\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />

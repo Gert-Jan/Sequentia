@@ -32,8 +32,8 @@ private:
 	void DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 contentSize, float height);
 	bool ClipInteraction(SeqClip *clip, const ImVec2 position, const ImVec2 size, bool *isHovered);
 	int TotalChannelHeight();
-	double PixelsToTime(float pixels);
-	float TimeToPixels(double time);
+	int64_t PixelsToTime(float pixels);
+	float TimeToPixels(int64_t time);
 	void Deserialize(SeqSerializer *serializer);
 
 private:
@@ -53,11 +53,11 @@ private:
 	char *name;
 	SeqScene *scene;
 	SeqList<int> *channelHeights;
-	double position;
+	int64_t position;
 	float zoom = 1;
 	bool overrideScrollX = true;
 	ImVec2 scroll = ImVec2(0, 0);
-	double dragStartPosition = 0;
+	int64_t dragStartPosition = 0;
 	float settingsPanelWidth = 100;
 	bool isSettingsPanelCollapsed = false;
 };

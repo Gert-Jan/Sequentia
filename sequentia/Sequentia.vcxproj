@@ -216,6 +216,7 @@
     <ClInclude Include="SeqString.h" />
     <ClInclude Include="SeqTaskDecodeVideo.h" />
     <ClInclude Include="SeqTaskReadVideoInfo.h" />
+    <ClInclude Include="SeqTime.h" />
     <ClInclude Include="Sequentia.h" />
     <ClInclude Include="SeqUILibrary.h" />
     <ClInclude Include="SeqUISequencer.h" />
