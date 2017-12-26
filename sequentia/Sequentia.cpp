@@ -1,6 +1,7 @@
 #include "Sequentia.h"
 #include "SeqRenderer.h"
 #include "SeqProjectHeaders.h"
+#include "SeqPlayer.h"
 #include "SeqActionFactory.h"
 #include "SeqWorkerManager.h"
 #include "SeqUISequencer.h"
@@ -13,6 +14,7 @@ SeqDragMode Sequentia::DragMode = SeqDragMode::None;
 bool Sequentia::done = false;
 SDL_Window* Sequentia::window = nullptr;
 SeqProject* Sequentia::project = nullptr;
+SeqScene* Sequentia::previewScene = nullptr;
 bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
@@ -44,6 +46,11 @@ int Sequentia::Run(const char *openProject)
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	InitImGui();
 	SeqRenderer::InitGL();
+
+	// Setup preview scene
+	previewScene = new SeqScene(0, "preview");
+	previewScene->AddChannel(SeqChannelType::Video, "video");
+	previewScene->AddChannel(SeqChannelType::Audio, "audio");
 
 	// Setup initial project
 	if (openProject != nullptr)
@@ -372,6 +379,39 @@ void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 			project->DeactivateAllClipProxies();
 			dragClipProxy = nullptr;
 			DragMode = SeqDragMode::None;
+		}
+	}
+}
+
+SeqScene* Sequentia::GetPreviewScene()
+{
+	return previewScene;
+}
+
+void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
+{
+	if (previewScene->GetChannel(0)->ClipCount() == 0 ||
+		previewScene->GetChannel(0)->GetClip(0)->GetLink() != link)
+	{
+		// clear the previewScene no matter what
+		for (int i = 0; i < previewScene->ChannelCount(); i++)
+		{
+			SeqChannel *channel = previewScene->GetChannel(i);
+			while (channel->ClipCount() > 0)
+			{
+				int index = channel->ClipCount() - 1;
+				SeqClip *clip = channel->GetClip(index);
+				channel->RemoveClipAt(index);
+				delete clip;
+			}
+		}
+		// reset the player
+		previewScene->player->Stop();
+		// build up a previewScene
+		if (link->metaDataLoaded && previewScene->player->IsActive())
+		{
+			SeqClip *clip = new SeqClip(link);
+			previewScene->GetChannel(0)->AddClip(clip);
 		}
 	}
 }

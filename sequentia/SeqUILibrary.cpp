@@ -82,6 +82,7 @@ void SeqUILibrary::Draw()
 			if (ImGui::Selectable(link->fullPath, library->GetLastLinkFocus() == link, ImGuiSelectableFlags_SpanAllColumns))
 			{
 				library->SetLastLinkFocus(link);
+				Sequentia::SetPreviewLibraryLink(link);
 			}
 			if (ImGui::IsItemActive()) // is dragging
 			{

@@ -4,6 +4,7 @@ class SeqChannel;
 enum class SeqChannelType;
 class SeqClip;
 
+class SeqPlayer;
 class SeqSerializer;
 template<class T>
 class SeqList;
@@ -37,6 +38,7 @@ private:
 public:
 	int id;
 	char *name;
+	SeqPlayer *player;
 
 private:
 	SeqList<SeqChannel*> *channels;

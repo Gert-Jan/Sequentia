@@ -1,4 +1,5 @@
 #include "SeqProjectHeaders.h"
+#include "SeqPlayer.h"
 #include "SeqList.h"
 #include "SeqSerializer.h"
 #include "SeqString.h"
@@ -11,6 +12,7 @@ SeqScene::SeqScene(int id, const char *sceneName) :
 {
 	name = SeqString::Copy(sceneName);
 	channels = new SeqList<SeqChannel*>();
+	player = new SeqPlayer(this);
 }
 
 SeqScene::SeqScene(SeqSerializer *serializer):
@@ -21,6 +23,7 @@ SeqScene::SeqScene(SeqSerializer *serializer):
 {
 	channels = new SeqList<SeqChannel*>();
 	Deserialize(serializer);
+	player = new SeqPlayer(this);
 }
 
 SeqScene::~SeqScene()

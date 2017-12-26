@@ -174,6 +174,7 @@
     <ClCompile Include="SeqLibrary.cpp" />
     <ClCompile Include="SeqMaterial.cpp" />
     <ClCompile Include="SeqPath.cpp" />
+    <ClCompile Include="SeqPlayer.cpp" />
     <ClCompile Include="SeqProject.cpp" />
     <ClCompile Include="SeqRenderer.cpp" />
     <ClCompile Include="SeqScene.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="SeqDecoder.h" />
     <ClInclude Include="SeqDialogs.h" />
     <ClInclude Include="SeqMaterial.h" />
+    <ClInclude Include="SeqPlayer.h" />
     <ClInclude Include="SeqProjectHeaders.h" />
     <ClInclude Include="SeqLibrary.h" />
     <ClInclude Include="SeqList.h" />

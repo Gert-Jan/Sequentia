@@ -84,6 +84,9 @@
     <ClCompile Include="SeqClipLocation.cpp">
       <Filter>data</Filter>
     </ClCompile>
+    <ClCompile Include="SeqPlayer.cpp">
+      <Filter>sys\player</Filter>
+    </ClCompile>
     <ClCompile Include="SeqScene.cpp">
       <Filter>data</Filter>
     </ClCompile>
@@ -198,6 +201,9 @@
     <ClInclude Include="SeqClipLocation.h">
       <Filter>data</Filter>
     </ClInclude>
+    <ClInclude Include="SeqPlayer.h">
+      <Filter>sys\player</Filter>
+    </ClInclude>
     <ClInclude Include="SeqScene.h">
       <Filter>data</Filter>
     </ClInclude>
@@ -250,6 +256,9 @@
     </Filter>
     <Filter Include="sys\render">
       <UniqueIdentifier>{aa8bf1b4-9064-4d08-b914-a0c2be9cfc7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\player">
+      <UniqueIdentifier>{f6f666e8-a0b3-4729-884a-3b9ee94c3e87}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
