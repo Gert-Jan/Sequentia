@@ -29,7 +29,7 @@ private:
 	void DrawChannelSettings(float rulerHeight, bool isWindowNew);
 	void DrawSequencerRuler(float height);
 	void DrawChannels();
-	void DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 contentSize, float height);
+	void DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 availableSize, ImVec2 contentSize, float height);
 	bool ClipInteraction(SeqClip *clip, const ImVec2 position, const ImVec2 size, bool *isHovered);
 	int TotalChannelHeight();
 	int64_t PixelsToTime(float pixels);

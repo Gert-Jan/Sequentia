@@ -2,6 +2,7 @@
 
 class SeqChannel;
 enum class SeqChannelType;
+class SeqClip;
 
 class SeqSerializer;
 template<class T>
@@ -20,6 +21,7 @@ public:
 	SeqChannel* GetChannel(const int index);
 	SeqChannel* GetChannelByActionId(const int id);
 	int GetChannelIndexByActionId(const int id);
+	void RefreshLastClip();
 
 	int64_t GetLength();
 
@@ -38,5 +40,6 @@ public:
 
 private:
 	SeqList<SeqChannel*> *channels;
+	SeqClip *lastClip;
 	int nextActionId = 0;
 };

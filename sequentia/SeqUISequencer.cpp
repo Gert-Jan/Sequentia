@@ -314,7 +314,7 @@ void SeqUISequencer::DrawChannels()
 			if (cursor.y - origin.y + channelHeight >= scroll.y && 
 				cursor.y - origin.y < scroll.y + size.y)
 			{
-				DrawChannel(scene->GetChannel(i), cursor, contentSize, channelHeight);
+				DrawChannel(scene->GetChannel(i), cursor, size, contentSize, channelHeight);
 			}
 			cursor.y += channelHeight + channelVerticalSpacing;
 		}
@@ -326,11 +326,11 @@ void SeqUISequencer::DrawChannels()
 	ImGui::EndChild();
 }
 
-void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 contentSize, float height)
+void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 availableSize, ImVec2 contentSize, float height)
 {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + contentSize.x, cursor.y + height));
+	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + availableSize.x, cursor.y + height));
 
 	bool isHovering = false;
 	SeqClipProxy *dragClipProxy = Sequentia::GetDragClipProxy();
@@ -368,7 +368,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 cont
 	
 	// calc left and right side of the visible part of the channel
 	const double start = position;
-	const double end = position + PixelsToTime(ImGui::GetContentRegionAvailWidth());
+	const double end = position + PixelsToTime(availableSize.x);
 	// draw clips
 	for (int i = 0; i < channel->ClipCount(); i++)
 	{

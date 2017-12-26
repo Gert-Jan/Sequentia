@@ -343,6 +343,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 			else
 			{
 				scene->RemoveChannel(scene->GetChannelCount() - 1);
+				scene->RefreshLastClip();
 			}
 			break;
 		}
@@ -375,6 +376,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 					data->clipId = clip->actionId;
 				else
 					clip->actionId = data->clipId;
+				scene->RefreshLastClip();
 			}
 			else
 			{
@@ -387,6 +389,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 				}
 				channel->RemoveClipAt(clipIndex);
 				delete clip;
+				scene->RefreshLastClip();
 			}
 			break;
 		}
@@ -407,6 +410,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 					clip->actionId = data->toClipId;
 				clip->SetPosition(data->toLeftTime);
 				clip->isHidden = false;
+				fromScene->RefreshLastClip();
 			}
 			else
 			{
@@ -415,6 +419,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 				clip->actionId = data->fromClipId;
 				clip->SetPosition(data->fromLeftTime);
 				clip->isHidden = false;
+				toScene->RefreshLastClip();
 			}
 			break;
 		}
