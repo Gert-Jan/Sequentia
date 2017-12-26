@@ -6,6 +6,7 @@
 
 SeqScene::SeqScene(int id, const char *sceneName) :
 	id(id),
+	lastClip(nullptr),
 	nextActionId(0)
 {
 	name = SeqString::Copy(sceneName);
@@ -15,6 +16,7 @@ SeqScene::SeqScene(int id, const char *sceneName) :
 SeqScene::SeqScene(SeqSerializer *serializer):
 	id(0),
 	name(nullptr),
+	lastClip(nullptr),
 	nextActionId(0)
 {
 	channels = new SeqList<SeqChannel*>();
@@ -72,9 +74,32 @@ int SeqScene::GetChannelIndexByActionId(const int id)
 	return -1;
 }
 
+void SeqScene::RefreshLastClip()
+{
+	lastClip = nullptr;
+	int64_t latestTime = 0;
+	for (int i = 0; i < channels->Count(); i++)
+	{
+		SeqChannel *channel = channels->Get(i);
+		for (int j = 0; j < channel->ClipCount(); j++)
+		{
+			SeqClip *clip = channel->GetClip(j);
+			int64_t rightTime = clip->location.rightTime;
+			if (rightTime > latestTime)
+			{
+				latestTime = rightTime;
+				lastClip = clip;
+			}
+		}
+	}
+}
+
 int64_t SeqScene::GetLength()
 {
-	return SEQ_TIME(60.54321);
+	if (lastClip != nullptr)
+		return lastClip->location.rightTime;
+	else
+		return SEQ_TIME_BASE;
 }
 
 int SeqScene::NextActionId()
@@ -101,4 +126,5 @@ void SeqScene::Deserialize(SeqSerializer *serializer)
 		SeqChannel *channel = new SeqChannel(this, serializer);
 		AddChannel(channel);
 	}
+	RefreshLastClip();
 }
