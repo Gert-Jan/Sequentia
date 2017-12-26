@@ -17,7 +17,7 @@ public:
 	 
 	void AddChannel(SeqChannelType type, const char *name);
 	void RemoveChannel(const int index);
-	int GetChannelCount();
+	int ChannelCount();
 	SeqChannel* GetChannel(const int index);
 	SeqChannel* GetChannelByActionId(const int id);
 	int GetChannelIndexByActionId(const int id);

@@ -36,7 +36,7 @@ public:
 	SeqScene* CreateScene(const char *name);
 	void AddScene(SeqScene *scene);
 	void RemoveScene(SeqScene *scene);
-	int GetSceneCount();
+	int SceneCount();
 	SeqScene* GetScene(const int index);
 	SeqScene* GetSceneById(const int id);
 

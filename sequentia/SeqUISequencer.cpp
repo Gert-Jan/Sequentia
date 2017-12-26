@@ -35,7 +35,7 @@ void SeqUISequencer::Init()
 	SeqString::Temp->Format("Sequencer##%d", project->NextWindowId());
 	name = SeqString::Temp->Copy();
 	channelHeights = new SeqList<int>();
-	for (int i = 0; i < scene->GetChannelCount(); i++)
+	for (int i = 0; i < scene->ChannelCount(); i++)
 		channelHeights->Add(initialChannelHeight);
 	// start listening for project changes
 	project->AddActionHandler(this);
@@ -119,7 +119,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	cursor.y += rulerHeight + 1;
 	ImGui::PushClipRect(cursor, ImVec2(cursor.x + size.x, cursor.y + size.y - rulerHeight - style.ScrollbarSize), false);
 	// draw settings panels
-	for (int i = 0; i < scene->GetChannelCount(); i++)
+	for (int i = 0; i < scene->ChannelCount(); i++)
 	{
 		int channelHeight = channelHeights->Get(i);
 		// only draw if visible
@@ -138,7 +138,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	cursor = origin;
 	cursor.y += rulerHeight;
 	ImGuiContext* g = ImGui::GetCurrentContext();
-	for (int i = 0; i < scene->GetChannelCount(); i++)
+	for (int i = 0; i < scene->ChannelCount(); i++)
 	{
 		int channelHeight = channelHeights->Get(i);
 		cursor.y += channelHeight;
@@ -307,7 +307,7 @@ void SeqUISequencer::DrawChannels()
 		const ImVec2 origin = ImGui::GetCursorScreenPos();
 
 		ImVec2 cursor = origin;
-		for (int i = 0; i < scene->GetChannelCount(); i++)
+		for (int i = 0; i < scene->ChannelCount(); i++)
 		{
 			int channelHeight = channelHeights->Get(i);
 			// only draw if visible

@@ -51,7 +51,7 @@ void SeqScene::RemoveChannel(const int index)
 	channels->RemoveAt(index);
 }
 
-int SeqScene::GetChannelCount()
+int SeqScene::ChannelCount()
 {
 	return channels->Count();
 }

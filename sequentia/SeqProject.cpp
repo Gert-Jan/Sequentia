@@ -161,7 +161,7 @@ void SeqProject::RemoveScene(SeqScene *scene)
 	scenes->Remove(scene);
 }
 
-int SeqProject::GetSceneCount()
+int SeqProject::SceneCount()
 {
 	return scenes->Count();
 }
@@ -342,7 +342,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 			}
 			else
 			{
-				scene->RemoveChannel(scene->GetChannelCount() - 1);
+				scene->RemoveChannel(scene->ChannelCount() - 1);
 				scene->RefreshLastClip();
 			}
 			break;
