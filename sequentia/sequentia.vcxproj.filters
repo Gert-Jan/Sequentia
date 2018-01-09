@@ -90,6 +90,9 @@
     <ClCompile Include="SeqScene.cpp">
       <Filter>data</Filter>
     </ClCompile>
+    <ClCompile Include="SeqMaterialInstance.cpp">
+      <Filter>sys\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -209,6 +212,9 @@
     </ClInclude>
     <ClInclude Include="SeqTime.h">
       <Filter>sys\util</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqMaterialInstance.h">
+      <Filter>sys\render</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

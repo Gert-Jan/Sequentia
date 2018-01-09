@@ -10,19 +10,20 @@
 #include "SeqDecoder.h"
 #include "SeqString.h"
 #include "SeqRenderer.h"
-#include "SeqMaterial.h"
+#include "SeqMaterialInstance.h"
 
 extern "C"
 {
 	#include "libavformat/avformat.h"
 }
 
-SeqUIVideo::SeqUIVideo():
+SeqUIVideo::SeqUIVideo() :
 	decoderTask(nullptr),
 	previousFrame(nullptr),
 	isSeeking(false),
 	seekVideoTime(0),
-	startVideoTime(0)
+	startVideoTime(0),
+	lockVideo(false)
 {
 	Init();
 }
@@ -32,7 +33,8 @@ SeqUIVideo::SeqUIVideo(SeqSerializer *serializer):
 	previousFrame(nullptr),
 	isSeeking(false),
 	seekVideoTime(0),
-	startVideoTime(0)
+	startVideoTime(0),
+	lockVideo(false)
 {
 	Init();
 	Deserialize(serializer);
@@ -47,7 +49,7 @@ void SeqUIVideo::Init()
 	// start listening for project changes
 	project->AddActionHandler(this);
 	// prepare material
-	material = SeqRenderer::GetVideoMaterial();
+	material = SeqRenderer::CreateVideoMaterialInstance();
 }
 
 SeqUIVideo::~SeqUIVideo()
@@ -57,6 +59,8 @@ SeqUIVideo::~SeqUIVideo()
 	project->RemoveActionHandler(this);
 	// free memory
 	delete[] name;
+	// free material
+	SeqRenderer::RemoveMaterialInstance(material);
 }
 
 void SeqUIVideo::ActionDone(const SeqAction action)
@@ -85,7 +89,7 @@ void SeqUIVideo::Draw()
 
 	// detect if another video was focussed
 	if ((decoderTask == nullptr && library->GetLastLinkFocus() != nullptr) ||
-		(decoderTask != nullptr && decoderTask->GetLink() != library->GetLastLinkFocus()))
+		(decoderTask != nullptr && !lockVideo && decoderTask->GetLink() != library->GetLastLinkFocus()))
 	{
 		if (decoderTask != nullptr)
 		{
@@ -231,6 +235,8 @@ void SeqUIVideo::Draw()
 						startVideoTime += videoTime - seekVideoTime;
 						videoTime = seekVideoTime;
 					}
+					ImGui::SameLine();
+					ImGui::Checkbox("lock video", &lockVideo);
 					previousFrame = frame;
 				}
 			}

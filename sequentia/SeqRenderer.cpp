@@ -1,4 +1,5 @@
 #include "SeqRenderer.h"
+#include "SeqMaterialInstance.h"
 #include "SeqList.h"
 #include "imgui.h"
 #include <GL/gl3w.h>
@@ -11,9 +12,9 @@ ImVec4 SeqRenderer::clearColor = ImColor(114, 144, 154);
 unsigned int SeqRenderer::vboHandle = 0;
 unsigned int SeqRenderer::vaoHandle = 0;
 unsigned int SeqRenderer::elementsHandle = 0;
-SeqList<SeqMaterial*>* SeqRenderer::materials = new SeqList<SeqMaterial*>();
-SeqMaterial SeqRenderer::fontMaterial = SeqMaterial();
-SeqMaterial SeqRenderer::videoMaterial = SeqMaterial();
+SeqList<SeqMaterialInstance*>* SeqRenderer::materials = new SeqList<SeqMaterialInstance*>();
+SeqMaterial SeqRenderer::fontMaterial = SeqMaterial(1);
+SeqMaterial SeqRenderer::videoMaterial = SeqMaterial(3);
 
 void SeqRenderer::InitGL()
 {
@@ -120,8 +121,8 @@ void SeqRenderer::CreateDeviceObjects()
 	glBindVertexArray(vaoHandle);
 	glBindBuffer(GL_ARRAY_BUFFER, vboHandle);
 
-	fontMaterial.Init(vertex_shader, fragment_shader_default, 1);
-	videoMaterial.Init(vertex_shader, fragment_shader_video, 3);
+	fontMaterial.Init(vertex_shader, fragment_shader_default);
+	videoMaterial.Init(vertex_shader, fragment_shader_video);
 
 	CreateFontsTexture();
 
@@ -142,6 +143,7 @@ void SeqRenderer::InvalidateDeviceObjects()
 	vaoHandle = vboHandle = elementsHandle = 0;
 
 	fontMaterial.Dispose();
+	ImGui::GetIO().Fonts->TexID = 0;
 	for (int i = 0; i < materials->Count(); i++)
 		materials->Get(i)->Dispose();
 	videoMaterial.Dispose();
@@ -204,7 +206,6 @@ void SeqRenderer::Render()
 		{ -1.0f, 1.0f, 0.0f, 1.0f },
 	};
 
-	fontMaterial.Begin(orthoProjection, vaoHandle);
 	for (int i = 0; i < materials->Count(); i++)
 		materials->Get(i)->Begin(orthoProjection, vaoHandle);
 
@@ -228,7 +229,7 @@ void SeqRenderer::Render()
 			}
 			else
 			{
-				SeqMaterial* mat = (SeqMaterial*)pcmd->TextureId;
+				SeqMaterialInstance* mat = (SeqMaterialInstance*)pcmd->TextureId;
 				mat->BindTextures();
 				glScissor((int)pcmd->ClipRect.x, (int)(fbHeight - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
 				glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, indexBufferOffset);
@@ -259,15 +260,28 @@ void SeqRenderer::Shutdown()
 	InvalidateDeviceObjects();
 }
 
-SeqMaterial* SeqRenderer::GetVideoMaterial()
+void SeqRenderer::RemoveMaterialInstance(SeqMaterialInstance *materialInstance)
 {
-	SeqMaterial* material = new SeqMaterial(videoMaterial);
-	materials->Add(material);
-	return material;
+	materials->Remove(materialInstance);
+	materialInstance->Dispose();
+	delete materialInstance;
+}
+
+SeqMaterialInstance* SeqRenderer::CreateVideoMaterialInstance()
+{
+	SeqMaterialInstance *videoMaterialInstance = new SeqMaterialInstance(&videoMaterial);
+	videoMaterialInstance->Init();
+	materials->Add(videoMaterialInstance);
+	return videoMaterialInstance;
 }
 
 void SeqRenderer::CreateFontsTexture()
 {
+	// Create material instance
+	SeqMaterialInstance *fontMaterialInstance = new SeqMaterialInstance(&fontMaterial);
+	fontMaterialInstance->Init();
+	materials->Add(fontMaterialInstance);
+
 	// Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
 	unsigned char *pixels;
@@ -278,15 +292,15 @@ void SeqRenderer::CreateFontsTexture()
 	// Upload texture to graphics system
 	GLint lastTexture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
-	glGenTextures(1, &fontMaterial.textureHandles[0]);
-	glBindTexture(GL_TEXTURE_2D, fontMaterial.textureHandles[0]);
+	glGenTextures(1, &fontMaterialInstance->textureHandles[0]);
+	glBindTexture(GL_TEXTURE_2D, fontMaterialInstance->textureHandles[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 	// Store our identifier
-	io.Fonts->TexID = (void *)&fontMaterial;
+	io.Fonts->TexID = (void *)fontMaterialInstance;
 
 	// Restore state
 	glBindTexture(GL_TEXTURE_2D, lastTexture);

@@ -5,7 +5,7 @@
 
 class SeqProject;
 class SeqLibrary;
-struct SeqMaterial;
+struct SeqMaterialInstance;
 class SeqSerializer;
 class SeqTaskDecodeVideo;
 struct AVFrame;
@@ -29,10 +29,11 @@ private:
 
 private:
 	char *name;
-	SeqMaterial *material;
+	SeqMaterialInstance *material;
 	SeqTaskDecodeVideo *decoderTask;
 	AVFrame *previousFrame;
 	bool isSeeking;
 	int seekVideoTime;
 	int startVideoTime;
+	bool lockVideo;
 };

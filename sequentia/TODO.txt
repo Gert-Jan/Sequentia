@@ -33,7 +33,6 @@ Audio
 - Feed audio data to SDL2
 
 Graphics
-- Divide the Material struct up in a Material and MaterialInstance struct.
 
 Development
 - Test dev environment on another machine, write a setup guide in the README.txt
