@@ -22,9 +22,9 @@ void SeqMaterialInstance::Init()
 	glLinkProgram(programHandle);
 
 	projMatAttribLoc = glGetUniformLocation(programHandle, "ProjMtx");
-	positionAttribLoc = glGetAttribLocation(programHandle, "Position");
-	uvAttribLoc = glGetAttribLocation(programHandle, "UV");
-	colorAttribLoc = glGetAttribLocation(programHandle, "Color");
+	GLint positionAttribLoc = glGetAttribLocation(programHandle, "Position");
+	GLint uvAttribLoc = glGetAttribLocation(programHandle, "UV");
+	GLint colorAttribLoc = glGetAttribLocation(programHandle, "Color");
 
 	glEnableVertexAttribArray(positionAttribLoc);
 	glEnableVertexAttribArray(uvAttribLoc);

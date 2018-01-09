@@ -17,10 +17,6 @@ public:
 	SeqMaterial *material;
 	GLuint programHandle;
 	GLuint textureHandles[3];
-	int textureAttribLoc[3];
-
-	int projMatAttribLoc;
-	int positionAttribLoc;
-	int uvAttribLoc;
-	int colorAttribLoc;
+	GLint textureAttribLoc[3];
+	GLint projMatAttribLoc;
 };
