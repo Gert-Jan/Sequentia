@@ -57,7 +57,7 @@ void SeqList<T>::InsertAt(T item, const int index)
 	if (index <= count)
 	{
 		EnsureCapacity(count + 1);
-		memcpy(data[index + 1], data[index], sizeof(T) * (count - index));
+		memcpy(&data[index + 1], &data[index], sizeof(T) * (count - index));
 		data[index] = item;
 		count += 1;
 	}
@@ -99,11 +99,7 @@ void SeqList<T>::EnsureCapacity(const int requiredCapacity)
 		int newCapacity = capacity * 2;
 		while (requiredCapacity > newCapacity)
 			newCapacity = newCapacity * 2;
-		T* newData = new T[newCapacity];
-		T* deleteData = data;
-		memcpy(newData, data, sizeof(T) * count);
-		data = newData;
-		delete[] deleteData;
+		realloc(data, newCapacity * sizeof(T));
 		capacity = newCapacity;
 	}
 }
