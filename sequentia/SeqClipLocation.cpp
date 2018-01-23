@@ -29,6 +29,16 @@ void SeqClipLocation::SetPosition(int64_t newLeftTime)
 	rightTime = leftTime + width;
 }
 
+bool SeqClipLocation::ContainsTime(int64_t time)
+{
+	return time >= leftTime && time <= rightTime;
+}
+
+bool SeqClipLocation::OverlapsTimeRange(int64_t leftBound, int64_t rightBound)
+{
+	return leftBound <= rightTime && rightBound >= leftTime;
+}
+
 void SeqClipLocation::Serialize(SeqSerializer *serializer)
 {
 	serializer->Write(leftTime);

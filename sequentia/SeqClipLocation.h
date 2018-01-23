@@ -13,6 +13,9 @@ public:
 	void Reset();
 	void SetPosition(int64_t leftTime);
 
+	bool ContainsTime(int64_t time);
+	bool OverlapsTimeRange(int64_t leftBound, int64_t rightBound);
+
 	void Serialize(SeqSerializer *serializer);
 	void Deserialize(SeqSerializer *serializer);
 

@@ -15,7 +15,7 @@ struct SeqLibraryLink
 	SDL_atomic_t useCount;
 	bool metaDataLoaded;
 	int width, height;
-	uint64_t duration;
+	int64_t duration;
 };
 
 class SeqLibrary

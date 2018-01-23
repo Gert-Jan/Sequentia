@@ -33,6 +33,7 @@ public:
 	void MoveClip(SeqClip *clip, int64_t leftTime);
 	int ClipCount();
 	SeqClip* GetClip(const int index);
+	SeqClip* GetClipAt(int64_t time);
 	int GetClipIndexByActionId(const int id);
 
 	void AddClipProxy(SeqClipProxy *proxy);

@@ -17,7 +17,9 @@ SeqProject::SeqProject():
 	nextWindowId(0),
 	actionCursor(0),
 	nextSceneId(0),
-	fullPath("")
+	fullPath(""),
+	width(1920),
+	height(1080)
 {
 	library = new SeqLibrary();
 	scenes = new SeqList<SeqScene*>();
@@ -231,10 +233,14 @@ void SeqProject::RemoveWindow(SeqWindow *window)
 void SeqProject::Update()
 {
 	library->Update();
+	for (int i = 0; i < scenes->Count(); i++)
+		scenes->Get(i)->player->Update();
 }
 
 void SeqProject::Draw()
 {
+	for (int i = 0; i < scenes->Count(); i++)
+		scenes->Get(i)->player->Render();
 	SeqDialogs::Draw();
 	for (int i = 0; i < windows->Count(); i++)
 	{

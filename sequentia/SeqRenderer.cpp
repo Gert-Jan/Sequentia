@@ -1,4 +1,6 @@
 #include "SeqRenderer.h"
+#include "Sequentia.h"
+#include "SeqProject.h"
 #include "SeqMaterialInstance.h"
 #include "SeqList.h"
 #include "imgui.h"
@@ -12,9 +14,14 @@ ImVec4 SeqRenderer::clearColor = ImColor(114, 144, 154);
 unsigned int SeqRenderer::vboHandle = 0;
 unsigned int SeqRenderer::vaoHandle = 0;
 unsigned int SeqRenderer::elementsHandle = 0;
-SeqList<SeqMaterialInstance*>* SeqRenderer::materials = new SeqList<SeqMaterialInstance*>();
+unsigned int SeqRenderer::frameBufferHandle = 0;
+int SeqRenderer::framebufferWidth = 1280;
+int SeqRenderer::framebufferHeight = 720;
+SeqList<SeqMaterialInstance*>* SeqRenderer::materialsImGui = new SeqList<SeqMaterialInstance*>();
+SeqList<SeqMaterialInstance*>* SeqRenderer::materialsPlayer = new SeqList<SeqMaterialInstance*>();
 SeqMaterial SeqRenderer::fontMaterial = SeqMaterial(1);
 SeqMaterial SeqRenderer::videoMaterial = SeqMaterial(3);
+SeqMaterial SeqRenderer::playerMaterial = SeqMaterial(1);
 
 void SeqRenderer::InitGL()
 {
@@ -25,7 +32,7 @@ void SeqRenderer::InitGL()
 
 void SeqRenderer::RefreshDeviceObjects()
 {
-	if (materials->Count() == 0)
+	if (materialsImGui->Count() == 0)
 		CreateDeviceObjects();
 }
 
@@ -116,6 +123,7 @@ void SeqRenderer::CreateDeviceObjects()
 
 	glGenBuffers(1, &vboHandle);
 	glGenBuffers(1, &elementsHandle);
+	glGenFramebuffers(1, &frameBufferHandle);
 
 	glGenVertexArrays(1, &vaoHandle);
 	glBindVertexArray(vaoHandle);
@@ -123,8 +131,9 @@ void SeqRenderer::CreateDeviceObjects()
 
 	fontMaterial.Init(vertex_shader, fragment_shader_default);
 	videoMaterial.Init(vertex_shader, fragment_shader_video);
+	playerMaterial.Init(vertex_shader, fragment_shader_default);
 
-	CreateFontsTexture();
+	CreateFontsMaterialInstance();
 
 	// Restore modified GL state
 	glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -144,14 +153,18 @@ void SeqRenderer::InvalidateDeviceObjects()
 
 	fontMaterial.Dispose();
 	ImGui::GetIO().Fonts->TexID = 0;
-	for (int i = 0; i < materials->Count(); i++)
-		materials->Get(i)->Dispose();
+	for (int i = 0; i < materialsImGui->Count(); i++)
+		materialsImGui->Get(i)->Dispose();
+	for (int i = 0; i < materialsPlayer->Count(); i++)
+		materialsPlayer->Get(i)->Dispose();
 	videoMaterial.Dispose();
+	playerMaterial.Dispose();
 }
 
 void SeqRenderer::Render()
 {
 	ImGuiIO& io = ImGui::GetIO();
+	SeqProject *project = Sequentia::GetProject();
 
 	glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
@@ -161,9 +174,8 @@ void SeqRenderer::Render()
 	ImDrawData* drawData = ImGui::GetDrawData();
 
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-	int fbWidth = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
-	int fbHeight = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
-	if (fbWidth == 0 || fbHeight == 0)
+	SetImGuiViewport();
+	if (framebufferWidth == 0 || framebufferHeight == 0)
 		return;
 	drawData->ScaleClipRects(io.DisplayFramebufferScale);
 
@@ -197,17 +209,25 @@ void SeqRenderer::Render()
 	glEnable(GL_SCISSOR_TEST);
 
 	// Setup viewport, orthographic projection matrix
-	glViewport(0, 0, (GLsizei)fbWidth, (GLsizei)fbHeight);
-	const float orthoProjection[4][4] =
+	const float orthoProjectionImGui[4][4] =
 	{
 		{ 2.0f / io.DisplaySize.x, 0.0f, 0.0f, 0.0f },
 		{ 0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 0.0f },
 		{ 0.0f, 0.0f, -1.0f, 0.0f },
 		{ -1.0f, 1.0f, 0.0f, 1.0f },
 	};
+	const float orthoProjectionPlayer[4][4] =
+	{
+		{ 2.0f / project->width, 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 2.0f / -project->height, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, -1.0f, 0.0f },
+		{ -1.0f, 1.0f, 0.0f, 1.0f },
+	};
 
-	for (int i = 0; i < materials->Count(); i++)
-		materials->Get(i)->Begin(orthoProjection, vaoHandle);
+	for (int i = 0; i < materialsImGui->Count(); i++)
+		materialsImGui->Get(i)->Begin(orthoProjectionImGui, vaoHandle);
+	for (int i = 0; i < materialsPlayer->Count(); i++)
+		materialsPlayer->Get(i)->Begin(orthoProjectionPlayer, vaoHandle);
 
 	for (int n = 0; n < drawData->CmdListsCount; n++)
 	{
@@ -231,7 +251,7 @@ void SeqRenderer::Render()
 			{
 				SeqMaterialInstance* mat = (SeqMaterialInstance*)pcmd->TextureId;
 				mat->BindTextures();
-				glScissor((int)pcmd->ClipRect.x, (int)(fbHeight - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
+				glScissor((int)pcmd->ClipRect.x, (int)(framebufferHeight - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
 				glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, indexBufferOffset);
 			}
 			indexBufferOffset += pcmd->ElemCount;
@@ -262,7 +282,8 @@ void SeqRenderer::Shutdown()
 
 void SeqRenderer::RemoveMaterialInstance(SeqMaterialInstance *materialInstance)
 {
-	materials->Remove(materialInstance);
+	materialsImGui->Remove(materialInstance);
+	materialsPlayer->Remove(materialInstance);
 	materialInstance->Dispose();
 	delete materialInstance;
 }
@@ -271,16 +292,16 @@ SeqMaterialInstance* SeqRenderer::CreateVideoMaterialInstance()
 {
 	SeqMaterialInstance *videoMaterialInstance = new SeqMaterialInstance(&videoMaterial);
 	videoMaterialInstance->Init();
-	materials->Add(videoMaterialInstance);
+	materialsPlayer->Add(videoMaterialInstance);
 	return videoMaterialInstance;
 }
 
-void SeqRenderer::CreateFontsTexture()
+void SeqRenderer::CreateFontsMaterialInstance()
 {
 	// Create material instance
 	SeqMaterialInstance *fontMaterialInstance = new SeqMaterialInstance(&fontMaterial);
 	fontMaterialInstance->Init();
-	materials->Add(fontMaterialInstance);
+	materialsImGui->Add(fontMaterialInstance);
 
 	// Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
@@ -289,10 +310,11 @@ void SeqRenderer::CreateFontsTexture()
 	// Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	// Upload texture to graphics system
+	// Store current state
 	GLint lastTexture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
-	glGenTextures(1, &fontMaterialInstance->textureHandles[0]);
+
+	// Upload texture to graphics system
 	glBindTexture(GL_TEXTURE_2D, fontMaterialInstance->textureHandles[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -306,11 +328,37 @@ void SeqRenderer::CreateFontsTexture()
 	glBindTexture(GL_TEXTURE_2D, lastTexture);
 }
 
+SeqMaterialInstance* SeqRenderer::CreatePlayerMaterialInstance()
+{
+	SeqProject *project = Sequentia::GetProject();
+
+	// Create material instance
+	SeqMaterialInstance *playerMaterialInstance = new SeqMaterialInstance(&playerMaterial);
+	playerMaterialInstance->Init();
+	materialsImGui->Add(playerMaterialInstance);
+
+	// Store current state
+	GLint lastTexture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
+
+	// Create framebuffer texture
+	glBindTexture(GL_TEXTURE_2D, playerMaterialInstance->textureHandles[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, project->width, project->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Restore state
+	glBindTexture(GL_TEXTURE_2D, lastTexture);
+
+	return playerMaterialInstance;
+}
+
 void SeqRenderer::CreateVideoTextures(AVFrame* frame, GLuint texId[3])
 {
 	// Store current state
-	GLint last_texture;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+	GLint lastTexture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
 
 	// Create textures
 	glBindTexture(GL_TEXTURE_2D, texId[0]);
@@ -332,14 +380,14 @@ void SeqRenderer::CreateVideoTextures(AVFrame* frame, GLuint texId[3])
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
 
 	// Restore state
-	glBindTexture(GL_TEXTURE_2D, last_texture);
+	glBindTexture(GL_TEXTURE_2D, lastTexture);
 }
 
 void SeqRenderer::OverwriteVideoTextures(AVFrame* frame, GLuint texId[3])
 {
 	// Store current state
-	GLint last_texture;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+	GLint lastTexture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
 
 	// Overwrite textures
 	glBindTexture(GL_TEXTURE_2D, texId[0]);
@@ -350,5 +398,52 @@ void SeqRenderer::OverwriteVideoTextures(AVFrame* frame, GLuint texId[3])
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width / 2, frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
 
 	// Restore state
-	glBindTexture(GL_TEXTURE_2D, last_texture);
+	glBindTexture(GL_TEXTURE_2D, lastTexture);
+}
+
+void SeqRenderer::BindFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command)
+{
+	SeqMaterialInstance *framebufferOutput = (SeqMaterialInstance *)command->UserCallbackData;
+	
+	if (framebufferOutput == nullptr)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		SetImGuiViewport();
+	}
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle);
+		framebufferOutput->BindTextures();
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, framebufferOutput->textureHandles[0], 0);
+		SetPlayerViewport();
+	}
+}
+
+void SeqRenderer::SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command)
+{
+	SeqProject *project = Sequentia::GetProject();
+	SeqMaterialInstance *framebufferOutput = (SeqMaterialInstance *)command->UserCallbackData;
+
+	// copy the previous frame buffer to the new output frame buffer
+	framebufferOutput->BindTextures();
+	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, project->width, project->height, 0);
+	
+	// bind the new output to the framebuffer
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, framebufferOutput->textureHandles[0], 0);
+}
+
+void SeqRenderer::SetImGuiViewport()
+{
+	ImGuiIO& io = ImGui::GetIO();
+	framebufferWidth = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
+	framebufferHeight = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
+	glViewport(0, 0, framebufferWidth, framebufferHeight);
+}
+
+void SeqRenderer::SetPlayerViewport()
+{
+	SeqProject *project = Sequentia::GetProject();
+	framebufferWidth = project->width;
+	framebufferHeight = project->height;
+	glViewport(0, 0, framebufferWidth, framebufferHeight);
 }

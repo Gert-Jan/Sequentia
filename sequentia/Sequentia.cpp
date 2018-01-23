@@ -89,6 +89,8 @@ int Sequentia::Run(const char *openProject)
 		HandleShortcuts();
 		HandleMainMenuBar();
 		SeqWorkerManager::Instance()->Update();
+		previewScene->player->Update();
+		previewScene->player->Render();
 		project->Update();
 		project->Draw();
 		HandleDragging();
@@ -393,6 +395,8 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 	if (previewScene->GetChannel(0)->ClipCount() == 0 ||
 		previewScene->GetChannel(0)->GetClip(0)->GetLink() != link)
 	{
+		// reset the player
+		previewScene->player->Stop();
 		// clear the previewScene no matter what
 		for (int i = 0; i < previewScene->ChannelCount(); i++)
 		{
@@ -405,14 +409,15 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 				delete clip;
 			}
 		}
-		// reset the player
-		previewScene->player->Stop();
 		// build up a previewScene
 		if (link->metaDataLoaded && previewScene->player->IsActive())
 		{
 			SeqClip *clip = new SeqClip(link);
 			previewScene->GetChannel(0)->AddClip(clip);
+			previewScene->RefreshLastClip();
 		}
+		// play
+		previewScene->player->Play();
 	}
 }
 

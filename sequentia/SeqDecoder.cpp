@@ -33,9 +33,14 @@ int64_t SeqDecoder::GetPlaybackTime()
 	return lastRequestedFrameTime;
 }
 
-int64_t SeqDecoder::GetBufferTime()
+int64_t SeqDecoder::GetBufferLeft()
 {
-	return 0;
+	return SDL_max(frameBuffer[displayFrameCursor]->pts, 0);
+}
+
+int64_t SeqDecoder::GetBufferRight()
+{
+	return SDL_max(frameBuffer[(frameBufferCursor - 1 + frameBufferSize) % frameBufferSize]->pts, 0);
 }
 
 void SeqDecoder::Dispose()
@@ -163,7 +168,7 @@ int SeqDecoder::Loop()
 			int64_t tempSeekTime = seekTime;
 			SDL_UnlockMutex(seekMutex);
 			// ffmpeg seek
-			av_seek_frame(videoInfo->formatContext, videoInfo->videoStreamIndex, tempSeekTime, 0);
+			avformat_seek_file(videoInfo->formatContext, videoInfo->videoStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
 			// set state to 'loading' as the complete buffer is now invalid
 			status = SeqDecoderStatus::Loading;
 			// reset the packet and frame buffer so it will completely be refilled
@@ -171,7 +176,8 @@ int SeqDecoder::Loop()
 			packetBufferCursor = 0;
 			frameBufferCursor = (displayFrameCursor + 1) % frameBufferSize;
 			lastRequestedFrameTime = tempSeekTime;
-			printf("SEEKING disp_pkt:%d pkt_cur:%d disp_frm:%d frm_cur:%d\n", displayPacketCursor, packetBufferCursor, displayFrameCursor, frameBufferCursor);
+			printf("SEEKING time:%d lb: %d rb: %d disp_pkt:%d pkt_cur:%d disp_frm:%d frm_cur:%d\n", 
+				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor, displayFrameCursor, frameBufferCursor);
 		}
 		// fill the packet buffer
 		FillPacketBuffer();
@@ -436,10 +442,10 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 					lowestKeyFrameDecodeTime = decodingTime;
 			}
 
-			printf("video_frame%s n:%d coded_n:%d isKey:%d flags:%d dts:%.3f pts:%.3f lrft:%.3f\n",
+			printf("video_frame%s n:%d coded_n:%d isKey:%d flags:%d dts:%d pts:%d lrft:%d\n",
 				cached ? "(cached)" : "",
 				videoInfo->videoFrameCount++, target->coded_picture_number,
-				target->key_frame, pkt.flags, pkt.dts / 1000.0, pkt.pts / 1000.0, lastRequestedFrameTime / 1000.0);
+				target->key_frame, pkt.flags, pkt.dts, pkt.pts, lastRequestedFrameTime);
 		}
 	}
 	else if (pkt.stream_index == videoInfo->audioStreamIndex)

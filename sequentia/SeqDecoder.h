@@ -31,7 +31,8 @@ public:
 	SeqDecoderStatus GetStatus();
 	int64_t GetDuration();
 	int64_t GetPlaybackTime();
-	int64_t GetBufferTime();
+	int64_t GetBufferLeft();
+	int64_t GetBufferRight();
 
 	void Dispose();
 	static int ReadVideoInfo(const char *fullPath, SeqVideoInfo *videoInfo);

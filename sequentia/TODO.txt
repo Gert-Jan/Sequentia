@@ -3,6 +3,18 @@ BEFORE SHIPPING
 - Add a warning when creating a new project or opening a new project while there are unsaved changes in the current project.
 - Validate command arguments
 
+Project
+- The project has a width and height, which is used for all video/image position coordinates.
+	- Allow changing of the width and height
+	- Add a tooltip explaining that width and height has nothing to do with export dimensions.
+
+Export
+- Add video exporting
+- Allow for two export modes when having different export and project dimensions
+	- Rendering natively to the export resolution (export sized rendertarget)(default)
+	- Up/down scaled orginal project size (project sized rendertarget)
+	- Keep aspect ratio (potentially add black bars) or stretch.
+
 Library
 - When not able to load a video (FileNotFound/Corrupt) add error code to library link, show in red.
 	- try relative path on FileNotFound, notify on possible resolve.
@@ -15,10 +27,10 @@ UI
 		- Add 'filter' virtual folders
 		- Add 'links', linking to files or folders on the filesystem
 		- Let's start out with only file links
+	- Add a 'Scenes' tab displaying all editable non-temp scenes in the project
 - Video - video or audio player
 	- Allow targeting different contexts or channels to be displayed
 - Sequencer - video/audio arrangement
-	- Allow dragging videos from the library to the sequencer channels
 	- Add channel collapsing
 	- Add clearer channel selection color
 
@@ -33,6 +45,7 @@ Audio
 - Feed audio data to SDL2
 
 Graphics
+- Add a separate SeqScene rendering path.
 
 Development
 - Test dev environment on another machine, write a setup guide in the README.txt

@@ -72,9 +72,13 @@ private:
 	int Serialize(SeqSerializer *serializer);
 	int Deserialize(SeqSerializer *serializer);
 
+public:
+	int width, height;
+
 private:
 	const int version = 1;
 	char *fullPath;
+
 	int nextWindowId;
 	SeqLibrary *library;
 	SeqList<SeqScene*> *scenes;

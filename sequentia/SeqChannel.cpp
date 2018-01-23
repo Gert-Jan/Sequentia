@@ -106,6 +106,17 @@ SeqClip* SeqChannel::GetClip(const int index)
 	return clips->Get(index);
 }
 
+SeqClip* SeqChannel::GetClipAt(int64_t time)
+{
+	for (int i = 0; i < clips->Count(); i++)
+	{
+		SeqClip *clip = clips->Get(i);
+		if (clip->location.ContainsTime(time))
+			return clip;
+	}
+	return nullptr;
+}
+
 int SeqChannel::GetClipIndexByActionId(const int id)
 {
 	for (int i = 0; i < clips->Count(); i++)

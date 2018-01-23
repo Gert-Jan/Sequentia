@@ -19,12 +19,12 @@ SeqVideoInfo::~SeqVideoInfo()
 	avformat_close_input(&formatContext);
 }
 
-void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, uint64_t time)
+void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, int64_t time)
 {
 	if (time != AV_NOPTS_VALUE)
 	{
 		int hours, mins, secs, us;
-		int64_t duration = time + (time <= INT64_MAX - 5000 ? 5000 : 0);
+		int64_t duration = time;
 		secs = (int)(duration / AV_TIME_BASE);
 		us = duration % AV_TIME_BASE;
 		mins = secs / 60;

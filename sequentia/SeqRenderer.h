@@ -22,17 +22,29 @@ public:
 	static void Shutdown();
 	static void RemoveMaterialInstance(SeqMaterialInstance *materialInstance);
 	static SeqMaterialInstance* CreateVideoMaterialInstance();
-	static void CreateFontsTexture();
+	static void CreateFontsMaterialInstance();
+	static SeqMaterialInstance* CreatePlayerMaterialInstance();
 	static void CreateVideoTextures(AVFrame* frame, GLuint texId[3]);
 	static void OverwriteVideoTextures(AVFrame* frame, GLuint texId[3]);
+	static void BindFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command);
+	static void SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command);
+
+private:
+	static void SetImGuiViewport();
+	static void SetPlayerViewport();
 
 private:
 	static ImVec4 clearColor;
 	static unsigned int vboHandle;
 	static unsigned int vaoHandle;
 	static unsigned int elementsHandle;
+	static unsigned int frameBufferHandle;
 
-	static SeqList<SeqMaterialInstance*>* materials;
+	static int framebufferWidth, framebufferHeight;
+
+	static SeqList<SeqMaterialInstance*> *materialsImGui;
+	static SeqList<SeqMaterialInstance*> *materialsPlayer;
 	static SeqMaterial fontMaterial;
 	static SeqMaterial videoMaterial;
+	static SeqMaterial playerMaterial;
 };

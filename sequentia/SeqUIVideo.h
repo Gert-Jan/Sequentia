@@ -4,6 +4,7 @@
 #include "SeqAction.h"
 
 class SeqProject;
+class SeqPlayer;
 class SeqLibrary;
 struct SeqMaterialInstance;
 class SeqSerializer;
@@ -30,10 +31,7 @@ private:
 private:
 	char *name;
 	SeqMaterialInstance *material;
-	SeqTaskDecodeVideo *decoderTask;
-	AVFrame *previousFrame;
+	SeqPlayer *player;
 	bool isSeeking;
 	int seekVideoTime;
-	int startVideoTime;
-	bool lockVideo;
 };
