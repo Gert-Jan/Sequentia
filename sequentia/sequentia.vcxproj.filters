@@ -128,9 +128,6 @@
     <ClInclude Include="SeqAction.h">
       <Filter>sys\action</Filter>
     </ClInclude>
-    <ClInclude Include="libs\dirent\dirent.h">
-      <Filter>libs\dirent</Filter>
-    </ClInclude>
     <ClInclude Include="SeqUILibrary.h">
       <Filter>ui</Filter>
     </ClInclude>
@@ -213,6 +210,12 @@
     <ClInclude Include="SeqTime.h">
       <Filter>sys\util</Filter>
     </ClInclude>
+    <ClInclude Include="libs\sfh\noc_file_dialog.h">
+      <Filter>libs\sfh</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\sfh\dirent.h">
+      <Filter>libs\sfh</Filter>
+    </ClInclude>
     <ClInclude Include="SeqMaterialInstance.h">
       <Filter>sys\render</Filter>
     </ClInclude>
@@ -229,9 +232,6 @@
     </Filter>
     <Filter Include="libs">
       <UniqueIdentifier>{cce33654-f44c-4866-9469-1ed945854e05}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="libs\dirent">
-      <UniqueIdentifier>{836603e7-a634-4aa2-92df-1932b590584f}</UniqueIdentifier>
     </Filter>
     <Filter Include="libs\imgui">
       <UniqueIdentifier>{4223db68-66f8-4b64-b297-46ec6e87d3ab}</UniqueIdentifier>
@@ -265,6 +265,9 @@
     </Filter>
     <Filter Include="sys\player">
       <UniqueIdentifier>{f6f666e8-a0b3-4729-884a-3b9ee94c3e87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs\sfh">
+      <UniqueIdentifier>{aa4f22e4-e382-420b-8666-d2336430a01d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
