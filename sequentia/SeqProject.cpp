@@ -3,6 +3,7 @@
 
 #include "Sequentia.h"
 #include "SeqProjectHeaders.h"
+#include "SeqPlayer.h"
 #include "SeqWindow.h"
 #include "SeqUILibrary.h"
 #include "SeqUISequencer.h"
