@@ -207,11 +207,17 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 					clipPlayer->isWaitingForSeek = true;
 					*canPlay = false;
 				}
-				else if (clipPlayer->isWaitingForSeek &&
-					requestTime >= decoder->GetBufferLeft() &&
-					requestTime <= decoder->GetBufferRight())
+				else if (clipPlayer->isWaitingForSeek)
 				{
-					clipPlayer->isWaitingForSeek = false;
+					if (requestTime >= decoder->GetBufferLeft() &&
+						requestTime <= decoder->GetBufferRight())
+					{
+						clipPlayer->isWaitingForSeek = false;
+					}
+					else
+					{
+						*canPlay = false;
+					}
 				}
 				
 				// move the frame to the GPU if the decoder is ready
