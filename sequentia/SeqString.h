@@ -10,7 +10,12 @@ public:
 	SeqString(const char *string);
 	void Set(const char *string, const int count);
 	void Set(const char *string);
+	void Append(const char *string, const int count);
+	void Append(const char *string);
+	int AppendAt(const char *string, const int at, const int count);
+	int AppendAt(const char *string, const int at);
 	void Clear();
+	void Clean();
 	void Format(const char *format, ...);
 	char* Copy();
 	void Replace(const char* phrase, const char *with);

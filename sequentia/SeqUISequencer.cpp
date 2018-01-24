@@ -85,7 +85,7 @@ void SeqUISequencer::Draw()
 	
 	if (ImGui::Begin(name, &isOpen, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar))
 	{
-		const float headerHeight = ImGui::GetTextLineHeightWithSpacing();
+		const float headerHeight = ImGui::GetTextLineHeightWithSpacing() + 5;
 		ImGui::Columns(2, "panel");
 		DrawChannelSettings(headerHeight, isWindowNew);
 		ImGui::NextColumn();
@@ -101,6 +101,7 @@ void SeqUISequencer::Draw()
 
 void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 {
+	SeqProject *project = Sequentia::GetProject();
 	const ImGuiStyle style = ImGui::GetStyle();
 	const ImVec2 origin = ImGui::GetCursorScreenPos();
 	const ImVec2 size = ImVec2(settingsPanelWidth, ImGui::GetContentRegionAvail().y);
@@ -112,13 +113,38 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	if (isWindowNew)
 		ImGui::SetColumnOffset(1, settingsPanelWidth + 7);
 
-	// debug text
-	ImGui::Text("%s", scene->name);
+	// scene selector
+	ImGui::PushItemWidth(size.x - 4);
+	SeqString::Temp->Clean();
+	int selectedScene = 0;
+	SeqScene *otherScene = nullptr;
+	int textCursor = 0;
+	for (int i = 0; i < project->SceneCount(); i++)
+	{
+		otherScene = project->GetScene(i);
+		textCursor = SeqString::Temp->AppendAt(otherScene->name, textCursor);
+		textCursor++;
+		if (otherScene == scene)
+			selectedScene = i;
+	}
+	otherScene = Sequentia::GetPreviewScene();
+	SeqString::Temp->AppendAt(otherScene->name, textCursor);
+	if (otherScene == scene)
+		selectedScene = project->SceneCount();
+	if (ImGui::Combo("##sceneSelect", &selectedScene, SeqString::Temp->Buffer))
+	{
+		if (selectedScene == project->SceneCount())
+			scene = Sequentia::GetPreviewScene();
+		else
+			scene = project->GetScene(selectedScene);
+	}
+	ImGui::PopItemWidth();
 
+	// draw settings panels
 	ImVec2 cursor = origin;
 	cursor.y += rulerHeight + 1;
 	ImGui::PushClipRect(cursor, ImVec2(cursor.x + size.x, cursor.y + size.y - rulerHeight - style.ScrollbarSize), false);
-	// draw settings panels
+
 	for (int i = 0; i < scene->ChannelCount(); i++)
 	{
 		int channelHeight = channelHeights->Get(i);

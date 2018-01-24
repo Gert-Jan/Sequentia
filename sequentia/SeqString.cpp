@@ -20,6 +20,32 @@ SeqString::SeqString(const char *string)
 	strcpy_s(Buffer, BufferLen, string);
 }
 
+void SeqString::Append(const char *string, const int count)
+{
+	int length = strlen(Buffer);
+	EnsureCapacity(length + count);
+	memcpy_s(&Buffer[length], count, string, count);
+	Buffer[length + count] = 0;
+}
+
+void SeqString::Append(const char *string)
+{
+	Append(string, strlen(string));
+}
+
+int SeqString::AppendAt(const char *string, const int at, const int count)
+{
+	EnsureCapacity(at + count);
+	memcpy_s(&Buffer[at], count, string, count);
+	Buffer[at + count] = 0;
+	return at + count;
+}
+
+int SeqString::AppendAt(const char *string, const int at)
+{
+	return AppendAt(string, at, strlen(string));
+}
+
 void SeqString::Set(const char *string, const int count)
 {
 	EnsureCapacity(count);
@@ -35,6 +61,12 @@ void SeqString::Set(const char *string)
 void SeqString::Clear()
 {
 	Buffer[0] = 0;
+}
+
+void SeqString::Clean()
+{
+	memset(Buffer, 0, BufferLen);
+	Clear();
 }
 
 void SeqString::Format(const char *format, ...)
