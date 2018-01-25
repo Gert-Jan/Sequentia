@@ -3,6 +3,7 @@
 #include "SeqUISequencer.h"
 #include "Sequentia.h"
 #include "SeqProjectHeaders.h"
+#include "SeqPlayer.h"
 #include "SeqActionFactory.h"
 #include "SeqSerializer.h"
 #include "SeqString.h"
@@ -279,8 +280,8 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	// seconds lines
 	int seconds = SEQ_TIME_FLOOR_IN_SECONDS(position);
 	float firstOffset = -TimeToPixels(position - SEQ_TIME_FLOOR(position));
-	float scaledStep = pixelsPerSecond / zoom;
-	int secondStep = (int)ceil(80.f / scaledStep); // calc min second step so steps won't be too small for time labels
+	float secondWidth = pixelsPerSecond / zoom;
+	int secondStep = (int)ceil(80.f / secondWidth); // calc min second step so steps won't be too small for time labels
 
 	if (secondStep > 1 && secondStep % 2 != 0) // only have even numbered or single steps
 	{
@@ -289,10 +290,10 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	if (seconds % 2 != 0) // start time should also be even
 	{
 		seconds -= 1;
-		firstOffset -= scaledStep;
+		firstOffset -= secondWidth;
 	}
-	scaledStep *= secondStep;
-	for (float x = origin.x + firstOffset; x < origin.x + width; x += scaledStep)
+	secondWidth *= secondStep;
+	for (float x = origin.x + firstOffset; x < origin.x + width; x += secondWidth)
 	{
 		drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + height - 1), lineColor, thickness);
 		ImGui::SetCursorScreenPos(ImVec2(x + style.FramePadding.x, origin.y));
@@ -306,6 +307,11 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 		ImGui::Text("%02d:%02d:%02d.%d", hours, mins, secs, us);
 		seconds += secondStep;
 	}
+
+	// draw the play position
+	float x = origin.x + SEQ_TIME_IN_SECONDS((double)(scene->player->GetPlaybackTime() - position)) * secondWidth;
+	drawList->AddRectFilled(ImVec2(x - 2, origin.y), ImVec2(x + 3, origin.y + height), lineColor);
+
 	ImGui::PopClipRect();
 
 	// setup the position for channel drawing
@@ -348,6 +354,12 @@ void SeqUISequencer::DrawChannels()
 		static ImVec2 scrollPosTextSize = ImGui::CalcTextSize("ScrollPos: 00000.000, 00000.000 zoom: 0000.000");
 		ImGui::SetCursorPos(ImVec2(ImGui::GetScrollX() + size.x - scrollPosTextSize.x, ImGui::GetScrollY() + size.y - scrollPosTextSize.y));
 		ImGui::Text("ScrollPos: %.3f, %.3f zoom: %.3f", ImGui::GetScrollX(), ImGui::GetScrollY(), zoom);
+
+		// draw play time line
+		ImDrawList *drawList = ImGui::GetWindowDrawList();
+		float secondWidth = pixelsPerSecond / zoom;
+		float x = origin.x + SEQ_TIME_IN_SECONDS((double)(scene->player->GetPlaybackTime() - position)) * secondWidth;
+		drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + size.y), lineColor);
 	}
 	ImGui::EndChild();
 }

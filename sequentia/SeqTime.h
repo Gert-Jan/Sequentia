@@ -7,6 +7,7 @@
 #define SEQ_TIME(seconds) (seconds) * SEQ_TIME_BASE
 #define SEQ_TIME_FROM_MILLISECONDS(milliseconds) (milliseconds) * SEQ_TIME_BASE_MILLISECONDS
 
+#define SEQ_TIME_IN_SECONDS(time) (time) / SEQ_TIME_BASE
 #define SEQ_TIME_IN_MILLISECONDS(time) (time) / SEQ_TIME_BASE_MILLISECONDS
 
 #define SEQ_TIME_FLOOR(time) ((time) - SEQ_TIME_BASE_HALF) / SEQ_TIME_BASE * SEQ_TIME_BASE
