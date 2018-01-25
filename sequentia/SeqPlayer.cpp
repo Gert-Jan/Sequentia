@@ -14,6 +14,7 @@
 
 SeqPlayer::SeqPlayer(SeqScene *scene):
 	scene(scene),
+	isPlaying(false),
 	isSeeking(false),
 	playTime(0)
 {
