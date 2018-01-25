@@ -108,7 +108,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	const ImVec2 size = ImVec2(settingsPanelWidth, ImGui::GetContentRegionAvail().y);
 	
 	// draw channel settings
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImDrawList *drawList = ImGui::GetWindowDrawList();
 	
 	// default panel width
 	if (isWindowNew)
@@ -164,7 +164,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	// code based on ImGui::Column()
 	cursor = origin;
 	cursor.y += rulerHeight;
-	ImGuiContext* g = ImGui::GetCurrentContext();
+	ImGuiContext *g = ImGui::GetCurrentContext();
 	for (int i = 0; i < scene->ChannelCount(); i++)
 	{
 		int channelHeight = channelHeights->Get(i);
@@ -215,7 +215,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 void SeqUISequencer::DrawSequencerRuler(float height)
 {
 	ImGuiContext *imContext = ImGui::GetCurrentContext();
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImDrawList *drawList = ImGui::GetWindowDrawList();
 	const ImGuiStyle style = ImGui::GetStyle();
 	ImGuiWindow *window = ImGui::GetCurrentWindow();
 	const ImGuiID id = window->GetID("ruler");
@@ -366,7 +366,7 @@ void SeqUISequencer::DrawChannels()
 
 void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 availableSize, ImVec2 contentSize, float height)
 {
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImDrawList *drawList = ImGui::GetWindowDrawList();
 
 	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + availableSize.x, cursor.y + height));
 
@@ -488,7 +488,7 @@ bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const
 
 void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered)
 {
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImDrawList *drawList = ImGui::GetWindowDrawList();
 	const ImVec2 tl = ImVec2(position.x, position.y);
 	const ImVec2 br = ImVec2(position.x + size.x, position.y + size.y);
 	ImGui::ItemSize(size);
