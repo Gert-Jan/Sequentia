@@ -9,6 +9,7 @@
 #include "SeqString.h"
 #include "SeqList.h"
 #include "SeqTime.h"
+#include "SeqWidgets.h"
 
 ImU32 SeqUISequencer::clipBackgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_MenuBarBg]);
 ImU32 SeqUISequencer::lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
@@ -116,29 +117,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 
 	// scene selector
 	ImGui::PushItemWidth(size.x - 4);
-	SeqString::Temp->Clean();
-	int selectedScene = 0;
-	SeqScene *otherScene = nullptr;
-	int textCursor = 0;
-	for (int i = 0; i < project->SceneCount(); i++)
-	{
-		otherScene = project->GetScene(i);
-		textCursor = SeqString::Temp->AppendAt(otherScene->name, textCursor);
-		textCursor++;
-		if (otherScene == scene)
-			selectedScene = i;
-	}
-	otherScene = Sequentia::GetPreviewScene();
-	SeqString::Temp->AppendAt(otherScene->name, textCursor);
-	if (otherScene == scene)
-		selectedScene = project->SceneCount();
-	if (ImGui::Combo("##sceneSelect", &selectedScene, SeqString::Temp->Buffer))
-	{
-		if (selectedScene == project->SceneCount())
-			scene = Sequentia::GetPreviewScene();
-		else
-			scene = project->GetScene(selectedScene);
-	}
+	SeqWidgets::SceneSelectCombo(&scene);
 	ImGui::PopItemWidth();
 
 	// draw settings panels

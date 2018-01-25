@@ -4,7 +4,7 @@
 #include "SeqAction.h"
 
 class SeqProject;
-class SeqPlayer;
+class SeqScene;
 class SeqLibrary;
 struct SeqMaterialInstance;
 class SeqSerializer;
@@ -31,7 +31,7 @@ private:
 private:
 	char *name;
 	SeqMaterialInstance *material;
-	SeqPlayer *player;
+	SeqScene *scene;
 	bool isSeeking;
 	int seekVideoTime;
 };

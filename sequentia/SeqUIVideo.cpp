@@ -12,6 +12,7 @@
 #include "SeqRenderer.h"
 #include "SeqPlayer.h"
 #include "SeqMaterialInstance.h"
+#include "SeqWidgets.h"
 
 extern "C"
 {
@@ -42,8 +43,8 @@ void SeqUIVideo::Init()
 	// start listening for project changes
 	project->AddActionHandler(this);
 	// prepare material
-	player = Sequentia::GetPreviewScene()->player;
-	material = player->AddViewer(0);
+	scene = Sequentia::GetPreviewScene();
+	material = scene->player->AddViewer(0);
 }
 
 SeqUIVideo::~SeqUIVideo()
@@ -54,7 +55,7 @@ SeqUIVideo::~SeqUIVideo()
 	// free memory
 	delete[] name;
 	// free material
-	player->RemoveViewer(0);
+	scene->player->RemoveViewer(0);
 }
 
 void SeqUIVideo::ActionDone(const SeqAction action)
@@ -143,6 +144,7 @@ void SeqUIVideo::Draw()
 		ImGui::PushItemWidth(-1);
 
 		// seeker scrollbar drawing and behavior
+		SeqPlayer *player = scene->player;
 		if (isSeeking && ImGui::IsMouseReleased(0))
 		{
 			printf("seek: %d\n", seekVideoTime);
@@ -185,6 +187,13 @@ void SeqUIVideo::Draw()
 		{
 			player->Stop();
 		}
+	}
+	ImGui::SameLine();
+	SeqScene *previousScene = scene;
+	if (SeqWidgets::SceneSelectCombo(&scene))
+	{
+		previousScene->player->RemoveViewer(0);
+		material = scene->player->AddViewer(0);
 	}
 	ImGui::End();
 

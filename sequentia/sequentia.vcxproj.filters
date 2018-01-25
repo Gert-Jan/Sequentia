@@ -93,6 +93,9 @@
     <ClCompile Include="SeqMaterialInstance.cpp">
       <Filter>sys\render</Filter>
     </ClCompile>
+    <ClCompile Include="SeqWidgets.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -218,6 +221,9 @@
     </ClInclude>
     <ClInclude Include="SeqMaterialInstance.h">
       <Filter>sys\render</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqWidgets.h">
+      <Filter>ui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
