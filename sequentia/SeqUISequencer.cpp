@@ -337,7 +337,7 @@ void SeqUISequencer::DrawChannels()
 		// draw play time line
 		ImDrawList *drawList = ImGui::GetWindowDrawList();
 		float secondWidth = pixelsPerSecond / zoom;
-		float x = origin.x + SEQ_TIME_IN_SECONDS((double)(scene->player->GetPlaybackTime() - position)) * secondWidth;
+		float x = origin.x + SEQ_TIME_IN_SECONDS((double)scene->player->GetPlaybackTime()) * secondWidth;
 		drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + size.y), lineColor);
 	}
 	ImGui::EndChild();
