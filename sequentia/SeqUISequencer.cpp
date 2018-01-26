@@ -233,7 +233,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 				const float newZoom = zoom + (newDragMouseDelta.y - imContext->DragLastMouseDelta.y) / (100.f / zoom);
 				zoom = ImClamp(newZoom, 0.0001f, 1000.f);
 				position = dragStartPosition - PixelsToTime(relativeMouseX);
-				if (position < 0)
+				if (position < 0 || width > TimeToPixels(scene->GetLength()))
 				{
 					position = 0;
 					dragStartPosition = position + PixelsToTime(relativeMouseX);
