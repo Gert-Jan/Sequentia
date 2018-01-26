@@ -18,7 +18,7 @@ SeqPlayer::SeqPlayer(SeqScene *scene):
 	isSeeking(false),
 	playTime(0)
 {
-	clipPlayers = new SeqList<SeqClipPlayer*>();
+	clipPlayers = new SeqList<SeqClipPlayer>();
 	viewers = new SeqList<int>();
 	renderTargets = new SeqList<SeqPlayerRenderTarget>();
 	lastMeasuredTime = SDL_GetTicks();
@@ -27,7 +27,11 @@ SeqPlayer::SeqPlayer(SeqScene *scene):
 SeqPlayer::~SeqPlayer()
 {
 	for (int i = 0; i < clipPlayers->Count(); i++)
-		clipPlayers->Get(i)->decoderTask->Stop();
+	{
+		SeqClipPlayer player = clipPlayers->Get(i);
+		player.decoderTask->Stop();
+		SeqRenderer::RemoveMaterialInstance(player.material);
+	}
 	delete clipPlayers;
 }
 
@@ -82,8 +86,8 @@ void SeqPlayer::RemoveViewer(int untilChannel)
 		}
 	}
 
-	// there is only one render target representing this viewer, remove it
-	if (similairCount == 0)
+	// there was only one render target representing this untilChannel, now there are none, remove the render targer
+	if (similairCount == 1)
 	{
 		for (int i = 0; i < renderTargets->Count(); i++)
 		{
@@ -95,6 +99,18 @@ void SeqPlayer::RemoveViewer(int untilChannel)
 				return;
 			}
 		}
+	}
+
+	// if there are no viewers left, remove all clipPlayers
+	if (renderTargets->Count() == 0)
+	{
+		for (int i = 0; i < clipPlayers->Count(); i++)
+		{
+			SeqClipPlayer clipPlayer = clipPlayers->Get(i);
+			clipPlayer.decoderTask->Stop();
+			SeqRenderer::RemoveMaterialInstance(clipPlayer.material);
+		}
+		clipPlayers->Clear();
 	}
 }
 
@@ -134,7 +150,7 @@ void SeqPlayer::Seek(int64_t time)
 	playTime = time;
 	// reset all seek waiting states so we can seek again.
 	for (int i = 0; i < clipPlayers->Count(); i++)
-		clipPlayers->Get(i)->isWaitingForSeek = false;
+		clipPlayers->GetPtr(i)->isWaitingForSeek = false;
 }
 
 bool SeqPlayer::IsActive()
@@ -226,9 +242,9 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				if (frame != clipPlayer->lastFrame)
 				{
 					if (clipPlayer->lastFrame == nullptr)
-						SeqRenderer::CreateVideoTextures(frame, clipPlayer->matrial->textureHandles);
+						SeqRenderer::CreateVideoTextures(frame, clipPlayer->material->textureHandles);
 					else
-						SeqRenderer::CreateVideoTextures(frame, clipPlayer->matrial->textureHandles);
+						SeqRenderer::CreateVideoTextures(frame, clipPlayer->material->textureHandles);
 					clipPlayer->lastFrame = frame;
 				}
 
@@ -247,11 +263,11 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 	// cleanup clip players that are outside of preload bounds
 	for (int i = 0; i < clipPlayers->Count(); i++)
 	{
-		SeqClipPlayer *clipPlayer = clipPlayers->Get(i);
-		if (!clipPlayer->clip->location.OverlapsTimeRange(leftTime, rightTime))
+		SeqClipPlayer clipPlayer = clipPlayers->Get(i);
+		if (!clipPlayer.clip->location.OverlapsTimeRange(leftTime, rightTime))
 		{
-			clipPlayer->decoderTask->Stop();
-			SeqRenderer::RemoveMaterialInstance(clipPlayer->matrial);
+			clipPlayer.decoderTask->Stop();
+			SeqRenderer::RemoveMaterialInstance(clipPlayer.material);
 			clipPlayers->RemoveAt(i);
 			i--;
 		}
@@ -260,6 +276,8 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 
 void SeqPlayer::Render()
 {
+	if (renderTargets->Count() == 0)
+		return;
 	SeqProject* project = Sequentia::GetProject();
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(project->width, project->height), ImGuiSetCond_Always);
@@ -302,7 +320,7 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 			SeqProject* project = Sequentia::GetProject();
 			if (player->lastFrame != nullptr)
 			{
-				drawList->AddImage(player->matrial, ImVec2(0, 0), ImVec2(project->width, project->height));
+				drawList->AddImage(player->material, ImVec2(0, 0), ImVec2(project->width, project->height));
 			}
 		}
 	}
@@ -314,18 +332,18 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 	// TODO: easy optimalisation if needed: use a hash table for clip/decoder pairs
 	for (int i = 0; i < clipPlayers->Count(); i++)
 	{
-		SeqClipPlayer *player = clipPlayers->Get(i);
+		SeqClipPlayer *player = clipPlayers->GetPtr(i);
 		if (player->clip == clip)
 			return player;
 	}
 	// could not find an existing decoder, create one
-	SeqClipPlayer *player = new SeqClipPlayer();
+	clipPlayers->Add(SeqClipPlayer());
+	SeqClipPlayer *player = clipPlayers->GetPtr(clipPlayers->Count() - 1);
 	player->clip = clip;
 	player->decoderTask = new SeqTaskDecodeVideo(clip->GetLink());
-	player->matrial = SeqRenderer::CreateVideoMaterialInstance();
+	player->material = SeqRenderer::CreateVideoMaterialInstance();
 	player->lastFrame = nullptr;
 	player->isWaitingForSeek = false;
 	SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
-	clipPlayers->Add(player);
 	return player;
 }

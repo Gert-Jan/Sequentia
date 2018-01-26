@@ -44,6 +44,7 @@ private:
 
 	static SeqList<SeqMaterialInstance*> *materialsImGui;
 	static SeqList<SeqMaterialInstance*> *materialsPlayer;
+	static SeqList<SeqMaterialInstance*> *deleteMaterials;
 	static SeqMaterial fontMaterial;
 	static SeqMaterial videoMaterial;
 	static SeqMaterial playerMaterial;

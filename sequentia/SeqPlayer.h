@@ -16,7 +16,7 @@ struct SeqClipPlayer
 {
 	SeqClip *clip;
 	SeqTaskDecodeVideo *decoderTask;	
-	SeqMaterialInstance *matrial;
+	SeqMaterialInstance *material;
 	AVFrame *lastFrame;
 	bool isWaitingForSeek;
 };
@@ -55,7 +55,7 @@ private:
 
 private:
 	SeqScene *scene;
-	SeqList<SeqClipPlayer*> *clipPlayers;
+	SeqList<SeqClipPlayer> *clipPlayers;
 	SeqList<int> *viewers;
 	SeqList<SeqPlayerRenderTarget> *renderTargets;
 	bool isPlaying;

@@ -19,6 +19,7 @@ int SeqRenderer::framebufferWidth = 1280;
 int SeqRenderer::framebufferHeight = 720;
 SeqList<SeqMaterialInstance*>* SeqRenderer::materialsImGui = new SeqList<SeqMaterialInstance*>();
 SeqList<SeqMaterialInstance*>* SeqRenderer::materialsPlayer = new SeqList<SeqMaterialInstance*>();
+SeqList<SeqMaterialInstance*>* SeqRenderer::deleteMaterials = new SeqList<SeqMaterialInstance*>();
 SeqMaterial SeqRenderer::fontMaterial = SeqMaterial(1);
 SeqMaterial SeqRenderer::videoMaterial = SeqMaterial(3);
 SeqMaterial SeqRenderer::playerMaterial = SeqMaterial(1);
@@ -273,6 +274,16 @@ void SeqRenderer::Render()
 	if (lastEnableScissorTest) glEnable(GL_SCISSOR_TEST); else glDisable(GL_SCISSOR_TEST);
 	glViewport(lastViewport[0], lastViewport[1], (GLsizei)lastViewport[2], (GLsizei)lastViewport[3]);
 	glScissor(lastScissorBox[0], lastScissorBox[1], (GLsizei)lastScissorBox[2], (GLsizei)lastScissorBox[3]);
+
+	// Often materials are removed while they are still used. After rendering one frame we should be safe to actually delete those materials.
+	while (deleteMaterials->Count() > 0)
+	{
+		const int index = deleteMaterials->Count() - 1;
+		SeqMaterialInstance *materialInstance = deleteMaterials->Get(index);
+		materialInstance->Dispose();
+		delete materialInstance;
+		deleteMaterials->RemoveAt(index);
+	}
 }
 
 void SeqRenderer::Shutdown()
@@ -284,8 +295,7 @@ void SeqRenderer::RemoveMaterialInstance(SeqMaterialInstance *materialInstance)
 {
 	materialsImGui->Remove(materialInstance);
 	materialsPlayer->Remove(materialInstance);
-	materialInstance->Dispose();
-	delete materialInstance;
+	deleteMaterials->Add(materialInstance);
 }
 
 SeqMaterialInstance* SeqRenderer::CreateVideoMaterialInstance()
