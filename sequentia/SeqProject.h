@@ -39,6 +39,7 @@ public:
 	int SceneCount();
 	SeqScene* GetScene(const int index);
 	SeqScene* GetSceneById(const int id);
+	SeqScene* GetPreviewScene();
 
 	SeqClipProxy* NextClipProxy();
 	void DeactivateAllClipProxies();

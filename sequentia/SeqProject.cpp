@@ -30,6 +30,12 @@ SeqProject::SeqProject():
 
 	actionHandlers = new SeqList<SeqActionHandler*>();
 	actions = new SeqList<SeqAction>();
+
+	// Setup preview scene
+	SeqScene *previewScene = new SeqScene(0, "preview");
+	previewScene->AddChannel(SeqChannelType::Video, "video");
+	previewScene->AddChannel(SeqChannelType::Audio, "audio");
+	scenes->Add(previewScene);
 }
 
 SeqProject::~SeqProject()
@@ -182,6 +188,11 @@ SeqScene* SeqProject::GetSceneById(const int id)
 	return nullptr;
 }
 
+SeqScene* SeqProject::GetPreviewScene()
+{
+	return scenes->Get(0);
+}
+
 SeqClipProxy* SeqProject::NextClipProxy()
 {
 	// reuse proxy
@@ -212,7 +223,7 @@ int SeqProject::NextWindowId()
 
 void SeqProject::AddWindowSequencer()
 {
-	windows->Add(new SeqUISequencer(scenes->Get(0)));
+	windows->Add(new SeqUISequencer(scenes->Get(1)));
 }
 
 void SeqProject::AddWindowLibrary()

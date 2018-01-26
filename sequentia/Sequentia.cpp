@@ -14,7 +14,6 @@ SeqDragMode Sequentia::DragMode = SeqDragMode::None;
 bool Sequentia::done = false;
 SDL_Window* Sequentia::window = nullptr;
 SeqProject* Sequentia::project = nullptr;
-SeqScene* Sequentia::previewScene = nullptr;
 bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
@@ -46,11 +45,6 @@ int Sequentia::Run(const char *openProject)
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	InitImGui();
 	SeqRenderer::InitGL();
-
-	// Setup preview scene
-	previewScene = new SeqScene(0, "preview");
-	previewScene->AddChannel(SeqChannelType::Video, "video");
-	previewScene->AddChannel(SeqChannelType::Audio, "audio");
 
 	// Setup initial project
 	if (openProject != nullptr)
@@ -89,8 +83,6 @@ int Sequentia::Run(const char *openProject)
 		HandleShortcuts();
 		HandleMainMenuBar();
 		SeqWorkerManager::Instance()->Update();
-		previewScene->player->Update();
-		previewScene->player->Render();
 		project->Update();
 		project->Draw();
 		HandleDragging();
@@ -385,13 +377,9 @@ void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 	}
 }
 
-SeqScene* Sequentia::GetPreviewScene()
-{
-	return previewScene;
-}
-
 void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 {
+	SeqScene *previewScene = project->GetPreviewScene();
 	if (previewScene->GetChannel(0)->ClipCount() == 0 ||
 		previewScene->GetChannel(0)->GetClip(0)->GetLink() != link)
 	{

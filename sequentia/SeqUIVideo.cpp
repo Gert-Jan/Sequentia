@@ -43,7 +43,7 @@ void SeqUIVideo::Init()
 	// start listening for project changes
 	project->AddActionHandler(this);
 	// prepare material
-	scene = Sequentia::GetPreviewScene();
+	scene = project->GetPreviewScene();
 	material = scene->player->AddViewer(0);
 }
 

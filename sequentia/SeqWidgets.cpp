@@ -19,16 +19,9 @@ bool SeqWidgets::SceneSelectCombo(SeqScene **currentScene)
 		if (*currentScene == scene)
 			selectedScene = i;
 	}
-	scene = Sequentia::GetPreviewScene();
-	SeqString::Temp->AppendAt(scene->name, textCursor);
-	if (*currentScene == scene)
-		selectedScene = project->SceneCount();
 	if (ImGui::Combo("##sceneSelect", &selectedScene, SeqString::Temp->Buffer))
 	{
-		if (selectedScene == project->SceneCount())
-			*currentScene = Sequentia::GetPreviewScene();
-		else
-			*currentScene = project->GetScene(selectedScene);
+		*currentScene = project->GetScene(selectedScene);
 		// currentScene changed
 		return true;
 	}
