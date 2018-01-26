@@ -257,22 +257,15 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	drawList->AddLine(ImVec2(origin.x, origin.y + height - 2), ImVec2(origin.x + width, origin.y + height - 2), lineColor, thickness);
 
 	// seconds lines
-	int seconds = SEQ_TIME_FLOOR_IN_SECONDS(position);
-	float firstOffset = -TimeToPixels(position - SEQ_TIME_FLOOR(position));
-	float secondWidth = pixelsPerSecond / zoom;
+	float secondWidth = pixelsPerSecond / zoom; // width of a second in pixels
+	int seconds = SEQ_TIME_FLOOR_IN_SECONDS(position); // first full second left of the view position
 	int secondStep = (int)ceil(80.f / secondWidth); // calc min second step so steps won't be too small for time labels
-
-	if (secondStep > 1 && secondStep % 2 != 0) // only have even numbered or single steps
-	{
+	if (secondStep > 1 && secondStep % 2 != 0) // only have even numbered or single second steps
 		secondStep += 1;
-	}
-	if (seconds % 2 != 0) // start time should also be even
-	{
-		seconds -= 1;
-		firstOffset -= secondWidth;
-	}
-	secondWidth *= secondStep;
-	for (float x = origin.x + firstOffset; x < origin.x + width; x += secondWidth)
+	seconds = seconds - (seconds % secondStep); // start only at full secondStep intervals, not in-between
+	float firstOffset = -TimeToPixels(position % (secondStep * 1000000));
+	float step = secondStep * secondWidth;
+	for (float x = origin.x + firstOffset; x < origin.x + width; x += step)
 	{
 		drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + height - 1), lineColor, thickness);
 		ImGui::SetCursorScreenPos(ImVec2(x + style.FramePadding.x, origin.y));
@@ -291,6 +284,7 @@ void SeqUISequencer::DrawSequencerRuler(float height)
 	float x = origin.x + SEQ_TIME_IN_SECONDS((double)(scene->player->GetPlaybackTime() - position)) * secondWidth;
 	drawList->AddRectFilled(ImVec2(x - 2, origin.y), ImVec2(x + 3, origin.y + height), lineColor);
 
+	// stop drawing the ruler
 	ImGui::PopClipRect();
 
 	// setup the position for channel drawing
