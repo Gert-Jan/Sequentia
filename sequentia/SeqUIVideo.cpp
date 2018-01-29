@@ -13,6 +13,7 @@
 #include "SeqPlayer.h"
 #include "SeqMaterialInstance.h"
 #include "SeqWidgets.h"
+#include "SeqSerializer.h"
 
 extern "C"
 {
@@ -203,10 +204,11 @@ void SeqUIVideo::Draw()
 
 void SeqUIVideo::Serialize(SeqSerializer *serializer)
 {
-
+	serializer->Write(scene->id);
 }
 
 void SeqUIVideo::Deserialize(SeqSerializer *serializer)
 {
-
+	int sceneId = serializer->ReadInt();
+	scene = Sequentia::GetProject()->GetSceneById(sceneId);
 }

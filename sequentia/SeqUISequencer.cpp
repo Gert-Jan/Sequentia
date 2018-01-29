@@ -496,6 +496,7 @@ float SeqUISequencer::TimeToPixels(int64_t time)
 
 void SeqUISequencer::Serialize(SeqSerializer *serializer)
 {
+	serializer->Write(scene->id);
 	serializer->Write(position);
 	serializer->Write(zoom);
 	serializer->Write(scroll.y);
@@ -507,6 +508,8 @@ void SeqUISequencer::Serialize(SeqSerializer *serializer)
 
 void SeqUISequencer::Deserialize(SeqSerializer *serializer)
 {
+	int sceneId = serializer->ReadInt();
+	scene = Sequentia::GetProject()->GetSceneById(sceneId);
 	position = serializer->ReadDouble();
 	zoom = serializer->ReadFloat();
 	scroll.y = serializer->ReadFloat();
