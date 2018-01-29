@@ -30,12 +30,6 @@ SeqProject::SeqProject():
 
 	actionHandlers = new SeqList<SeqActionHandler*>();
 	actions = new SeqList<SeqAction>();
-
-	// Setup preview scene
-	SeqScene *previewScene = new SeqScene(0, "preview");
-	previewScene->AddChannel(SeqChannelType::Video, "video");
-	previewScene->AddChannel(SeqChannelType::Audio, "audio");
-	scenes->Add(previewScene);
 }
 
 SeqProject::~SeqProject()
@@ -72,6 +66,36 @@ void SeqProject::Clear()
 	library->Clear();
 
 	nextWindowId = 0;
+	nextSceneId = 0;
+}
+
+void SeqProject::CreateDefault()
+{
+	// preview scene
+	SeqScene *previewScene = CreateScene("preview");
+	previewScene->AddChannel(SeqChannelType::Video, "video");
+	previewScene->AddChannel(SeqChannelType::Audio, "audio");
+	AddScene(previewScene);
+
+	// master scene
+	SeqScene *masterScene = CreateScene("master");
+	for (int i = 0; i < 5; i++)
+	{
+		masterScene->AddChannel(SeqChannelType::Video, "Video");
+		masterScene->AddChannel(SeqChannelType::Audio, "Audio");
+	}
+	AddScene(masterScene);
+
+	// windows
+	AddWindowSequencer();
+	AddWindowLibrary();
+	AddWindowVideo();
+}
+
+void SeqProject::New()
+{
+	Clear();
+	CreateDefault();
 }
 
 void SeqProject::Open()

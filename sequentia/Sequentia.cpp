@@ -47,26 +47,15 @@ int Sequentia::Run(const char *openProject)
 	SeqRenderer::InitGL();
 
 	// Setup initial project
+	project = new SeqProject();
 	if (openProject != nullptr)
 	{
-		project = new SeqProject();
 		project->SetPath(openProject);
 		project->Open();
 	}
 	else
 	{
-		// test data
-		project = new SeqProject();
-		SeqScene *scene = project->CreateScene("master");
-		project->AddScene(scene);
-		for (int i = 0; i < 5; i++)
-		{
-			project->AddAction(SeqActionFactory::AddChannel(scene, SeqChannelType::Video, "Video"));
-			project->AddAction(SeqActionFactory::AddChannel(scene, SeqChannelType::Audio, "Audio"));
-		}
-		project->AddWindowSequencer();
-		project->AddWindowLibrary();
-		project->AddWindowVideo();
+		project->New();
 	}
 
 	// Start looping
@@ -253,7 +242,7 @@ void Sequentia::HandleShortcuts()
 	ImGuiIO& io = ImGui::GetIO();
 	if (io.KeyCtrl)
 	{
-		if (ImGui::IsKeyPressed(SDLK_n, false)) { project->Clear(); }
+		if (ImGui::IsKeyPressed(SDLK_n, false)) { project->New(); }
 		if (ImGui::IsKeyPressed(SDLK_o, false)) { project->OpenFrom(); }
 		if (ImGui::IsKeyPressed(SDLK_s, false)) { project->Save(); }
 		if (ImGui::IsKeyPressed(SDLK_z, false)) { project->Undo(); }
@@ -267,7 +256,7 @@ void Sequentia::HandleMainMenuBar()
 	{
 		if (ImGui::BeginMenu("Project"))
 		{
-			if (ImGui::MenuItem("New", "Ctrl+N")) { project->Clear(); }
+			if (ImGui::MenuItem("New", "Ctrl+N")) { project->New(); }
 			if (ImGui::MenuItem("Open", "Ctrl+O")) { project->OpenFrom(); }
 			ImGui::Separator();
 			if (ImGui::MenuItem("Save", "Ctrl+S")) { project->Save(); }

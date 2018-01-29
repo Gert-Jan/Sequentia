@@ -22,7 +22,7 @@ public:
 	SeqProject();
 	~SeqProject();
 
-	void Clear();
+	void New();
 	void Open();
 	void OpenFrom();
 	void Save();
@@ -64,6 +64,9 @@ public:
 	void RemoveActionHandler(SeqActionHandler *handler);
 
 private:
+	void Clear();
+	void CreateDefault();
+
 	int NextSceneId();
 
 	void DoAction(const SeqAction action);
