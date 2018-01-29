@@ -2,7 +2,6 @@
 #include "SeqList.h"
 #include "SeqString.h"
 #include <SDL.h>
-#include <dirent.h>
 #include <direct.h>
 #include <errno.h>
 

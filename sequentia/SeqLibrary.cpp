@@ -1,4 +1,3 @@
-#include <dirent.h>
 #include <SDL.h>
 #include "SeqLibrary.h"
 #include "SeqList.h"
