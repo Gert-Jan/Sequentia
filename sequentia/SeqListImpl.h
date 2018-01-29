@@ -99,7 +99,11 @@ void SeqList<T>::EnsureCapacity(const int requiredCapacity)
 		int newCapacity = capacity * 2;
 		while (requiredCapacity > newCapacity)
 			newCapacity = newCapacity * 2;
-		realloc(data, newCapacity * sizeof(T));
+		T* newData = new T[newCapacity];
+		T* deleteData = data;
+		memcpy(newData, data, sizeof(T) * count);
+		data = newData;
+		delete[] deleteData;
 		capacity = newCapacity;
 	}
 }
