@@ -360,6 +360,11 @@ AVFrame* SeqDecoder::NextFrame()
 	return frameBuffer[displayFrameCursor];
 }
 
+bool SeqDecoder::IsValidFrame(AVFrame *frame)
+{
+	return frame->pts >= 0;
+}
+
 void SeqDecoder::FillPacketBuffer()
 {
 	int ret = 0;

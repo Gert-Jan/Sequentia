@@ -239,12 +239,12 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				
 				// move the frame to the GPU if the decoder is ready
 				AVFrame *frame = decoder->NextFrame(requestTime);
-				if (frame != clipPlayer->lastFrame)
+				if (SeqDecoder::IsValidFrame(frame) && frame != clipPlayer->lastFrame)
 				{
 					if (clipPlayer->lastFrame == nullptr)
 						SeqRenderer::CreateVideoTextures(frame, clipPlayer->material->textureHandles);
 					else
-						SeqRenderer::CreateVideoTextures(frame, clipPlayer->material->textureHandles);
+						SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->material->textureHandles);
 					clipPlayer->lastFrame = frame;
 				}
 

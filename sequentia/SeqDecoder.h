@@ -42,6 +42,7 @@ public:
 	void Seek(int64_t time);
 	AVFrame* NextFrame(int64_t);
 	AVFrame* NextFrame();
+	static bool IsValidFrame(AVFrame *frame);
 
 private:
 	void FillPacketBuffer();
