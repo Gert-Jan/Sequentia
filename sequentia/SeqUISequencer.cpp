@@ -16,13 +16,15 @@ ImU32 SeqUISequencer::lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle
 ImU32 SeqUISequencer::backgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_ComboBg]);
 
 SeqUISequencer::SeqUISequencer(SeqScene *scene):
-	scene(scene)
+	scene(scene),
+	sceneSettings(nullptr)
 {
 	Init();
 }
 
 SeqUISequencer::SeqUISequencer(SeqScene *scene, SeqSerializer *serializer):
-	scene(scene)
+	scene(scene),
+	sceneSettings(nullptr)
 {
 	Init();
 	Deserialize(serializer);
@@ -32,13 +34,25 @@ SeqUISequencer::SeqUISequencer(SeqScene *scene, SeqSerializer *serializer):
 
 void SeqUISequencer::Init()
 {
-	// alloc memory
 	SeqProject *project = Sequentia::GetProject();
+	// name
 	SeqString::Temp->Format("Sequencer##%d", project->NextWindowId());
 	name = SeqString::Temp->Copy();
-	channelHeights = new SeqList<int>();
-	for (int i = 0; i < scene->ChannelCount(); i++)
-		channelHeights->Add(initialChannelHeight);
+	// scene settingss
+	sceneUISettings = new SeqList<SeqSceneUISettings>();
+	for (int i = 0; i < project->SceneCount(); i++)
+	{
+		SeqScene *scene = project->GetScene(i);
+		sceneUISettings->Add(SeqSceneUISettings());
+		SeqSceneUISettings *settings = sceneUISettings->GetPtr(sceneUISettings->Count() - 1);
+		settings->scene = scene;
+		settings->channelHeights = new SeqList<int>();
+		for (int j = 0; j < scene->ChannelCount(); j++)
+		{
+			settings->channelHeights->Add(initialChannelHeight);
+		}
+	}
+	sceneSettings = GetSceneUISettings(scene);
 	// start listening for project changes
 	project->AddActionHandler(this);
 }
@@ -50,7 +64,11 @@ SeqUISequencer::~SeqUISequencer()
 	project->RemoveActionHandler(this);
 	// free memory
 	delete[] name;
-	delete channelHeights; 
+	for (int i = 0; i < sceneUISettings->Count(); i++)
+	{
+		delete sceneUISettings->GetPtr(i)->channelHeights;
+	}
+	delete sceneUISettings;
 }
 
 void SeqUISequencer::ActionDone(const SeqAction action)
@@ -58,7 +76,11 @@ void SeqUISequencer::ActionDone(const SeqAction action)
 	switch (action.type)
 	{
 		case SeqActionType::AddChannel:
-			channelHeights->Add(initialChannelHeight);
+			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
+			SeqProject *project = Sequentia::GetProject();
+			SeqScene *scene = project->GetSceneById(data->sceneId);
+			SeqSceneUISettings *settings = GetSceneUISettings(scene);
+			settings->channelHeights->Add(initialChannelHeight);
 			break;
 	}
 }
@@ -68,7 +90,11 @@ void SeqUISequencer::ActionUndone(const SeqAction action)
 	switch (action.type)
 	{
 		case SeqActionType::AddChannel:
-			channelHeights->RemoveAt(channelHeights->Count() - 1);
+			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
+			SeqProject *project = Sequentia::GetProject();
+			SeqScene *scene = project->GetSceneById(data->sceneId);
+			SeqSceneUISettings *settings = GetSceneUISettings(scene);
+			settings->channelHeights->RemoveAt(settings->channelHeights->Count() - 1);
 			break;
 	}
 }
@@ -117,7 +143,10 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 
 	// scene selector
 	ImGui::PushItemWidth(size.x - 4);
-	SeqWidgets::SceneSelectCombo(&scene);
+	if (SeqWidgets::SceneSelectCombo(&scene))
+	{
+		sceneSettings = GetSceneUISettings(scene);
+	}
 	ImGui::PopItemWidth();
 
 	// draw settings panels
@@ -127,7 +156,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 
 	for (int i = 0; i < scene->ChannelCount(); i++)
 	{
-		int channelHeight = channelHeights->Get(i);
+		int channelHeight = sceneSettings->channelHeights->Get(i);
 		// only draw if visible
 		if (cursor.y - origin.y + channelHeight >= scroll.y &&
 			cursor.y - origin.y < scroll.y + size.y)
@@ -146,7 +175,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 	ImGuiContext *g = ImGui::GetCurrentContext();
 	for (int i = 0; i < scene->ChannelCount(); i++)
 	{
-		int channelHeight = channelHeights->Get(i);
+		int channelHeight = sceneSettings->channelHeights->Get(i);
 		cursor.y += channelHeight;
 		// if visible
 		if (cursor.y - origin.y >= scroll.y && 
@@ -171,7 +200,7 @@ void SeqUISequencer::DrawChannelSettings(float rulerHeight, bool isWindowNew)
 					g->ActiveIdClickOffset.y -= 4;   // Store from center of row line (we used a 8 high rect for row clicking)
 
 				float newHeight = ImClamp(g->IO.MousePos.y - (cursor.y - channelHeight - scroll.y) - g->ActiveIdClickOffset.y, minChannelHeight, maxChannelHeight);
-				channelHeights->Set(i, (int)newHeight);
+				sceneSettings->channelHeights->Set(i, (int)newHeight);
 			}
 		}
 		cursor.y += channelVerticalSpacing;
@@ -314,7 +343,7 @@ void SeqUISequencer::DrawChannels()
 		ImVec2 cursor = origin;
 		for (int i = 0; i < scene->ChannelCount(); i++)
 		{
-			int channelHeight = channelHeights->Get(i);
+			int channelHeight = sceneSettings->channelHeights->Get(i);
 			// only draw if visible
 			if (cursor.y - origin.y + channelHeight >= scroll.y && 
 				cursor.y - origin.y < scroll.y + size.y)
@@ -474,11 +503,22 @@ void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2
 	ImGui::Text("%s", clip->GetLabel());
 }
 
+SeqSceneUISettings* SeqUISequencer::GetSceneUISettings(SeqScene *scene)
+{
+	for (int i = 0; i < sceneUISettings->Count(); i++)
+	{
+		SeqSceneUISettings* settings = sceneUISettings->GetPtr(i);
+		if (settings->scene == scene)
+			return settings;
+	}
+	return nullptr;
+}
+
 int SeqUISequencer::TotalChannelHeight()
 {
 	int totalHeight = 0;
-	for (int i = 0; i < channelHeights->Count(); i++)
-		totalHeight += channelHeights->Get(i) + channelVerticalSpacing;
+	for (int i = 0; i < sceneSettings->channelHeights->Count(); i++)
+		totalHeight += sceneSettings->channelHeights->Get(i) + channelVerticalSpacing;
 	// remove spacing on the bottom most channel
 	totalHeight -= channelVerticalSpacing;
 	return totalHeight;
@@ -501,20 +541,36 @@ void SeqUISequencer::Serialize(SeqSerializer *serializer)
 	serializer->Write(zoom);
 	serializer->Write(scroll.y);
 	serializer->Write(settingsPanelWidth);
-	serializer->Write(channelHeights->Count());
-	for (int i = 0; i < channelHeights->Count(); i++)
-		serializer->Write(channelHeights->Get(i));
+	serializer->Write(sceneUISettings->Count());
+	for (int i = 0; i < sceneUISettings->Count(); i++)
+	{
+		SeqSceneUISettings *settings = sceneUISettings->GetPtr(i);
+		serializer->Write(settings->scene->id);
+		serializer->Write(settings->channelHeights->Count());
+		for (int j = 0; j < settings->channelHeights->Count(); j++)
+			serializer->Write(settings->channelHeights->Get(j));
+	}
 }
 
 void SeqUISequencer::Deserialize(SeqSerializer *serializer)
 {
+	SeqProject *project = Sequentia::GetProject();
 	int sceneId = serializer->ReadInt();
-	scene = Sequentia::GetProject()->GetSceneById(sceneId);
+	scene = project->GetSceneById(sceneId);
 	position = serializer->ReadDouble();
 	zoom = serializer->ReadFloat();
 	scroll.y = serializer->ReadFloat();
 	settingsPanelWidth = serializer->ReadFloat();
 	int channelSettingsCount = serializer->ReadInt();
 	for (int i = 0; i < channelSettingsCount; i++)
-		channelHeights->ReplaceAt(serializer->ReadInt(), i);
+	{
+		int sceneId = serializer->ReadInt();
+		SeqScene *scene = project->GetSceneById(sceneId);
+		SeqSceneUISettings *settings = GetSceneUISettings(scene);
+		int channelHeightCount = serializer->ReadInt();
+		for (int j = 0; j < channelHeightCount; j++)
+		{
+			settings->channelHeights->ReplaceAt(serializer->ReadInt(), j);
+		}
+	}
 }

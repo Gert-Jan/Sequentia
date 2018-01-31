@@ -10,6 +10,12 @@ class SeqSerializer;
 template<class T>
 class SeqList;
 
+struct SeqSceneUISettings
+{
+	SeqScene *scene;
+	SeqList<int> *channelHeights;
+};
+
 class SeqUISequencer : public SeqWindow, SeqActionHandler
 {
 public:
@@ -31,6 +37,7 @@ private:
 	void DrawChannels();
 	void DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 availableSize, ImVec2 contentSize, float height);
 	bool ClipInteraction(SeqClip *clip, const ImVec2 position, const ImVec2 size, bool *isHovered);
+	SeqSceneUISettings* GetSceneUISettings(SeqScene *scene);
 	int TotalChannelHeight();
 	int64_t PixelsToTime(float pixels);
 	float TimeToPixels(int64_t time);
@@ -52,7 +59,8 @@ private:
 	const float rounding = 6.0f;
 	char *name;
 	SeqScene *scene;
-	SeqList<int> *channelHeights;
+	SeqSceneUISettings *sceneSettings;
+	SeqList<SeqSceneUISettings> *sceneUISettings;
 	int64_t position;
 	float zoom = 1;
 	bool overrideScrollX = true;
