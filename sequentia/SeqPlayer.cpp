@@ -179,6 +179,11 @@ void SeqPlayer::Update()
 	if (canPlay)
 	{
 		playTime += SEQ_TIME_FROM_MILLISECONDS(measuredTime - lastMeasuredTime);
+		if (playTime >= scene->GetLength())
+		{
+			isPlaying = false;
+			playTime = scene->GetLength();
+		}
 	}
 	lastMeasuredTime = measuredTime;
 }
