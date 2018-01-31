@@ -28,6 +28,7 @@ SeqUISequencer::SeqUISequencer(SeqScene *scene, SeqSerializer *serializer):
 {
 	Init();
 	Deserialize(serializer);
+	sceneSettings = GetSceneUISettings(this->scene);
 	scroll.x = TimeToPixels(position);
 	overrideScrollX = true;
 }
