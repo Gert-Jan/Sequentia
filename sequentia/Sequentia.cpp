@@ -382,16 +382,16 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 			{
 				int index = channel->ClipCount() - 1;
 				SeqClip *clip = channel->GetClip(index);
-				channel->RemoveClipAt(index);
-				delete clip;
+				project->DoAndForgetAction(SeqActionFactory::RemoveClipFromChannel(clip));
 			}
 		}
 		// build up a previewScene
 		if (link->metaDataLoaded && previewScene->player->IsActive())
 		{
-			SeqClip *clip = new SeqClip(link);
-			previewScene->GetChannel(0)->AddClip(clip);
-			previewScene->RefreshLastClip();
+			SetDragClipNew(link);
+			dragClipProxy->SetParent(previewScene->GetChannel(0));
+			dragClipProxy->location.leftTime = 0;
+			project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
 		}
 		// play
 		previewScene->player->Play();

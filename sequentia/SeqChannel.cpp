@@ -117,6 +117,15 @@ SeqClip* SeqChannel::GetClipAt(int64_t time)
 	return nullptr;
 }
 
+SeqClip* SeqChannel::GetClipByActionId(const int id)
+{
+	const int index = GetClipIndexByActionId(id);
+	if (index > -1)
+		return GetClip(index);
+	else
+		return nullptr;
+}
+
 int SeqChannel::GetClipIndexByActionId(const int id)
 {
 	for (int i = 0; i < clips->Count(); i++)

@@ -342,15 +342,24 @@ void SeqProject::RemoveActionHandler(SeqActionHandler *handler)
 	actionHandlers->Remove(handler);
 }
 
+void SeqProject::DoAndForgetAction(const SeqAction action)
+{
+	// do action
+	DoAction(action);
+	// forget action
+	delete action.data;
+}
+
 void SeqProject::DoAction(const SeqAction action)
 {
-	// do the action
-	ExecuteAction(action, action.execution);
+	SeqActionExecution execution = action.execution;
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
 		actionHandlers->Get(i)->ActionDone(action);
 	}
+	// do the action
+	ExecuteAction(action, execution);
 }
 
 void SeqProject::UndoAction(const SeqAction action)
@@ -361,13 +370,13 @@ void SeqProject::UndoAction(const SeqAction action)
 		execution = SeqActionExecution::Undo;
 	else
 		execution = SeqActionExecution::Do;
-	// do the action
-	ExecuteAction(action, execution);
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
-		actionHandlers->Get(i)->ActionUndone(action);
+		actionHandlers->Get(i)->ActionDone(action);
 	}
+	// do the action
+	ExecuteAction(action, execution);
 }
 
 void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution execution)

@@ -34,6 +34,7 @@ public:
 	int ClipCount();
 	SeqClip* GetClip(const int index);
 	SeqClip* GetClipAt(int64_t time);
+	SeqClip* GetClipByActionId(const int id);
 	int GetClipIndexByActionId(const int id);
 
 	void AddClipProxy(SeqClipProxy *proxy);

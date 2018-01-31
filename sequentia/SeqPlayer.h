@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL_config.h"
+#include "SeqAction.h"
 
 class SeqScene;
 class SeqClip;
@@ -27,7 +28,7 @@ struct SeqPlayerRenderTarget
 	SeqMaterialInstance *target;
 };
 
-class SeqPlayer
+class SeqPlayer : public SeqActionHandler
 {
 public:
 	SeqPlayer(SeqScene *scene);
@@ -48,8 +49,13 @@ public:
 	void Update();
 	void Render();
 
+	void ActionDone(const SeqAction action);
+	void ActionUndone(const SeqAction action);
+
 private:
 	SeqClipPlayer* GetClipPlayerFor(SeqClip *clip);
+	int GetClipPlayerIndexFor(SeqClip *clip);
+	void DisposeClipPlayerAt(const int index);
 	void UpdateClipPlayers(bool *canPlay);
 	void Render(const int fromChannelIndex, const int toChannelIndex);
 

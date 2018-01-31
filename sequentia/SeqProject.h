@@ -60,6 +60,7 @@ public:
 	bool CanRedo();
 
 	void AddAction(const SeqAction action);
+	void DoAndForgetAction(const SeqAction action);
 	void AddActionHandler(SeqActionHandler *handler);
 	void RemoveActionHandler(SeqActionHandler *handler);
 
