@@ -19,6 +19,7 @@ struct SeqClipPlayer
 	SeqTaskDecodeVideo *decoderTask;	
 	SeqMaterialInstance *material;
 	AVFrame *lastFrame;
+	int maxLineSize;
 	bool isWaitingForSeek;
 };
 

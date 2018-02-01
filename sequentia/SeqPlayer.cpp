@@ -247,10 +247,17 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				AVFrame *frame = decoder->NextFrame(requestTime);
 				if (SeqDecoder::IsValidFrame(frame) && frame != clipPlayer->lastFrame)
 				{
-					if (clipPlayer->lastFrame == nullptr)
+					if (clipPlayer->lastFrame == nullptr ||
+						frame->linesize[0] > clipPlayer->maxLineSize)
+					{
+						clipPlayer->maxLineSize = frame->linesize[0];
 						SeqRenderer::CreateVideoTextures(frame, clipPlayer->material->textureHandles);
+					}
 					else
+					{
 						SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->material->textureHandles);
+					}
+
 					clipPlayer->lastFrame = frame;
 				}
 
@@ -325,7 +332,9 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 			SeqProject* project = Sequentia::GetProject();
 			if (player->lastFrame != nullptr)
 			{
-				drawList->AddImage(player->material, ImVec2(0, 0), ImVec2(project->width, project->height));
+				drawList->AddImage(player->material, 
+					ImVec2(0, 0), ImVec2(project->width, project->height), 
+					ImVec2(0, 0), ImVec2((float)player->lastFrame->width / (float)player->maxLineSize, 1));
 			}
 		}
 	}
@@ -378,6 +387,7 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 		player->decoderTask = new SeqTaskDecodeVideo(clip->GetLink());
 		player->material = SeqRenderer::CreateVideoMaterialInstance();
 		player->lastFrame = nullptr;
+		player->maxLineSize = 0;
 		player->isWaitingForSeek = false;
 		SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
 		return player;

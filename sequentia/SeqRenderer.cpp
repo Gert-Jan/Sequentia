@@ -375,19 +375,19 @@ void SeqRenderer::CreateVideoTextures(AVFrame* frame, GLuint texId[3])
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width, frame->height, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->linesize[0], frame->height, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
 
 	glBindTexture(GL_TEXTURE_2D, texId[1]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->linesize[1], frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
 
 	glBindTexture(GL_TEXTURE_2D, texId[2]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->width / 2, frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, frame->linesize[2], frame->height / 2, 0, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
 
 	// Restore state
 	glBindTexture(GL_TEXTURE_2D, lastTexture);
@@ -401,11 +401,11 @@ void SeqRenderer::OverwriteVideoTextures(AVFrame* frame, GLuint texId[3])
 
 	// Overwrite textures
 	glBindTexture(GL_TEXTURE_2D, texId[0]);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width, frame->height, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->linesize[0], frame->height, GL_RED, GL_UNSIGNED_BYTE, frame->data[0]);
 	glBindTexture(GL_TEXTURE_2D, texId[1]);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width / 2, frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->linesize[1], frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[1]);
 	glBindTexture(GL_TEXTURE_2D, texId[2]);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->width / 2, frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame->linesize[2], frame->height / 2, GL_RED, GL_UNSIGNED_BYTE, frame->data[2]);
 
 	// Restore state
 	glBindTexture(GL_TEXTURE_2D, lastTexture);
