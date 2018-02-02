@@ -1,5 +1,6 @@
 #include "SeqVideoInfo.h"
 #include "SeqString.h"
+#include "SeqTime.h"
 
 SeqVideoInfo::SeqVideoInfo() :
 	formatContext(nullptr),
@@ -8,7 +9,8 @@ SeqVideoInfo::SeqVideoInfo() :
 	videoStreamIndex(-1),
 	audioStreamIndex(-1),
 	videoFrameCount(0),
-	audioFrameCount(0)
+	audioFrameCount(0),
+	timeBase(1)
 {
 }
 
@@ -17,6 +19,16 @@ SeqVideoInfo::~SeqVideoInfo()
 	avcodec_free_context(&videoCodec);
 	avcodec_free_context(&audioCodec);
 	avformat_close_input(&formatContext);
+}
+
+int64_t SeqVideoInfo::ToStreamTime(int64_t time)
+{
+	return time / (SEQ_TIME_BASE * timeBase);
+}
+
+int64_t SeqVideoInfo::FromStreamTime(int64_t streamTime)
+{
+	return streamTime * (SEQ_TIME_BASE * timeBase);
 }
 
 void SeqVideoInfo::GetTimeString(char *buffer, int bufferLen, int64_t time)

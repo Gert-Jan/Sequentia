@@ -14,6 +14,7 @@
 #include "SeqMaterialInstance.h"
 #include "SeqWidgets.h"
 #include "SeqSerializer.h"
+#include "SeqTime.h"
 
 extern "C"
 {
@@ -149,11 +150,11 @@ void SeqUIVideo::Draw()
 		if (isSeeking && ImGui::IsMouseReleased(0))
 		{
 			printf("seek: %d\n", seekVideoTime);
-			player->Seek(seekVideoTime);
+			player->Seek(SEQ_TIME_FROM_MILLISECONDS(seekVideoTime));
 			isSeeking = false;
 		}
-		seekVideoTime = player->GetPlaybackTime();
-		if (ImGui::SliderInt("##seek", &seekVideoTime, 0, (int)(player->GetDuration()), ""))
+		seekVideoTime = SEQ_TIME_IN_MILLISECONDS(player->GetPlaybackTime());
+		if (ImGui::SliderInt("##seek", &seekVideoTime, 0, SEQ_TIME_IN_MILLISECONDS(player->GetDuration()), ""))
 		{
 			isSeeking = true;
 		}

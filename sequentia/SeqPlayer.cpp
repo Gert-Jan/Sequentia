@@ -221,10 +221,10 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 					continue;
 				}
 				// make sure the decoder is playing the right part of the video
-				int64_t requestTime = SEQ_TIME_IN_MILLISECONDS(clip->location.startTime + (playTime - clip->location.leftTime));
+				int64_t requestTime = clip->location.startTime + (playTime - clip->location.leftTime);
 				if (!clipPlayer->isWaitingForSeek && 
-					(requestTime < decoder->GetBufferLeft() - 500 ||
-					requestTime > decoder->GetBufferRight() + 500))
+					(requestTime < decoder->GetBufferLeft() - SEQ_TIME_FROM_MILLISECONDS(500) ||
+					requestTime > decoder->GetBufferRight() + SEQ_TIME_FROM_MILLISECONDS(500)))
 				{
 					decoder->Seek(requestTime);
 					clipPlayer->isWaitingForSeek = true;

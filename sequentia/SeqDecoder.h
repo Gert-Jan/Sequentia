@@ -47,7 +47,7 @@ public:
 private:
 	void FillPacketBuffer();
 	bool IsSlowAndShouldSkip();
-	bool NextKeyFramePts(int64_t *result);
+	bool NextKeyFrameDts(int64_t *result);
 	int DecodePacket(AVPacket packet, AVFrame *target, int *frameIndex, int cached);
 	static int OpenCodecContext(int *streamIndex, AVCodecContext **codec, AVFormatContext *format, enum AVMediaType type);
 	void PrintAVError(const char *message, int error);
