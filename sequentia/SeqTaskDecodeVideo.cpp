@@ -8,13 +8,11 @@ SeqTaskDecodeVideo::SeqTaskDecodeVideo(SeqLibraryLink *link) :
 	link(link)
 {
 	SDL_AtomicIncRef(&link->useCount);
-	mutex = SDL_CreateMutex();
 	decoder = new SeqDecoder();
 }
 
 SeqTaskDecodeVideo::~SeqTaskDecodeVideo()
 {
-	SDL_DestroyMutex(mutex);
 }
 
 SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
@@ -25,14 +23,13 @@ SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
 void SeqTaskDecodeVideo::Start()
 {
 	SeqVideoInfo *info = new SeqVideoInfo();
-	SDL_LockMutex(mutex);
 	error = SeqDecoder::ReadVideoInfo(link->fullPath, info);
-	SDL_UnlockMutex(mutex);
 	if (error == 0)
 	{
 		decoder->Preload(info);
 		decoder->Loop();
 	}
+	delete info;
 	while (!done)
 		SDL_Delay(10);
 }
@@ -40,10 +37,8 @@ void SeqTaskDecodeVideo::Start()
 void SeqTaskDecodeVideo::Stop()
 {
 	done = true;
-	SDL_LockMutex(mutex);
 	if (error == 0)
 		decoder->Stop();
-	SDL_UnlockMutex(mutex);
 }
 
 void SeqTaskDecodeVideo::Finalize()

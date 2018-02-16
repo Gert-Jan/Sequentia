@@ -45,6 +45,13 @@ public:
 	static bool IsValidFrame(AVFrame *frame);
 
 private:
+	void SetStatusInactive();
+	void SetStatusOpening();
+	void SetStatusLoading();
+	void SetStatusReady();
+	void SetStatusStopping();
+	void SetStatusDisposing();
+
 	void FillPacketBuffer();
 	bool IsSlowAndShouldSkip();
 	bool NextKeyFrameDts(int64_t *result);
@@ -69,6 +76,7 @@ private:
 	bool shouldSeek = false;
 	int64_t seekTime = 0;
 	SDL_mutex *seekMutex;
+	SDL_mutex *statusMutex;
 	AVFrame *audioFrame = NULL;
 	int displayFrameCursor;
 	int frameBufferCursor = 0;

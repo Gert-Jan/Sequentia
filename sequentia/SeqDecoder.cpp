@@ -11,16 +11,69 @@ SeqDecoder::SeqDecoder():
 {
 	packetBuffer = new AVPacket[packetBufferSize];
 	frameBuffer = new AVFrame*[frameBufferSize]();
+	statusMutex = SDL_CreateMutex();
 }
 
 SeqDecoder::~SeqDecoder()
 {
 	Dispose();
+	delete[] frameBuffer;
+	delete[] packetBuffer;
+	SDL_DestroyMutex(statusMutex);
 }
 
 SeqDecoderStatus SeqDecoder::GetStatus()
 {
 	return status;
+}
+
+void SeqDecoder::SetStatusInactive()
+{
+	SDL_LockMutex(statusMutex);
+	status = SeqDecoderStatus::Inactive;
+	SDL_UnlockMutex(statusMutex);
+}
+
+void SeqDecoder::SetStatusOpening()
+{
+	SDL_LockMutex(statusMutex);
+	if (status < SeqDecoderStatus::Stopping)
+		status = SeqDecoderStatus::Opening;
+	SDL_UnlockMutex(statusMutex);
+}
+
+void SeqDecoder::SetStatusLoading()
+{
+	SDL_LockMutex(statusMutex);
+	if (status < SeqDecoderStatus::Stopping)
+		status = SeqDecoderStatus::Loading;
+	SDL_UnlockMutex(statusMutex);
+}
+
+void SeqDecoder::SetStatusReady()
+{
+	SDL_LockMutex(statusMutex);
+	if (status < SeqDecoderStatus::Stopping)
+		status = SeqDecoderStatus::Ready;
+	SDL_UnlockMutex(statusMutex);
+}
+
+void SeqDecoder::SetStatusStopping()
+{
+	SDL_LockMutex(statusMutex);
+	if (status < SeqDecoderStatus::Disposing)
+		status = SeqDecoderStatus::Stopping;
+	SDL_UnlockMutex(statusMutex);
+}
+
+void SeqDecoder::SetStatusDisposing()
+{
+	SDL_LockMutex(statusMutex);
+	if (status == SeqDecoderStatus::Stopping)
+		status = SeqDecoderStatus::Disposing;
+	else
+		SetStatusStopping();
+	SDL_UnlockMutex(statusMutex);
 }
 
 int64_t SeqDecoder::GetDuration()
@@ -47,14 +100,15 @@ void SeqDecoder::Dispose()
 {
 	if (status != SeqDecoderStatus::Disposing && status != SeqDecoderStatus::Inactive)
 	{
-		status = SeqDecoderStatus::Disposing;
+		SetStatusDisposing();
 		for (int i = 0; i < packetBufferSize; ++i)
 			av_packet_unref(&packetBuffer[i]);
 		for (int i = 0; i < frameBufferSize; ++i)
 			av_frame_free(&frameBuffer[i]);
+		av_frame_free(&audioFrame);
 		av_free(videoDestData[0]);
 		SDL_DestroyMutex(seekMutex);
-		status = SeqDecoderStatus::Inactive;
+		SetStatusInactive();
 	}
 }
 
@@ -88,7 +142,7 @@ int SeqDecoder::ReadVideoInfo(const char *fullPath, SeqVideoInfo *videoInfo)
 int SeqDecoder::Preload(SeqVideoInfo *info)
 {
 	videoInfo = info;
-	status = SeqDecoderStatus::Opening;
+	SetStatusOpening();
 	// create buffers
 	if (frameBuffer[0] == nullptr)
 	{
@@ -136,7 +190,7 @@ int SeqDecoder::Preload(SeqVideoInfo *info)
 		}
 	}
 
-	status = SeqDecoderStatus::Loading;
+	SetStatusLoading();
 	// prefetch a bunch of packets
 	packetBufferCursor = 0;
 	FillPacketBuffer();
@@ -171,7 +225,7 @@ int SeqDecoder::Loop()
 			// ffmpeg seek
 			avformat_seek_file(videoInfo->formatContext, videoInfo->videoStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
 			// set state to 'loading' as the complete buffer is now invalid
-			status = SeqDecoderStatus::Loading;
+			SetStatusLoading();
 			// reset the packet and frame buffer so it will completely be refilled
 			displayPacketCursor = 0;
 			packetBufferCursor = 0;
@@ -251,10 +305,11 @@ int SeqDecoder::Loop()
 		int nextFrameBufferCursor = (frameBufferCursor + 1) % frameBufferSize;
 		while (nextFrameBufferCursor == displayFrameCursor)
 		{
+			if (status == SeqDecoderStatus::Stopping)
+				break;
 			if (status == SeqDecoderStatus::Loading)
-				status = SeqDecoderStatus::Ready;
+				SetStatusReady();
 			SDL_Delay(5);
-
 			if (shouldSeek)
 				break;
 		}
@@ -271,6 +326,10 @@ int SeqDecoder::Loop()
 
 		// move the buffer cursor
 		frameBufferCursor = nextFrameBufferCursor;
+
+		// if this decoder is done, stop the buffering
+		if (status == SeqDecoderStatus::Stopping)
+			break;
 	}
 
 	// disposing...
@@ -282,7 +341,7 @@ int SeqDecoder::Loop()
 
 void SeqDecoder::Stop()
 {
-	status = SeqDecoderStatus::Stopping;
+	SetStatusStopping();
 }
 
 void SeqDecoder::Seek(int64_t time)

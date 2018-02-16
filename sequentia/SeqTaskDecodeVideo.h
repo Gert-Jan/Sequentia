@@ -22,7 +22,6 @@ public:
 private:
 	SeqLibraryLink *link;
 	SeqDecoder *decoder;
-	SDL_mutex *mutex;
 	int error;
 	bool done;
 };
