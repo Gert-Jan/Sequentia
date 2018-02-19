@@ -133,6 +133,8 @@ void SeqRenderer::CreateDeviceObjects()
 		"	g = y - 0.39465 * u - 0.58060 * v;\n"
 		"	b = y + 2.03211 * u;\n"
 		*/
+		// http://www.fourcc.org/fccyvrgb.php
+		// http://www.martinreddy.net/gfx/faqs/colorconv.faq
 		// https://www.fourcc.org/source/YUV420P-OpenGL-GLSLang.c
 		"	y = 1.1643 * (texture(Texture0, Frag_UV.st).r - 0.0625);\n"
 		"	u = texture(Texture1, Frag_UV.st).r - 0.5;\n"
