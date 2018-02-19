@@ -88,10 +88,12 @@ void SeqRenderer::CreateDeviceObjects()
 		"    1,  2.12798,  0      );\n"
 		*/
 		// BT.709 - https://en.wikipedia.org/wiki/YUV
+		/*
 		"  mat3 toRGB = mat3(\n"
 		"    1.0    ,  1.0    , 1.0    ,\n"
 		"    0.0    , -0.21482, 2.12798,\n"
 		"    1.28033, -0.38059, 0.0    );\n"
+		*/
 		// BT.601 - https://en.wikipedia.org/wiki/YUV
 		/*
 		"  mat3 toRGB = mat3(\n"
@@ -101,7 +103,7 @@ void SeqRenderer::CreateDeviceObjects()
 		*/
 		// BT.709 - https://github.com/webmproject/webm-tools/blob/master/vpx_ios/VPXExample/nv12_fragment_shader.glsl
 		/*
-		"  mat3 toRGB = mat3(\n";
+		"  mat3 toRGB = mat3(\n"
 		"    1.0,     1.0,    1.0   ,\n"
 		"    0.0,    -0.1870, 1.8556,\n"
 		"    1.5701, -0.4664, 0.0   );\n"
@@ -113,13 +115,32 @@ void SeqRenderer::CreateDeviceObjects()
 		"    0.0  , -0.344136, 1.772 ,\n"
 		"    1.402, -0.714136, 0.0   );\n"
 		*/
+		/*
 		"  vec3 yuv = vec3(\n"
 		"    texture(Texture0, Frag_UV.st).r,\n"
 		"    texture(Texture1, Frag_UV.st).r - 0.5,\n"
 		"    texture(Texture2, Frag_UV.st).r - 0.5);\n"
 		"  vec3 rgb = toRGB * yuv;\n"
 		"  Out_Color = Frag_Color * vec4(rgb, 1.0);"
+		*/
 		//"	Out_Color = Frag_Color * (texture(Texture0, Frag_UV.st).r * vec4(1, 0, 0, 0) + texture(Texture1, Frag_UV.st).r * vec4(0, 1, 0, 0) + texture(Texture2, Frag_UV.st).r * vec4(0, 0, 1, 0) + vec4(0, 0, 0, 1));\n"
+		"	float r, g, b, y, u, v;\n"
+		/*
+		"	y = texture(Texture0, Frag_UV.st).r;\n"
+		"	u = texture(Texture1, Frag_UV.st).r - 0.5;\n"
+		"	v = texture(Texture2, Frag_UV.st).r - 0.5;\n"
+		"	r = y + 1.13983 * v;\n"
+		"	g = y - 0.39465 * u - 0.58060 * v;\n"
+		"	b = y + 2.03211 * u;\n"
+		*/
+		// https://www.fourcc.org/source/YUV420P-OpenGL-GLSLang.c
+		"	y = 1.1643 * (texture(Texture0, Frag_UV.st).r - 0.0625);\n"
+		"	u = texture(Texture1, Frag_UV.st).r - 0.5;\n"
+		"	v = texture(Texture2, Frag_UV.st).r - 0.5;\n"
+		"	r = y + 1.5958 * v;\n"
+		"	g = y - 0.39173 * u - 0.8129 * v;\n"
+		"	b = y + 2.017 * u;\n"
+		"	Out_Color = Frag_Color * vec4(r, g, b, 1.0);\n"
 		"}\n";
 
 	glGenBuffers(1, &vboHandle);
