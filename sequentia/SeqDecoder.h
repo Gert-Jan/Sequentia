@@ -9,7 +9,7 @@ extern "C"
 	#include "libavutil/timestamp.h"
 }
 
-class SeqVideoInfo;
+class SeqVideoContext;
 struct SDL_mutex;
 
 enum class SeqDecoderStatus
@@ -35,8 +35,8 @@ public:
 	int64_t GetBufferRight();
 
 	void Dispose();
-	static int ReadVideoInfo(const char *fullPath, SeqVideoInfo *videoInfo);
-	int Preload(SeqVideoInfo *info);
+	static int OpenVideoContext(const char *fullPath, SeqVideoContext *videoContext);
+	int Preload(SeqVideoContext *context);
 	int Loop();
 	void Stop();
 	void Seek(int64_t time);
@@ -65,7 +65,7 @@ private:
 	static const int defaultPacketBufferSize = 500;
 
 	SeqDecoderStatus status = SeqDecoderStatus::Inactive;
-	SeqVideoInfo *videoInfo;
+	SeqVideoContext *videoContext;
 	int frameBufferSize = defaultFrameBufferSize;
 	int packetBufferSize = defaultPacketBufferSize;
 	uint8_t *videoDestData[4] = { NULL };

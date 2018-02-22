@@ -6,7 +6,7 @@
 #include "SeqProjectHeaders.h"
 #include "SeqWorkerManager.h"
 #include "SeqTaskDecodeVideo.h"
-#include "SeqVideoInfo.h"
+#include "SeqVideoContext.h"
 #include "SeqDecoder.h"
 #include "SeqString.h"
 #include "SeqRenderer.h"
@@ -160,12 +160,12 @@ void SeqUIVideo::Draw()
 		}
 
 		// render time
-		SeqVideoInfo::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, player->GetPlaybackTime());
+		SeqVideoContext::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, player->GetPlaybackTime());
 		ImGui::Text(SeqString::Temp->Buffer);
 		ImGui::SameLine();
 		ImGui::Text("/");
 		ImGui::SameLine();
-		SeqVideoInfo::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, player->GetDuration());
+		SeqVideoContext::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, player->GetDuration());
 		ImGui::Text(SeqString::Temp->Buffer);
 
 		if (player->IsPlaying())

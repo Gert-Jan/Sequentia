@@ -6,11 +6,11 @@ extern "C"
 	#include "libavutil/timestamp.h"
 }
 
-class SeqVideoInfo
+class SeqVideoContext
 {
 public:
-	SeqVideoInfo();
-	~SeqVideoInfo();
+	SeqVideoContext();
+	~SeqVideoContext();
 	int64_t ToStreamTime(int64_t time);
 	int64_t FromStreamTime(int64_t streamTime);
 	static void GetTimeString(char *buffer, int bufferLen, int64_t time);

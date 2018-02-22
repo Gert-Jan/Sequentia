@@ -53,9 +53,6 @@
     <ClCompile Include="SeqTaskReadVideoInfo.cpp">
       <Filter>sys\task</Filter>
     </ClCompile>
-    <ClCompile Include="SeqVideoInfo.cpp">
-      <Filter>sys\video</Filter>
-    </ClCompile>
     <ClCompile Include="SeqUIVideo.cpp">
       <Filter>ui</Filter>
     </ClCompile>
@@ -95,6 +92,9 @@
     </ClCompile>
     <ClCompile Include="SeqWidgets.cpp">
       <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqVideoContext.cpp">
+      <Filter>sys\video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -176,9 +176,6 @@
     <ClInclude Include="SeqTaskReadVideoInfo.h">
       <Filter>sys\task</Filter>
     </ClInclude>
-    <ClInclude Include="SeqVideoInfo.h">
-      <Filter>sys\video</Filter>
-    </ClInclude>
     <ClInclude Include="SeqUIVideo.h">
       <Filter>ui</Filter>
     </ClInclude>
@@ -224,6 +221,9 @@
     </ClInclude>
     <ClInclude Include="SeqWidgets.h">
       <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqVideoContext.h">
+      <Filter>sys\video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

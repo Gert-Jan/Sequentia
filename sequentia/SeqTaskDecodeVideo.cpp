@@ -1,6 +1,6 @@
 #include "SeqTaskDecodeVideo.h"
 #include "SeqLibrary.h"
-#include "SeqVideoInfo.h"
+#include "SeqVideoContext.h"
 #include "SeqDecoder.h"
 #include <SDL.h>
 
@@ -22,14 +22,14 @@ SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
 
 void SeqTaskDecodeVideo::Start()
 {
-	SeqVideoInfo *info = new SeqVideoInfo();
-	error = SeqDecoder::ReadVideoInfo(link->fullPath, info);
+	SeqVideoContext *context = new SeqVideoContext();
+	error = SeqDecoder::OpenVideoContext(link->fullPath, context);
 	if (error == 0)
 	{
-		decoder->Preload(info);
+		decoder->Preload(context);
 		decoder->Loop();
 	}
-	delete info;
+	delete context;
 	while (!done)
 		SDL_Delay(10);
 }

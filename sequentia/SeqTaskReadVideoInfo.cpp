@@ -1,7 +1,7 @@
 #include "SeqTaskReadVideoInfo.h"
 #include "SeqLibrary.h"
 #include "SeqDecoder.h"
-#include "SeqVideoInfo.h"
+#include "SeqVideoContext.h"
 #include <SDL.h>
 
 SeqTaskReadVideoInfo::SeqTaskReadVideoInfo(SeqLibraryLink *link) :
@@ -17,8 +17,8 @@ SeqTaskReadVideoInfo::~SeqTaskReadVideoInfo()
 
 void SeqTaskReadVideoInfo::Start()
 {
-	resultVideoInfo = new SeqVideoInfo();
-	SeqDecoder::ReadVideoInfo(link->fullPath, resultVideoInfo);
+	resultVideoContext = new SeqVideoContext();
+	SeqDecoder::OpenVideoContext(link->fullPath, resultVideoContext);
 	progress = 1;
 }
 
@@ -28,11 +28,11 @@ void SeqTaskReadVideoInfo::Stop()
 
 void SeqTaskReadVideoInfo::Finalize()
 {
-	link->width = resultVideoInfo->videoCodec->width;
-	link->height = resultVideoInfo->videoCodec->height;
-	link->duration = resultVideoInfo->formatContext->duration;
+	link->width = resultVideoContext->videoCodec->width;
+	link->height = resultVideoContext->videoCodec->height;
+	link->duration = resultVideoContext->formatContext->duration;
 	link->metaDataLoaded = true;
-	delete resultVideoInfo;
+	delete resultVideoContext;
 	SDL_AtomicDecRef(&link->useCount);
 	// we're done here remove self
 	delete this;

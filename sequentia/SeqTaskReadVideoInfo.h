@@ -4,7 +4,7 @@
 
 enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;
-class SeqVideoInfo;
+class SeqVideoContext;
 
 class SeqTaskReadVideoInfo : public SeqWorkerTask
 {
@@ -18,6 +18,6 @@ public:
 	float GetProgress();
 private:
 	SeqLibraryLink *link;
-	SeqVideoInfo *resultVideoInfo;
+	SeqVideoContext *resultVideoContext;
 	float progress;
 };
