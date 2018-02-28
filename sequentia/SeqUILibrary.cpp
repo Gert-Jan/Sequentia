@@ -95,7 +95,15 @@ void SeqUILibrary::Draw()
 			ImGui::NextColumn();
 			if (link->metaDataLoaded)
 			{
-				SeqString::Temp->Format("%ix%i", link->width, link->height);
+				if (link->defaultVideoStream != nullptr)
+				{
+					SeqVideoStreamInfo *videoInfo = link->defaultVideoStream;
+					SeqString::Temp->Format("%ix%i", videoInfo->width, videoInfo->height);
+				}
+				else
+				{
+					SeqString::Temp->Set("N/A");
+				}
 				ImGui::Text(SeqString::Temp->Buffer);
 				ImGui::NextColumn();
 				SeqVideoContext::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, link->duration);

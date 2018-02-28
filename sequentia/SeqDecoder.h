@@ -35,13 +35,19 @@ public:
 	int64_t GetBufferRight();
 
 	void Dispose();
-	static int OpenVideoContext(const char *fullPath, SeqVideoContext *videoContext);
-	int Preload(SeqVideoContext *context);
+	static int OpenFormatContext(const char *fullPath, AVFormatContext **formatContext);
+	static void CloseFormatContext(AVFormatContext **formatContext);
+	static int OpenCodecContext(int streamIndex, AVFormatContext *format, AVCodec **codec, AVCodecContext **context, double* timeBase);
+	static void CloseCodecContext(AVCodecContext **codecContext);
+	static int GetBestStream(AVFormatContext *format, enum AVMediaType type, int *streamIndex);
+	int Preload(SeqVideoContext *videoContext);
 	int Loop();
 	void Stop();
 	void Seek(int64_t time);
 	AVFrame* NextFrame(int64_t);
 	AVFrame* NextFrame();
+	void SetVideoStreamIndex(int streamIndex);
+	void SetAudioStreamIndex(int streamIndex);
 	static bool IsValidFrame(AVFrame *frame);
 
 private:
@@ -56,16 +62,15 @@ private:
 	bool IsSlowAndShouldSkip();
 	bool NextKeyFrameDts(int64_t *result);
 	int DecodePacket(AVPacket packet, AVFrame *target, int *frameIndex, int cached);
-	static int OpenCodecContext(int *streamIndex, AVCodecContext **codec, AVFormatContext *format, enum AVMediaType type);
+	void RefreshCodecContexts();
 	void PrintAVError(const char *message, int error);
 	
 private:
-	static const int ffmpegRefcount = 1;
 	static const int defaultFrameBufferSize = 60;
 	static const int defaultPacketBufferSize = 500;
 
 	SeqDecoderStatus status = SeqDecoderStatus::Inactive;
-	SeqVideoContext *videoContext;
+	SeqVideoContext *context;
 	int frameBufferSize = defaultFrameBufferSize;
 	int packetBufferSize = defaultPacketBufferSize;
 	uint8_t *videoDestData[4] = { NULL };
@@ -75,6 +80,9 @@ private:
 	int64_t lowestKeyFrameDecodeTime = 0;
 	bool shouldSeek = false;
 	int64_t seekTime = 0;
+	bool shouldRefreshCodex = false;
+	int newVideoStreamIndex = -1;
+	int newAudioStreamIndex = -1;
 	SDL_mutex *seekMutex;
 	SDL_mutex *statusMutex;
 	AVFrame *audioFrame = NULL;

@@ -2,6 +2,12 @@
 
 #include "SeqWorkerTask.h"
 
+#include <SDL_audio.h>
+extern "C"
+{
+#include "libavutil/samplefmt.h"
+}
+
 enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;
 class SeqVideoContext;
@@ -17,7 +23,9 @@ public:
 	SeqWorkerTaskPriority GetPriority();
 	float GetProgress();
 private:
+	SDL_AudioFormat FromAVSampleFormat(AVSampleFormat format, bool *isPlanar);
+private:
 	SeqLibraryLink *link;
-	SeqVideoContext *resultVideoContext;
+	SeqLibraryLink *tempLink;
 	float progress;
 };

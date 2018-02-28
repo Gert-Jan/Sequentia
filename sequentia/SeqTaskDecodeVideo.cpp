@@ -4,7 +4,7 @@
 #include "SeqDecoder.h"
 #include <SDL.h>
 
-SeqTaskDecodeVideo::SeqTaskDecodeVideo(SeqLibraryLink *link) :
+SeqTaskDecodeVideo::SeqTaskDecodeVideo(SeqLibraryLink *link):
 	link(link)
 {
 	SDL_AtomicIncRef(&link->useCount);
@@ -20,10 +20,19 @@ SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
 	return link;
 }
 
+void SeqTaskDecodeVideo::SetStreamIndex(int videoStreamIndex, int audioStreamIndex)
+{
+	decoder->SetVideoStreamIndex(videoStreamIndex);
+	decoder->SetAudioStreamIndex(audioStreamIndex);
+}
+
 void SeqTaskDecodeVideo::Start()
 {
+	while (!link->metaDataLoaded)
+		SDL_Delay(10);
+	SetStreamIndex(link->defaultVideoStream->streamIndex, link->defaultAudioStream->streamIndex);
 	SeqVideoContext *context = new SeqVideoContext();
-	error = SeqDecoder::OpenVideoContext(link->fullPath, context);
+	error = SeqDecoder::OpenFormatContext(link->fullPath, &context->formatContext);
 	if (error == 0)
 	{
 		decoder->Preload(context);

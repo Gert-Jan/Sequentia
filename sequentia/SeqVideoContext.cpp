@@ -16,19 +16,19 @@ SeqVideoContext::SeqVideoContext() :
 
 SeqVideoContext::~SeqVideoContext()
 {
-	avcodec_free_context(&videoCodec);
-	avcodec_free_context(&audioCodec);
+	DisposeVideoCodec();
+	DisposeAudioCodec();
 	avformat_close_input(&formatContext);
 }
 
-int64_t SeqVideoContext::ToStreamTime(int64_t time)
+void SeqVideoContext::DisposeVideoCodec()
 {
-	return time / (SEQ_TIME_BASE * timeBase);
+	avcodec_free_context(&videoCodec);
 }
 
-int64_t SeqVideoContext::FromStreamTime(int64_t streamTime)
+void SeqVideoContext::DisposeAudioCodec()
 {
-	return streamTime * (SEQ_TIME_BASE * timeBase);
+	avcodec_free_context(&audioCodec);
 }
 
 void SeqVideoContext::GetTimeString(char *buffer, int bufferLen, int64_t time)

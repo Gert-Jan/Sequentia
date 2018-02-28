@@ -11,8 +11,8 @@ class SeqVideoContext
 public:
 	SeqVideoContext();
 	~SeqVideoContext();
-	int64_t ToStreamTime(int64_t time);
-	int64_t FromStreamTime(int64_t streamTime);
+	void DisposeVideoCodec();
+	void DisposeAudioCodec();
 	static void GetTimeString(char *buffer, int bufferLen, int64_t time);
 	static void GetTimeString(char *buffer, int bufferLen, uint32_t time);
 

@@ -1,9 +1,10 @@
 #include "SeqDecoder.h"
 #include "SeqVideoContext.h"
+#include "SeqTime.h"
 #include <SDL.h>
 
 SeqDecoder::SeqDecoder():
-	videoContext(nullptr),
+	context(nullptr),
 	frameBufferSize(defaultFrameBufferSize),
 	packetBufferSize(defaultPacketBufferSize),
 	frameBuffer(nullptr),
@@ -78,22 +79,22 @@ void SeqDecoder::SetStatusDisposing()
 
 int64_t SeqDecoder::GetDuration()
 {
-	return videoContext->formatContext->duration;
+	return context->formatContext->duration;
 }
 
 int64_t SeqDecoder::GetPlaybackTime()
 {
-	return videoContext->FromStreamTime(lastRequestedFrameTime);
+	return STREAM_TIME_TO_SEQ_TIME(lastRequestedFrameTime, context->timeBase);
 }
 
 int64_t SeqDecoder::GetBufferLeft()
 {
-	return videoContext->FromStreamTime(SDL_max(frameBuffer[displayFrameCursor]->pkt_dts, 0));
+	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer[displayFrameCursor]->pkt_dts, 0), context->timeBase);
 }
 
 int64_t SeqDecoder::GetBufferRight()
 {
-	return videoContext->FromStreamTime(SDL_max(frameBuffer[(frameBufferCursor - 1 + frameBufferSize) % frameBufferSize]->pkt_dts, 0));
+	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer[(frameBufferCursor - 1 + frameBufferSize) % frameBufferSize]->pkt_dts, 0), context->timeBase);
 }
 
 void SeqDecoder::Dispose()
@@ -112,36 +113,86 @@ void SeqDecoder::Dispose()
 	}
 }
 
-int SeqDecoder::OpenVideoContext(const char *fullPath, SeqVideoContext *videoContext)
+int SeqDecoder::OpenFormatContext(const char *fullPath, AVFormatContext **formatContext)
 {
-	/* open input file, and allocate format context */
-	if (avformat_open_input(&videoContext->formatContext, fullPath, nullptr, nullptr) < 0)
+	// open input file, and allocate format context
+	if (avformat_open_input(formatContext, fullPath, nullptr, nullptr) < 0)
 	{
 		fprintf(stderr, "Could not open source file %s\n", fullPath);
 		return 1;
 	}
-	/* retrieve stream information */
-	if (avformat_find_stream_info(videoContext->formatContext, nullptr) < 0)
+
+	// retrieve stream information
+	if (avformat_find_stream_info(*formatContext, nullptr) < 0)
 	{
 		fprintf(stderr, "Could not find stream information\n");
 		return 1;
 	}
-	if (OpenCodecContext(&videoContext->videoStreamIndex, &videoContext->videoCodec, videoContext->formatContext, AVMEDIA_TYPE_VIDEO) >= 0)
-	{
-	}
-	if (OpenCodecContext(&videoContext->audioStreamIndex, &videoContext->audioCodec, videoContext->formatContext, AVMEDIA_TYPE_AUDIO) >= 0)
-	{
-	}
-	videoContext->timeBase = av_q2d(videoContext->formatContext->streams[videoContext->videoStreamIndex]->time_base);
-	/* dump input information to stderr */
-	av_dump_format(videoContext->formatContext, 0, fullPath, 0);
+
+	// dump input information to stderr
+	av_dump_format(*formatContext, 0, fullPath, 0);
 
 	return 0;
 }
 
-int SeqDecoder::Preload(SeqVideoContext *context)
+void SeqDecoder::CloseFormatContext(AVFormatContext **formatContext)
 {
-	videoContext = context;
+	avformat_close_input(formatContext);
+}
+
+int SeqDecoder::OpenCodecContext(int streamIndex, AVFormatContext *format, AVCodec **outCodec, AVCodecContext **context, double *timeBase)
+{
+	int ret;
+	AVStream *stream;
+
+	stream = format->streams[streamIndex];
+	AVMediaType type = stream->codecpar->codec_type;
+
+	// find decoder for the stream
+	AVCodec *codec = avcodec_find_decoder(stream->codecpar->codec_id);
+	if (!codec)
+	{
+		fprintf(stderr, "Failed to find %s codec\n",
+			av_get_media_type_string(type));
+		return AVERROR(EINVAL);
+	}
+	if (outCodec != nullptr)
+		*outCodec = codec;
+
+	// Allocate a codec context for the decoder
+	*context = avcodec_alloc_context3(codec);
+	if (!*context)
+	{
+		fprintf(stderr, "Failed to allocate the %s codec context\n",
+			av_get_media_type_string(type));
+		return AVERROR(ENOMEM);
+	}
+
+	// Copy codec parameters from input stream to output codec context
+	if ((ret = avcodec_parameters_to_context(*context, stream->codecpar)) < 0)
+	{
+		fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n",
+			av_get_media_type_string(type));
+		return ret;
+	}
+
+	// return timebase
+	*timeBase = av_q2d(format->streams[streamIndex]->time_base);
+
+	return 0;
+}
+
+void SeqDecoder::CloseCodecContext(AVCodecContext **codecContext)
+{
+	avcodec_free_context(codecContext);
+}
+
+int SeqDecoder::Preload(SeqVideoContext *videoContext)
+{
+	context = videoContext;
+	RefreshCodecContexts();
+
+	// create buffers
 	SetStatusOpening();
 	// create buffers
 	if (frameBuffer[0] == nullptr)
@@ -150,15 +201,15 @@ int SeqDecoder::Preload(SeqVideoContext *context)
 		seekMutex = SDL_CreateMutex();
 
 		/* allocate image where the decoded image will be put */
-		int ret = av_image_alloc(videoDestData, videoContext->videoDestLinesize,
-			videoContext->videoCodec->width, videoContext->videoCodec->height, videoContext->videoCodec->pix_fmt, 1);
+		int ret = av_image_alloc(videoDestData, context->videoDestLinesize,
+			context->videoCodec->width, context->videoCodec->height, context->videoCodec->pix_fmt, 1);
 		if (ret < 0)
 		{
 			fprintf(stderr, "Could not allocate raw video buffer\n");
 			Dispose();
 			return 1;
 		}
-		videoContext->videoDestBufferSize = ret;
+		context->videoDestBufferSize = ret;
 
 		for (int i = 0; i < frameBufferSize; i++)
 		{
@@ -215,6 +266,12 @@ int SeqDecoder::Loop()
 	// read frames from the file
 	while (status == SeqDecoderStatus::Loading || status == SeqDecoderStatus::Ready)
 	{
+		// switching codex, when for example switching audio channel or removing an audio channel all together
+		if (shouldRefreshCodex)
+		{
+			shouldRefreshCodex = false;
+			RefreshCodecContexts();
+		}
 		// seeking
 		if (shouldSeek)
 		{
@@ -223,7 +280,7 @@ int SeqDecoder::Loop()
 			int64_t tempSeekTime = seekTime;
 			SDL_UnlockMutex(seekMutex);
 			// ffmpeg seek
-			avformat_seek_file(videoContext->formatContext, videoContext->videoStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
+			avformat_seek_file(context->formatContext, context->videoStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
 			// set state to 'loading' as the complete buffer is now invalid
 			SetStatusLoading();
 			// reset the packet and frame buffer so it will completely be refilled
@@ -346,7 +403,7 @@ void SeqDecoder::Stop()
 
 void SeqDecoder::Seek(int64_t time)
 {
-	int64_t streamTime = videoContext->ToStreamTime(time);
+	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, context->timeBase);
 	// if searching forwards
 	if (streamTime > frameBuffer[displayFrameCursor]->pkt_dts)
 	{
@@ -383,7 +440,7 @@ void SeqDecoder::Seek(int64_t time)
 
 AVFrame* SeqDecoder::NextFrame(int64_t time)
 {
-	int64_t streamTime = videoContext->ToStreamTime(time);
+	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, context->timeBase);
 	// remember in the decoder what time was last requested, we can use this for buffering more relevant frames
 	lastRequestedFrameTime = streamTime;
 	// only look up to the frame buffer cursor, the decoder thread may be writing to the buffer_cursor index right now
@@ -422,6 +479,18 @@ AVFrame* SeqDecoder::NextFrame()
 	return frameBuffer[displayFrameCursor];
 }
 
+void SeqDecoder::SetVideoStreamIndex(int videoStreamIndex)
+{
+	newVideoStreamIndex = videoStreamIndex;
+	shouldRefreshCodex = true;
+}
+
+void SeqDecoder::SetAudioStreamIndex(int audioStreamIndex)
+{
+	newAudioStreamIndex = audioStreamIndex;
+	shouldRefreshCodex = true;
+}
+
 bool SeqDecoder::IsValidFrame(AVFrame *frame)
 {
 	return frame->pkt_dts >= 0;
@@ -434,7 +503,7 @@ void SeqDecoder::FillPacketBuffer()
 	while (nextPacketBufferCursor != displayPacketCursor && ret >= 0)
 	{
 		packetBufferCursor = nextPacketBufferCursor;
-		ret = av_read_frame(videoContext->formatContext, &packetBuffer[packetBufferCursor]);
+		ret = av_read_frame(context->formatContext, &packetBuffer[packetBufferCursor]);
 		if (ret >= 0)
 			nextPacketBufferCursor = (packetBufferCursor + 1) % packetBufferSize;
 	}
@@ -456,7 +525,7 @@ bool SeqDecoder::NextKeyFrameDts(int64_t *result)
 	for (int i = 1; i < packetBufferSize; ++i)
 	{
 		AVPacket* pkt = &packetBuffer[(displayPacketCursor + i) % packetBufferSize];
-		if (pkt->stream_index == videoContext->videoStreamIndex && (pkt->flags & AV_PKT_FLAG_KEY) > 0)
+		if (pkt->stream_index == context->videoStreamIndex && (pkt->flags & AV_PKT_FLAG_KEY) > 0)
 		{
 			*result = pkt->dts;
 			return true;
@@ -471,12 +540,12 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 	int ret = 0;
 	int decoded = pkt.size;
 	*frameIndex = 0;
-	if (pkt.stream_index == videoContext->videoStreamIndex)
+	if (pkt.stream_index == context->videoStreamIndex)
 	{
 		// keep track of frame decoding performance
 		Uint32 decoding_start_time = SDL_GetTicks();
 		// decode video frame
-		ret = avcodec_decode_video2(videoContext->videoCodec, target, frameIndex, &pkt);
+		ret = avcodec_decode_video2(context->videoCodec, target, frameIndex, &pkt);
 		if (ret < 0)
 		{
 			PrintAVError("Error decoding video frame (%s)\n", ret);
@@ -484,9 +553,9 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 		}
 		if (*frameIndex)
 		{
-			if (target->width != videoContext->videoCodec->width || 
-				target->height != videoContext->videoCodec->height ||
-				target->format != videoContext->videoCodec->pix_fmt)
+			if (target->width != context->videoCodec->width || 
+				target->height != context->videoCodec->height ||
+				target->format != context->videoCodec->pix_fmt)
 			{
 				// To handle this change, one could call av_image_alloc again and
 				// decode the following frames into another rawvideo file.
@@ -495,7 +564,7 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 					"pixel format of the input video changed:\n"
 					"old: width = %d, height = %d, format = %s\n"
 					"new: width = %d, height = %d, format = %s\n",
-					videoContext->videoCodec->width, videoContext->videoCodec->height, av_get_pix_fmt_name(videoContext->videoCodec->pix_fmt),
+					context->videoCodec->width, context->videoCodec->height, av_get_pix_fmt_name(context->videoCodec->pix_fmt),
 					target->width, target->height, av_get_pix_fmt_name((AVPixelFormat)target->format));
 				return -1;
 			}
@@ -511,14 +580,14 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 
 			printf("video_frame%s n:%d coded_n:%d isKey:%d flags:%d dts:%d pts:%d lrft:%d\n",
 				cached ? "(cached)" : "",
-				videoContext->videoFrameCount++, target->coded_picture_number,
-				target->key_frame, pkt.flags, pkt.dts, pkt.pts, videoContext->FromStreamTime(lastRequestedFrameTime) / 1000);
+				context->videoFrameCount++, target->coded_picture_number,
+				target->key_frame, pkt.flags, pkt.dts, pkt.pts, STREAM_TIME_TO_SEQ_TIME(lastRequestedFrameTime / 1000, context->timeBase));
 		}
 	}
-	else if (pkt.stream_index == videoContext->audioStreamIndex)
+	else if (pkt.stream_index == context->audioStreamIndex)
 	{
 		/* decode audio frame */
-		ret = avcodec_decode_audio4(videoContext->audioCodec, target, frameIndex, &pkt);
+		ret = avcodec_decode_audio4(context->audioCodec, target, frameIndex, &pkt);
 		if (ret < 0)
 		{
 			PrintAVError("Error decoding audio frame (%s)\n", ret);
@@ -542,13 +611,66 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 	return decoded;
 }
 
-int SeqDecoder::OpenCodecContext(int *streamIndex, AVCodecContext **codec, AVFormatContext *format, enum AVMediaType type)
+void SeqDecoder::RefreshCodecContexts()
 {
-	int ret, streamId;
-	AVStream *stream;
-	AVCodec *decoder = nullptr;
-	AVDictionary *opts = nullptr;
-	ret = av_find_best_stream(format, type, -1, -1, nullptr, 0);
+	// video codec
+	if (context->videoCodec != nullptr && 
+		(context->videoStreamIndex < 0 || context->videoStreamIndex != newVideoStreamIndex))
+	{
+		// free old video codec context
+		avcodec_free_context(&context->videoCodec);
+		context->videoCodec = nullptr;
+	}
+	if (newVideoStreamIndex > -1 &&
+		(context->videoCodec == nullptr || context->videoStreamIndex != newVideoStreamIndex))
+	{
+		// create new video codec context
+		AVCodec *decoder = nullptr;
+		OpenCodecContext(newVideoStreamIndex, context->formatContext, &decoder, &context->videoCodec, &context->timeBase);
+		AVStream *stream = context->formatContext->streams[newVideoStreamIndex];
+		AVDictionary *opts = nullptr;
+		av_dict_set(&opts, "refcounted_frames", "1", 0);
+		int ret = avcodec_open2(context->videoCodec, decoder, &opts);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Failed to open %s codec\n",
+				av_get_media_type_string(stream->codecpar->codec_type));
+			newVideoStreamIndex = -1;
+		}
+	}
+	context->videoStreamIndex = newVideoStreamIndex;
+
+	// audio codec
+	if (context->audioCodec != nullptr &&
+		(context->audioStreamIndex < 0 || context->audioStreamIndex != newAudioStreamIndex))
+	{
+		// free old audio codec context
+		avcodec_free_context(&context->audioCodec);
+		context->audioCodec = nullptr;
+	}
+	if (newAudioStreamIndex > -1 &&
+		(context->audioCodec == nullptr || context->audioStreamIndex != newAudioStreamIndex))
+	{
+		// create new audio codec context
+		AVCodec *decoder = nullptr;
+		OpenCodecContext(newAudioStreamIndex, context->formatContext, &decoder, &context->audioCodec, &context->timeBase);
+		AVStream *stream = context->formatContext->streams[newAudioStreamIndex];
+		AVDictionary *opts = nullptr;
+		av_dict_set(&opts, "refcounted_frames", "1", 0);
+		int ret = avcodec_open2(context->audioCodec, decoder, &opts);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Failed to open %s codec\n",
+				av_get_media_type_string(stream->codecpar->codec_type));
+			newAudioStreamIndex = -1;
+		}
+	}
+	context->audioStreamIndex = newAudioStreamIndex;
+}
+
+int SeqDecoder::GetBestStream(AVFormatContext *format, enum AVMediaType type, int *streamIndex)
+{
+	int ret = av_find_best_stream(format, type, -1, -1, nullptr, 0);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Could not find %s stream in input file'\n",
@@ -557,47 +679,9 @@ int SeqDecoder::OpenCodecContext(int *streamIndex, AVCodecContext **codec, AVFor
 	}
 	else
 	{
-		streamId = ret;
-		stream = format->streams[streamId];
-
-		/* find decoder for the stream */
-		decoder = avcodec_find_decoder(stream->codecpar->codec_id);
-		if (!decoder)
-		{
-			fprintf(stderr, "Failed to find %s codec\n",
-				av_get_media_type_string(type));
-			return AVERROR(EINVAL);
-		}
-
-		/* Allocate a codec context for the decoder */
-		*codec = avcodec_alloc_context3(decoder);
-		if (!*codec)
-		{
-			fprintf(stderr, "Failed to allocate the %s codec context\n",
-				av_get_media_type_string(type));
-			return AVERROR(ENOMEM);
-		}
-
-		/* Copy codec parameters from input stream to output codec context */
-		if ((ret = avcodec_parameters_to_context(*codec, stream->codecpar)) < 0)
-		{
-			fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n",
-				av_get_media_type_string(type));
-			return ret;
-		}
-
-		/* Init the decoders, with or without reference counting */
-		av_dict_set(&opts, "refcounted_frames", ffmpegRefcount ? "1" : "0", 0);
-		if ((ret = avcodec_open2(*codec, decoder, &opts)) < 0)
-		{
-			fprintf(stderr, "Failed to open %s codec\n",
-				av_get_media_type_string(type));
-			return ret;
-		}
-		*streamIndex = streamId;
+		*streamIndex = ret;
+		return 0;
 	}
-
-	return 0;
 }
 
 void SeqDecoder::PrintAVError(const char *message, int error)
