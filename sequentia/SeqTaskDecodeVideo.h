@@ -13,7 +13,7 @@ public:
 	SeqTaskDecodeVideo(SeqLibraryLink *link);
 	~SeqTaskDecodeVideo();
 	SeqLibraryLink* GetLink();
-	void SetStreamIndex(int videoStreamIndex, int audioStreamIndex);
+	void AddDecodeStreamIndex(int streamIndex);
 	void Start();
 	void Stop();
 	void Finalize();

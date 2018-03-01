@@ -20,17 +20,18 @@ SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
 	return link;
 }
 
-void SeqTaskDecodeVideo::SetStreamIndex(int videoStreamIndex, int audioStreamIndex)
+void SeqTaskDecodeVideo::AddDecodeStreamIndex(int streamIndex)
 {
-	decoder->SetVideoStreamIndex(videoStreamIndex);
-	decoder->SetAudioStreamIndex(audioStreamIndex);
+	// TODO: decoder should get a list of decoder indexes instead of just dumping it on the video stream index
+	decoder->SetVideoStreamIndex(streamIndex);
 }
 
 void SeqTaskDecodeVideo::Start()
 {
 	while (!link->metaDataLoaded)
 		SDL_Delay(10);
-	SetStreamIndex(link->defaultVideoStream->streamIndex, link->defaultAudioStream->streamIndex);
+
+	// start decoding
 	SeqVideoContext *context = new SeqVideoContext();
 	error = SeqDecoder::OpenFormatContext(link->fullPath, &context->formatContext);
 	if (error == 0)
@@ -38,6 +39,8 @@ void SeqTaskDecodeVideo::Start()
 		decoder->Preload(context);
 		decoder->Loop();
 	}
+
+	// cleanup
 	delete context;
 	while (!done)
 		SDL_Delay(10);

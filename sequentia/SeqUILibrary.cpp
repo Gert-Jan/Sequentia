@@ -95,9 +95,9 @@ void SeqUILibrary::Draw()
 			ImGui::NextColumn();
 			if (link->metaDataLoaded)
 			{
-				if (link->defaultVideoStream != nullptr)
+				if (link->defaultVideoStreamInfoIndex >= 0)
 				{
-					SeqVideoStreamInfo *videoInfo = link->defaultVideoStream;
+					SeqVideoStreamInfo *videoInfo = &link->streamInfos[link->defaultVideoStreamInfoIndex].videoInfo;
 					SeqString::Temp->Format("%ix%i", videoInfo->width, videoInfo->height);
 				}
 				else

@@ -15,20 +15,34 @@ class SeqLibrary;
 
 struct SeqVideoStreamInfo
 {
-	int streamIndex;
-	double timeBase;
 	int width, height;
 	AVPixelFormat pixelFormat;
 };
 
 struct SeqAudioStreamInfo
 {
-	int streamIndex;
-	double timeBase;
 	int sampleRate;
 	SDL_AudioFormat format;
 	int channelCount;
 	bool isPlanar;
+};
+
+enum class SeqStreamInfoType
+{
+	Video,
+	Audio
+};
+
+struct SeqStreamInfo
+{
+	int streamIndex;
+	double timeBase;
+	SeqStreamInfoType type;
+	union
+	{
+		SeqVideoStreamInfo videoInfo;
+		SeqAudioStreamInfo audioInfo;
+	};
 };
 
 struct SeqLibraryLink
@@ -40,10 +54,9 @@ struct SeqLibraryLink
 	int64_t duration;
 	int videoStreamCount;
 	int audioStreamCount;
-	SeqVideoStreamInfo *defaultVideoStream;
-	SeqAudioStreamInfo *defaultAudioStream;
-	SeqVideoStreamInfo *videoStreams;
-	SeqAudioStreamInfo *audioStreams;
+	int defaultVideoStreamInfoIndex;
+	int defaultAudioStreamInfoIndex;
+	SeqStreamInfo *streamInfos;
 };
 
 

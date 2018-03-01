@@ -41,43 +41,42 @@ void SeqTaskReadVideoInfo::Start()
 				break;
 		}
 	}
-	if (tempLink->videoStreamCount > 0)
-		tempLink->videoStreams = new SeqVideoStreamInfo[tempLink->videoStreamCount];
-	if (tempLink->audioStreamCount > 0)
-		tempLink->audioStreams = new SeqAudioStreamInfo[tempLink->audioStreamCount];
+	if (tempLink->videoStreamCount + tempLink->audioStreamCount > 0)
+		tempLink->streamInfos = new SeqStreamInfo[tempLink->videoStreamCount + tempLink->audioStreamCount];
 
 	// read codec info for all relevant streams
 	AVCodecContext *codec = nullptr;
 	double timeBase;
-	int videoIndex = 0;
-	int audioIndex = 0;
+	int infoIndex = 0;
 	for (int i = 0; i < format->nb_streams; i++)
 	{
 		SeqDecoder::OpenCodecContext(i, format, nullptr, &codec, &timeBase);
 		AVMediaType type = format->streams[i]->codecpar->codec_type;
 		if (type == AVMediaType::AVMEDIA_TYPE_VIDEO)
 		{
-			SeqVideoStreamInfo *videoInfo = &tempLink->videoStreams[videoIndex];
-			videoInfo->streamIndex = i;
-			videoInfo->timeBase = timeBase;
-			videoInfo->width = codec->width;
-			videoInfo->height = codec->height;
-			videoInfo->pixelFormat = codec->pix_fmt;
+			SeqStreamInfo *info = &tempLink->streamInfos[infoIndex];
+			info->streamIndex = i;
+			info->timeBase = timeBase;
+			info->type = SeqStreamInfoType::Video;
+			info->videoInfo.width = codec->width;
+			info->videoInfo.height = codec->height;
+			info->videoInfo.pixelFormat = codec->pix_fmt;
 			if (i == bestVideoStream)
-				tempLink->defaultVideoStream = &tempLink->videoStreams[videoIndex];
-			videoIndex++;
+				tempLink->defaultVideoStreamInfoIndex = infoIndex;
+			infoIndex++;
 		}
 		else if (type == AVMediaType::AVMEDIA_TYPE_AUDIO)
 		{
-			SeqAudioStreamInfo *audioInfo = &tempLink->audioStreams[audioIndex];
-			audioInfo->streamIndex = i;
-			audioInfo->timeBase = timeBase;
-			audioInfo->sampleRate = codec->sample_rate;
-			audioInfo->channelCount = codec->channels;
-			audioInfo->format = FromAVSampleFormat(codec->sample_fmt, &audioInfo->isPlanar);
+			SeqStreamInfo *info = &tempLink->streamInfos[infoIndex];
+			info->streamIndex = i;
+			info->timeBase = timeBase;
+			info->type = SeqStreamInfoType::Audio;
+			info->audioInfo.sampleRate = codec->sample_rate;
+			info->audioInfo.channelCount = codec->channels;
+			info->audioInfo.format = FromAVSampleFormat(codec->sample_fmt, &info->audioInfo.isPlanar);
 			if (i == bestAudioStream)
-				tempLink->defaultAudioStream = &tempLink->audioStreams[audioIndex];
-			audioIndex++;
+				tempLink->defaultAudioStreamInfoIndex = infoIndex;
+			infoIndex++;
 		}
 		SeqDecoder::CloseCodecContext(&codec);
 	}
@@ -95,9 +94,10 @@ void SeqTaskReadVideoInfo::Stop()
 
 void SeqTaskReadVideoInfo::Finalize()
 {
-	// we should not read the metadata twice (otherwise we would need to delete video/audio streams).
-	SDL_assert(link->videoStreams == nullptr);
-	SDL_assert(link->audioStreams == nullptr);
+	// why would we want to read the meta data twice?, but still do the right thing anyways...
+	SDL_assert(link->streamInfos == nullptr);
+	if (link->streamInfos != nullptr)
+		delete link->streamInfos;
 	// copy the data aquired in the thread to SeqLibrary
 	int dataOffset = (char*)&link->duration - (char*)&link->fullPath;
 	rsize_t size = sizeof(SeqLibraryLink) - dataOffset;

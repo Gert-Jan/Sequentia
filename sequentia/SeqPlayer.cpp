@@ -210,10 +210,16 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 			// these clips are now playing
 			if (clip->location.ContainsTime(playTime))
 			{
+				// get or create a clip player
 				SeqClipPlayer *clipPlayer = GetClipPlayerFor(clip);
+				// the clip link meta data is not always loaded, than we can't make a clip player yet...
+				if (clipPlayer == nullptr)
+					continue;
+
+				// get the decoder
 				SeqDecoder *decoder = clipPlayer->decoderTask->GetDecoder();
 
-				// continue is the decoder is not at all ready yet
+				// continue if the decoder is not ready yet
 				if (decoder->GetStatus() != SeqDecoderStatus::Loading &&
 					decoder->GetStatus() != SeqDecoderStatus::Ready)
 				{
@@ -328,6 +334,8 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 		if (clip != nullptr)
 		{
 			SeqClipPlayer *player = GetClipPlayerFor(clip);
+			if (player == nullptr)
+				continue;
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 			SeqProject* project = Sequentia::GetProject();
 			if (player->lastFrame != nullptr)
@@ -380,11 +388,20 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 	}
 	else
 	{
+		// see if the link in clip is loaded enough to create a SeqClipPlayer
+		SeqLibraryLink *link = clip->GetLink();
+		if (!link->metaDataLoaded)
+			return nullptr;
 		// could not find an existing decoder, create one
 		clipPlayers->Add(SeqClipPlayer());
 		SeqClipPlayer *player = clipPlayers->GetPtr(clipPlayers->Count() - 1);
 		player->clip = clip;
-		player->decoderTask = new SeqTaskDecodeVideo(clip->GetLink());
+		player->decoderTask = new SeqTaskDecodeVideo(link);
+		if (link->defaultVideoStreamInfoIndex >= 0)
+		{
+			int streamIndex = link->streamInfos[link->defaultVideoStreamInfoIndex].streamIndex;
+			player->decoderTask->AddDecodeStreamIndex(streamIndex);
+		}
 		player->material = SeqRenderer::CreateVideoMaterialInstance();
 		player->lastFrame = nullptr;
 		player->maxLineSize = 0;

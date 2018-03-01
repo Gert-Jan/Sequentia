@@ -11,6 +11,8 @@ SeqClip::SeqClip(SeqLibraryLink *link):
 	location(SeqClipLocation()),
 	actionId(-1)
 {
+	// TODO: for now use the defaultVideoStreamInfoIndex here, this should be a parameter later on
+	streamInfoIndex = link->defaultVideoStreamInfoIndex;
 	if (link->metaDataLoaded)
 		location.rightTime = link->duration;
 	else
@@ -73,5 +75,7 @@ void SeqClip::Serialize(SeqSerializer *serializer)
 void SeqClip::Deserialize(SeqSerializer *serializer)
 {
 	link = Sequentia::GetLibrary()->GetLink(serializer->ReadString());
+	// TODO: for now use the defaultVideoStreamInfoIndex here, this should be a serialized value later on
+	streamInfoIndex = link->defaultVideoStreamInfoIndex;
 	location.Deserialize(serializer);
 }

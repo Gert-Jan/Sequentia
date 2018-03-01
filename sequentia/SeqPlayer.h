@@ -16,7 +16,7 @@ struct AVFrame;
 struct SeqClipPlayer
 {
 	SeqClip *clip;
-	SeqTaskDecodeVideo *decoderTask;	
+	SeqTaskDecodeVideo *decoderTask;
 	SeqMaterialInstance *material;
 	AVFrame *lastFrame;
 	int maxLineSize;

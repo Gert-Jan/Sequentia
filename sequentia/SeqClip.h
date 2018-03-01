@@ -26,9 +26,10 @@ private:
 	void Deserialize(SeqSerializer *serializer);
 
 public:
+	int actionId;
 	bool isHidden;
 	SeqClipLocation location;
-	int actionId;
+	int streamInfoIndex;
 private:
 	SeqLibraryLink *link;
 };
