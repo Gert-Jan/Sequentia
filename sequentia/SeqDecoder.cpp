@@ -1,26 +1,35 @@
 #include "SeqDecoder.h"
-#include "SeqVideoContext.h"
+#include "SeqList.h"
 #include "SeqTime.h"
 #include <SDL.h>
 
 SeqDecoder::SeqDecoder():
-	context(nullptr),
-	frameBufferSize(defaultFrameBufferSize),
+	formatContext(nullptr),
 	packetBufferSize(defaultPacketBufferSize),
-	frameBuffer(nullptr),
 	packetBuffer(nullptr)
 {
 	packetBuffer = new AVPacket[packetBufferSize];
-	frameBuffer = new AVFrame*[frameBufferSize]();
+	streamContexts = new SeqList<SeqStreamContext>(2);
+	frameBuffers = new SeqList<SeqFrameBuffer*>(2);
+	startStreams = new SeqList<int>();
+	stopStreams = new SeqList<int>();
+
 	statusMutex = SDL_CreateMutex();
+	seekMutex = SDL_CreateMutex();
+	refreshStreamContextsMutex = SDL_CreateMutex();
 }
 
 SeqDecoder::~SeqDecoder()
 {
 	Dispose();
-	delete[] frameBuffer;
+	delete startStreams;
+	delete stopStreams;
+	delete frameBuffers;
+	delete streamContexts;
 	delete[] packetBuffer;
 	SDL_DestroyMutex(statusMutex);
+	SDL_DestroyMutex(seekMutex);
+	SDL_DestroyMutex(refreshStreamContextsMutex);
 }
 
 SeqDecoderStatus SeqDecoder::GetStatus()
@@ -79,22 +88,24 @@ void SeqDecoder::SetStatusDisposing()
 
 int64_t SeqDecoder::GetDuration()
 {
-	return context->formatContext->duration;
+	return formatContext->duration;
 }
 
 int64_t SeqDecoder::GetPlaybackTime()
 {
-	return STREAM_TIME_TO_SEQ_TIME(lastRequestedFrameTime, context->timeBase);
+	return lastReturnedFrameTime;
 }
 
 int64_t SeqDecoder::GetBufferLeft()
 {
-	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer[displayFrameCursor]->pkt_dts, 0), context->timeBase);
+	SeqFrameBuffer *frameBuffer = primaryStreamContext->frameBuffer;
+	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts, 0), primaryStreamContext->timeBase);
 }
 
 int64_t SeqDecoder::GetBufferRight()
 {
-	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer[(frameBufferCursor - 1 + frameBufferSize) % frameBufferSize]->pkt_dts, 0), context->timeBase);
+	SeqFrameBuffer *frameBuffer = primaryStreamContext->frameBuffer;
+	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer->buffer[(frameBuffer->insertCursor - 1 + frameBuffer->size) % frameBuffer->size]->pkt_dts, 0), primaryStreamContext->timeBase);
 }
 
 void SeqDecoder::Dispose()
@@ -104,13 +115,51 @@ void SeqDecoder::Dispose()
 		SetStatusDisposing();
 		for (int i = 0; i < packetBufferSize; ++i)
 			av_packet_unref(&packetBuffer[i]);
-		for (int i = 0; i < frameBufferSize; ++i)
-			av_frame_free(&frameBuffer[i]);
-		av_frame_free(&audioFrame);
-		av_free(videoDestData[0]);
-		SDL_DestroyMutex(seekMutex);
+		for (int i = 0; i < frameBuffers->Count(); i++)
+			DisposeFrameBuffer(frameBuffers->Get(i));
+		while (streamContexts->Count() > 0)
+			DisposeStreamContext(streamContexts->Count() - 1);
+		avformat_close_input(&formatContext);
 		SetStatusInactive();
 	}
+}
+
+SeqFrameBuffer* SeqDecoder::CreateFrameBuffer(int size)
+{
+	SeqFrameBuffer *buffer = new SeqFrameBuffer();
+	buffer->size = size;
+	buffer->buffer = new AVFrame*[size];
+	buffer->inUseCursor = size - 1;
+	for (int i = 0; i < size; i++)
+	{
+		buffer->buffer[i] = av_frame_alloc();
+		SDL_assert_always(buffer->buffer[i] != nullptr);
+	}
+	return buffer;
+}
+
+void SeqDecoder::DisposeFrameBuffer(SeqFrameBuffer *buffer)
+{
+	for (int i = 0; i < buffer->size; i++)
+		av_frame_free(&buffer->buffer[i]);
+	delete[] buffer->buffer;
+}
+
+void SeqDecoder::DisposeStreamContext(int streamContextIndex)
+{
+	AVCodecContext *codecContext = streamContexts->Get(streamContextIndex).codecContext;
+	avcodec_free_context(&codecContext);
+	streamContexts->RemoveAt(streamContextIndex);
+}
+
+int SeqDecoder::IndexOfStreamContext(int streamIndex)
+{
+	for (int i = 0; i < streamContexts->Count(); i++)
+	{
+		if (streamContexts->Get(i).streamIndex == streamIndex)
+			return i;
+	}
+	return -1;
 }
 
 int SeqDecoder::OpenFormatContext(const char *fullPath, AVFormatContext **formatContext)
@@ -187,57 +236,25 @@ void SeqDecoder::CloseCodecContext(AVCodecContext **codecContext)
 	avcodec_free_context(codecContext);
 }
 
-int SeqDecoder::Preload(SeqVideoContext *videoContext)
+int SeqDecoder::Preload()
 {
-	context = videoContext;
-	RefreshCodecContexts();
-
-	// create buffers
 	SetStatusOpening();
-	// create buffers
-	if (frameBuffer[0] == nullptr)
+
+	// create stream context and buffers
+	SDL_LockMutex(refreshStreamContextsMutex);
+	RefreshStreamContexts();
+	SDL_UnlockMutex(refreshStreamContextsMutex);
+
+	// create packet buffer
+	for (int i = 0; i < packetBufferSize; ++i)
 	{
-		displayFrameCursor = frameBufferSize - 1;
-		seekMutex = SDL_CreateMutex();
+		AVPacket* pkt = &packetBuffer[i];
+		av_init_packet(pkt);
+		pkt->data = nullptr;
+		pkt->size = 0;
+	}
 
-		/* allocate image where the decoded image will be put */
-		int ret = av_image_alloc(videoDestData, context->videoDestLinesize,
-			context->videoCodec->width, context->videoCodec->height, context->videoCodec->pix_fmt, 1);
-		if (ret < 0)
 		{
-			fprintf(stderr, "Could not allocate raw video buffer\n");
-			Dispose();
-			return 1;
-		}
-		context->videoDestBufferSize = ret;
-
-		for (int i = 0; i < frameBufferSize; i++)
-		{
-			frameBuffer[i] = av_frame_alloc();
-			if (!frameBuffer[i])
-			{
-				fprintf(stderr, "Could not allocate buffer frame\n");
-				ret = AVERROR(ENOMEM);
-				Dispose();
-				return 1;
-			}
-		}
-		audioFrame = av_frame_alloc();
-		if (!audioFrame)
-		{
-			fprintf(stderr, "Could not allocate audio frame\n");
-			ret = AVERROR(ENOMEM);
-			Dispose();
-			return 1;
-		}
-
-		/* initialize packets, set data to nullptr, let the demuxer fill it */
-		for (int i = 0; i < packetBufferSize; ++i)
-		{
-			AVPacket* pkt = &packetBuffer[i];
-			av_init_packet(pkt);
-			pkt->data = nullptr;
-			pkt->size = 0;
 		}
 	}
 
@@ -267,10 +284,14 @@ int SeqDecoder::Loop()
 	while (status == SeqDecoderStatus::Loading || status == SeqDecoderStatus::Ready)
 	{
 		// switching codex, when for example switching audio channel or removing an audio channel all together
-		if (shouldRefreshCodex)
+		if (shouldRefreshStreamContexts)
 		{
-			shouldRefreshCodex = false;
-			RefreshCodecContexts();
+			SDL_LockMutex(refreshStreamContextsMutex);
+			shouldRefreshStreamContexts = false;
+			RefreshStreamContexts();
+			startStreams->Clear();
+			stopStreams->Clear();
+			SDL_UnlockMutex(refreshStreamContextsMutex);
 		}
 		// seeking
 		if (shouldSeek)
@@ -280,16 +301,22 @@ int SeqDecoder::Loop()
 			int64_t tempSeekTime = seekTime;
 			SDL_UnlockMutex(seekMutex);
 			// ffmpeg seek
-			avformat_seek_file(context->formatContext, context->videoStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
+			avformat_seek_file(formatContext, primaryStreamContext->streamIndex, 0, tempSeekTime, tempSeekTime, 0);
 			// set state to 'loading' as the complete buffer is now invalid
 			SetStatusLoading();
 			// reset the packet and frame buffer so it will completely be refilled
 			displayPacketCursor = 0;
 			packetBufferCursor = 0;
-			frameBufferCursor = (displayFrameCursor + 1) % frameBufferSize;
+			for (int i = 0; i < frameBuffers->Count(); i++)
+			{
+				SeqFrameBuffer *frameBuffer = frameBuffers->Get(i);
+				frameBuffer->insertCursor = (frameBuffer->inUseCursor + 1) % frameBuffer->size;
+			}
 			lastRequestedFrameTime = tempSeekTime;
 			printf("SEEKING time:%d lb: %d rb: %d disp_pkt:%d pkt_cur:%d disp_frm:%d frm_cur:%d\n", 
-				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor, displayFrameCursor, frameBufferCursor);
+				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor, 
+				primaryStreamContext->frameBuffer->inUseCursor, 
+				primaryStreamContext->frameBuffer->insertCursor);
 		}
 		// fill the packet buffer
 		FillPacketBuffer();
@@ -297,6 +324,7 @@ int SeqDecoder::Loop()
 		// decode the next packet
 		displayPacketCursor = (displayPacketCursor + 1) % packetBufferSize;
 		pkt = packetBuffer[displayPacketCursor];
+		int streamContextIndex = IndexOfStreamContext(pkt.stream_index);
 
 		// skip the packet if:
 		// - there is no data in the packet
@@ -305,8 +333,9 @@ int SeqDecoder::Loop()
 			printf("skipping frame. pts:%d flags:%d size:%d NO DATA!\n", pkt.pts, pkt.flags, pkt.size);
 			continue;
 		}
+
 		// - it's from the wrong stream
-		if (pkt.stream_index != videoContext->videoStreamIndex)
+		if (streamContextIndex == -1)
 		{
 			//printf("skipping frame. pts:%d flags:%d size:%d AUDIO PACKET!\n", pkt.pts, pkt.flags, pkt.size);
 			continue;
@@ -359,8 +388,9 @@ int SeqDecoder::Loop()
 		}
 
 		// wait until we have room in the buffer
-		int nextFrameBufferCursor = (frameBufferCursor + 1) % frameBufferSize;
-		while (nextFrameBufferCursor == displayFrameCursor)
+		SeqFrameBuffer *frameBuffer = streamContexts->Get(streamContextIndex).frameBuffer;
+		int nextInsertCursor = (frameBuffer->insertCursor + 1) % frameBuffer->size;
+		while (nextInsertCursor == frameBuffer->inUseCursor)
 		{
 			if (status == SeqDecoderStatus::Stopping)
 				break;
@@ -376,13 +406,13 @@ int SeqDecoder::Loop()
 			continue;
 
 		// put the new frame in the buffer
-		AVFrame* swapFrame = frameBuffer[frameBufferCursor];
-		frameBuffer[frameBufferCursor] = tempFrame;
+		AVFrame* swapFrame = frameBuffer->buffer[frameBuffer->insertCursor];
+		frameBuffer->buffer[frameBuffer->insertCursor] = tempFrame;
 		tempFrame = swapFrame;
-		bufferPunctuality = frameBuffer[frameBufferCursor]->pkt_dts - lastRequestedFrameTime;
+		bufferPunctuality = frameBuffer->buffer[frameBuffer->insertCursor]->pkt_dts - lastRequestedFrameTime;
 
 		// move the buffer cursor
-		frameBufferCursor = nextFrameBufferCursor;
+		frameBuffer->insertCursor = nextInsertCursor;
 
 		// if this decoder is done, stop the buffering
 		if (status == SeqDecoderStatus::Stopping)
@@ -403,27 +433,28 @@ void SeqDecoder::Stop()
 
 void SeqDecoder::Seek(int64_t time)
 {
-	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, context->timeBase);
-	// if searching forwards
-	if (streamTime > frameBuffer[displayFrameCursor]->pkt_dts)
+	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, primaryStreamContext->timeBase);
+	SeqFrameBuffer *frameBuffer = primaryStreamContext->frameBuffer;
+	// if searching forwards	
+	if (streamTime > frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts)
 	{
 		// first check if the location we're seeking for is already buffered
-		int nextDisplayFrameCursor = (displayFrameCursor + 1) % frameBufferSize;
-		int latest_frame = displayFrameCursor;
+		int nextInUseCursor = (frameBuffer->inUseCursor + 1) % frameBuffer->size;
+		int latest_frame = frameBuffer->inUseCursor;
 		int64_t latest_dts = -1;
-		while (nextDisplayFrameCursor != frameBufferCursor &&
-			frameBuffer[displayFrameCursor]->pkt_dts < streamTime)
+		while (nextInUseCursor != frameBuffer->insertCursor &&
+			frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts < streamTime)
 		{
-			if (frameBuffer[nextDisplayFrameCursor]->pkt_dts > latest_dts)
+			if (frameBuffer->buffer[nextInUseCursor]->pkt_dts > latest_dts)
 			{
-				latest_dts = frameBuffer[nextDisplayFrameCursor]->pkt_dts;
-				latest_frame = nextDisplayFrameCursor;
+				latest_dts = frameBuffer->buffer[nextInUseCursor]->pkt_dts;
+				latest_frame = nextInUseCursor;
 			}
-			nextDisplayFrameCursor = (nextDisplayFrameCursor + 1) % frameBufferSize;
+			nextInUseCursor = (nextInUseCursor + 1) % frameBuffer->size;
 		}
 		// did we find the requested frame in the buffer?
-		if (frameBuffer[displayFrameCursor]->pkt_dts < streamTime &&
-			frameBuffer[nextDisplayFrameCursor]->pkt_dts > streamTime)
+		if (frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts < streamTime &&
+			frameBuffer->buffer[nextInUseCursor]->pkt_dts > streamTime)
 		{
 			// the frame was in the buffer! we're done here!
 			return;
@@ -438,57 +469,85 @@ void SeqDecoder::Seek(int64_t time)
 	SDL_UnlockMutex(seekMutex);
 }
 
-AVFrame* SeqDecoder::NextFrame(int64_t time)
+AVFrame* SeqDecoder::NextFrame(int streamContextIndex, int64_t time)
 {
-	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, context->timeBase);
+	SeqStreamContext *streamContext = streamContexts->GetPtr(streamContextIndex);
+	SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
+	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, streamContext->timeBase);
 	// remember in the decoder what time was last requested, we can use this for buffering more relevant frames
 	lastRequestedFrameTime = streamTime;
 	// only look up to the frame buffer cursor, the decoder thread may be writing to the buffer_cursor index right now
-	int oneBeforeFrameBufferCursor = (frameBufferCursor - 1 + frameBufferSize) % frameBufferSize;
+	int oneBeforeInsertCursor = (frameBuffer->insertCursor - 1 + frameBuffer->size) % frameBuffer->size;
 	// start looking from the last frame we displayed
-	int candidateFrameCursor = displayFrameCursor;
+	int candidateDisplayFrame = frameBuffer->inUseCursor;
 	// figure out the first candidate's frame time
 	int64_t candidateFrameDeltaTime = 0;
-	if (frameBuffer[candidateFrameCursor])
-		candidateFrameDeltaTime = abs(frameBuffer[candidateFrameCursor]->pkt_dts - streamTime);
+	if (frameBuffer->buffer[candidateDisplayFrame])
+		candidateFrameDeltaTime = abs(frameBuffer->buffer[candidateDisplayFrame]->pkt_dts - streamTime);
 	int64_t lowestDeltaTime = candidateFrameDeltaTime;
 	// go through all frame in the buffer until we found one where the requested time is smaller than the frame time
-	while (candidateFrameCursor != oneBeforeFrameBufferCursor)
+	while (candidateDisplayFrame != oneBeforeInsertCursor)
 	{
 		if (lowestDeltaTime < 0 ||
 			candidateFrameDeltaTime < lowestDeltaTime)
 		{
 			lowestDeltaTime = candidateFrameDeltaTime;
-			displayFrameCursor = candidateFrameCursor;
+			frameBuffer->inUseCursor = candidateDisplayFrame;
 		}
-		candidateFrameCursor = (candidateFrameCursor + 1) % frameBufferSize;
-		candidateFrameDeltaTime = abs(frameBuffer[candidateFrameCursor]->pkt_dts - streamTime);
+		candidateDisplayFrame = (candidateDisplayFrame + 1) % frameBuffer->size;
+		candidateFrameDeltaTime = abs(frameBuffer->buffer[candidateDisplayFrame]->pkt_dts - streamTime);
 	}
+	// frame to return
+	AVFrame *frame = frameBuffer->buffer[frameBuffer->inUseCursor];
+	// set playback time
+	lastReturnedFrameTime = STREAM_TIME_TO_SEQ_TIME(frame->pkt_dts, streamContext->timeBase);
 	// return the best suited display frame
-	return frameBuffer[displayFrameCursor];
+	return frame;
 }
 
-AVFrame* SeqDecoder::NextFrame()
+AVFrame* SeqDecoder::NextFrame(int streamContextIndex)
 {
 	// simply return the next display frame in the buffer
-	int nextFrameCursor = (displayFrameCursor + 1) % frameBufferSize;
-	if (nextFrameCursor != frameBufferCursor)
+	SeqStreamContext *streamContext = streamContexts->GetPtr(streamContextIndex);
+	SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
+	int nextInUseCursor = (frameBuffer->inUseCursor + 1) % frameBuffer->size;
+	if (nextInUseCursor != frameBuffer->insertCursor)
 	{
-		displayFrameCursor = nextFrameCursor;
+		frameBuffer->inUseCursor = nextInUseCursor;
 	}
-	return frameBuffer[displayFrameCursor];
+	AVFrame *frame = frameBuffer->buffer[frameBuffer->inUseCursor];
+	lastReturnedFrameTime = STREAM_TIME_TO_SEQ_TIME(frame->pkt_dts, streamContext->timeBase);
+	return frame;
 }
 
-void SeqDecoder::SetVideoStreamIndex(int videoStreamIndex)
+void SeqDecoder::StartDecodingStream(int streamIndex)
 {
-	newVideoStreamIndex = videoStreamIndex;
-	shouldRefreshCodex = true;
+	SDL_LockMutex(refreshStreamContextsMutex);
+	int index = stopStreams->IndexOf(streamIndex);
+	if (index > -1)
+		stopStreams->RemoveAt(index);
+	if (IndexOfStreamContext(streamIndex) > -1)
+		return;
+	if (startStreams->IndexOf(streamIndex) > -1)
+		return;
+	startStreams->Add(streamIndex);
+	shouldRefreshStreamContexts = true;
+	SDL_UnlockMutex(refreshStreamContextsMutex);
 }
 
-void SeqDecoder::SetAudioStreamIndex(int audioStreamIndex)
+void SeqDecoder::StopDecodingStream(int streamIndex)
 {
-	newAudioStreamIndex = audioStreamIndex;
-	shouldRefreshCodex = true;
+	SDL_LockMutex(refreshStreamContextsMutex);
+	int index = startStreams->IndexOf(streamIndex);
+	if (index > -1)
+		startStreams->RemoveAt(index);
+	if (IndexOfStreamContext(streamIndex) == -1)
+		return;
+	if (stopStreams->IndexOf(streamIndex) > -1)
+		return;
+	stopStreams->Add(streamIndex);
+	shouldRefreshStreamContexts = true;
+	SDL_UnlockMutex(refreshStreamContextsMutex);
 }
 
 bool SeqDecoder::IsValidFrame(AVFrame *frame)
@@ -503,7 +562,7 @@ void SeqDecoder::FillPacketBuffer()
 	while (nextPacketBufferCursor != displayPacketCursor && ret >= 0)
 	{
 		packetBufferCursor = nextPacketBufferCursor;
-		ret = av_read_frame(context->formatContext, &packetBuffer[packetBufferCursor]);
+		ret = av_read_frame(formatContext, &packetBuffer[packetBufferCursor]);
 		if (ret >= 0)
 			nextPacketBufferCursor = (packetBufferCursor + 1) % packetBufferSize;
 	}
@@ -512,8 +571,9 @@ void SeqDecoder::FillPacketBuffer()
 bool SeqDecoder::IsSlowAndShouldSkip()
 {
 	int64_t nextKeyFrame;
+	SeqFrameBuffer *frameBuffer = primaryStreamContext->frameBuffer;
 	if (NextKeyFrameDts(&nextKeyFrame))
-		return bufferPunctuality < FFMAX(0, frameBuffer[displayFrameCursor]->pkt_dts) - nextKeyFrame + lowestKeyFrameDecodeTime;
+		return bufferPunctuality < FFMAX(0, frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts) - nextKeyFrame + lowestKeyFrameDecodeTime;
 	else if (bufferPunctuality < 0)
 		return true;
 	else
@@ -525,7 +585,7 @@ bool SeqDecoder::NextKeyFrameDts(int64_t *result)
 	for (int i = 1; i < packetBufferSize; ++i)
 	{
 		AVPacket* pkt = &packetBuffer[(displayPacketCursor + i) % packetBufferSize];
-		if (pkt->stream_index == context->videoStreamIndex && (pkt->flags & AV_PKT_FLAG_KEY) > 0)
+		if (pkt->stream_index == primaryStreamContext->streamIndex && (pkt->flags & AV_PKT_FLAG_KEY) > 0)
 		{
 			*result = pkt->dts;
 			return true;
@@ -539,13 +599,17 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 {
 	int ret = 0;
 	int decoded = pkt.size;
+	int streamContextIndex = IndexOfStreamContext(pkt.stream_index);
+	if (streamContextIndex == -1)
+		return decoded;
+	SeqStreamContext *streamContext = streamContexts->GetPtr(streamContextIndex);
 	*frameIndex = 0;
-	if (pkt.stream_index == context->videoStreamIndex)
+	if (streamContext->codecContext->codec_type == AVMediaType::AVMEDIA_TYPE_VIDEO)
 	{
 		// keep track of frame decoding performance
 		Uint32 decoding_start_time = SDL_GetTicks();
 		// decode video frame
-		ret = avcodec_decode_video2(context->videoCodec, target, frameIndex, &pkt);
+		ret = avcodec_decode_video2(streamContext->codecContext, target, frameIndex, &pkt);
 		if (ret < 0)
 		{
 			PrintAVError("Error decoding video frame (%s)\n", ret);
@@ -553,9 +617,9 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 		}
 		if (*frameIndex)
 		{
-			if (target->width != context->videoCodec->width || 
-				target->height != context->videoCodec->height ||
-				target->format != context->videoCodec->pix_fmt)
+			if (target->width != streamContext->codecContext->width ||
+				target->height != streamContext->codecContext->height ||
+				target->format != streamContext->codecContext->pix_fmt)
 			{
 				// To handle this change, one could call av_image_alloc again and
 				// decode the following frames into another rawvideo file.
@@ -564,8 +628,10 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 					"pixel format of the input video changed:\n"
 					"old: width = %d, height = %d, format = %s\n"
 					"new: width = %d, height = %d, format = %s\n",
-					context->videoCodec->width, context->videoCodec->height, av_get_pix_fmt_name(context->videoCodec->pix_fmt),
-					target->width, target->height, av_get_pix_fmt_name((AVPixelFormat)target->format));
+					streamContext->codecContext->width, streamContext->codecContext->height, 
+					av_get_pix_fmt_name(streamContext->codecContext->pix_fmt),
+					target->width, target->height, 
+					av_get_pix_fmt_name((AVPixelFormat)target->format));
 				return -1;
 			}
 
@@ -580,14 +646,15 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 
 			printf("video_frame%s n:%d coded_n:%d isKey:%d flags:%d dts:%d pts:%d lrft:%d\n",
 				cached ? "(cached)" : "",
-				context->videoFrameCount++, target->coded_picture_number,
-				target->key_frame, pkt.flags, pkt.dts, pkt.pts, STREAM_TIME_TO_SEQ_TIME(lastRequestedFrameTime / 1000, context->timeBase));
+				streamContext->frameCount++, target->coded_picture_number,
+				target->key_frame, pkt.flags, pkt.dts, pkt.pts, 
+				STREAM_TIME_TO_SEQ_TIME(lastRequestedFrameTime / 1000, streamContext->timeBase));
 		}
 	}
-	else if (pkt.stream_index == context->audioStreamIndex)
+	else if (streamContext->codecContext->codec_type == AVMediaType::AVMEDIA_TYPE_AUDIO)
 	{
 		/* decode audio frame */
-		ret = avcodec_decode_audio4(context->audioCodec, target, frameIndex, &pkt);
+		ret = avcodec_decode_audio4(streamContext->codecContext, target, frameIndex, &pkt);
 		if (ret < 0)
 		{
 			PrintAVError("Error decoding audio frame (%s)\n", ret);
@@ -600,72 +667,110 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 		decoded = FFMIN(ret, pkt.size);
 		if (*frameIndex)
 		{
-			//size_t unpaddedLinesize = target->nb_samples * av_get_bytes_per_sample((AVSampleFormat)target->format);
-			//char buff[256];
-			//av_ts_make_time_string(buff, target->pts, &videoInfo.audioCodec->time_base);
-			//printf("audio_frame%s n:%d nb_samples:%d pts:%s\n",
-			//	cached ? "(cached)" : "",
-			//	videoInfo.audioFrameCount++, target->nb_samples, buff);
+			size_t unpadded_linesize = target->nb_samples * av_get_bytes_per_sample((AVSampleFormat)target->format);
+			printf("audio_frame%s n:%d nb_samples:%d pts:%d\n",
+				cached ? "(cached)" : "",
+				streamContext->frameCount++, target->nb_samples,
+				STREAM_TIME_TO_SEQ_TIME(target->pts, streamContext->timeBase));
 		}
 	}
 	return decoded;
 }
 
-void SeqDecoder::RefreshCodecContexts()
+void SeqDecoder::RefreshStreamContexts()
 {
-	// video codec
-	if (context->videoCodec != nullptr && 
-		(context->videoStreamIndex < 0 || context->videoStreamIndex != newVideoStreamIndex))
+	// stop streams
+	for (int i = 0; i < stopStreams->Count(); i++)
 	{
-		// free old video codec context
-		avcodec_free_context(&context->videoCodec);
-		context->videoCodec = nullptr;
-	}
-	if (newVideoStreamIndex > -1 &&
-		(context->videoCodec == nullptr || context->videoStreamIndex != newVideoStreamIndex))
-	{
-		// create new video codec context
-		AVCodec *decoder = nullptr;
-		OpenCodecContext(newVideoStreamIndex, context->formatContext, &decoder, &context->videoCodec, &context->timeBase);
-		AVStream *stream = context->formatContext->streams[newVideoStreamIndex];
-		AVDictionary *opts = nullptr;
-		av_dict_set(&opts, "refcounted_frames", "1", 0);
-		int ret = avcodec_open2(context->videoCodec, decoder, &opts);
-		if (ret < 0)
-		{
-			fprintf(stderr, "Failed to open %s codec\n",
-				av_get_media_type_string(stream->codecpar->codec_type));
-			newVideoStreamIndex = -1;
-		}
-	}
-	context->videoStreamIndex = newVideoStreamIndex;
+		// get the stream context for the stream index
+		int streamContextIndex = IndexOfStreamContext(stopStreams->Get(i));
+		SeqStreamContext *streamContext = streamContexts->GetPtr(streamContextIndex);
 
-	// audio codec
-	if (context->audioCodec != nullptr &&
-		(context->audioStreamIndex < 0 || context->audioStreamIndex != newAudioStreamIndex))
-	{
-		// free old audio codec context
-		avcodec_free_context(&context->audioCodec);
-		context->audioCodec = nullptr;
+		// discard primary stream context if removed
+		if (primaryStreamContext == streamContext)
+			primaryStreamContext = nullptr;
+
+		// free the AVCodecContext
+		avcodec_free_context(&streamContext->codecContext);
+		// reset the associated frame buffer for later re-use.
+		ResetFrameBuffer(streamContext->frameBuffer);
+		// remove the stream context from the video context
+		streamContexts->RemoveAt(streamContextIndex);
+		// if an index before the primary stream context was removed the primary context has been copied to the left
+		if (primaryStreamContext > streamContext)
+			primaryStreamContext = primaryStreamContext - sizeof(SeqStreamContext);
 	}
-	if (newAudioStreamIndex > -1 &&
-		(context->audioCodec == nullptr || context->audioStreamIndex != newAudioStreamIndex))
+
+	// prefer old already used streams context over new ones for primary 
+	RefreshPrimaryStreamContext();
+
+	// start new streams
+	for (int i = 0; i < startStreams->Count(); i++)
 	{
-		// create new audio codec context
+		int streamIndex = startStreams->Get(i);
+		// get an old, or create a new framebufferi
+		int frameBufferIndex = NextFrameBuffer();
+		// make a new SeqStreamContext
+		streamContexts->Add(SeqStreamContext());
+		SeqStreamContext *streamContext = streamContexts->GetPtr(streamContexts->Count() - 1);
+		streamContext->streamIndex = streamIndex;
+		streamContext->frameBuffer = frameBuffers->Get(frameBufferIndex);
+		streamContext->frameBuffer->usedBy = streamContext;
+		// create codec context
 		AVCodec *decoder = nullptr;
-		OpenCodecContext(newAudioStreamIndex, context->formatContext, &decoder, &context->audioCodec, &context->timeBase);
-		AVStream *stream = context->formatContext->streams[newAudioStreamIndex];
+		OpenCodecContext(streamIndex, formatContext, &decoder, &streamContext->codecContext, &streamContext->timeBase);
+		AVStream *stream = formatContext->streams[streamIndex];
 		AVDictionary *opts = nullptr;
 		av_dict_set(&opts, "refcounted_frames", "1", 0);
-		int ret = avcodec_open2(context->audioCodec, decoder, &opts);
+		int ret = avcodec_open2(streamContext->codecContext, decoder, &opts);
 		if (ret < 0)
 		{
 			fprintf(stderr, "Failed to open %s codec\n",
 				av_get_media_type_string(stream->codecpar->codec_type));
-			newAudioStreamIndex = -1;
 		}
 	}
-	context->audioStreamIndex = newAudioStreamIndex;
+
+	// if we didn't find a primary stream context previously, maybe we do now?
+	RefreshPrimaryStreamContext();
+}
+
+void SeqDecoder::RefreshPrimaryStreamContext()
+{
+	if (primaryStreamContext == nullptr || primaryStreamContext->codecContext->codec_type != AVMediaType::AVMEDIA_TYPE_VIDEO)
+	{
+		for (int i = 0; i < streamContexts->Count(); i++)
+		{
+			// prefer video over other stream types
+			if (streamContexts->Get(i).codecContext->codec_type == AVMediaType::AVMEDIA_TYPE_VIDEO)
+			{
+				primaryStreamContext = streamContexts->GetPtr(i);
+				break;
+			}
+			// otherwise just use the first one in the list
+			else if (primaryStreamContext == nullptr)
+			{
+				primaryStreamContext = streamContexts->GetPtr(i);
+			}
+		}
+	}
+}
+
+int SeqDecoder::NextFrameBuffer()
+{
+	for (int i = 0; i < frameBuffers->Count(); i++)
+	{
+		if (frameBuffers->Get(i)->usedBy == nullptr)
+			return i;
+	}
+	frameBuffers->Add(CreateFrameBuffer(defaultFrameBufferSize));
+	return frameBuffers->Count() - 1;
+}
+
+void SeqDecoder::ResetFrameBuffer(SeqFrameBuffer *buffer)
+{
+	buffer->inUseCursor = buffer->size - 1;
+	buffer->insertCursor = 0;
+	buffer->usedBy = nullptr;
 }
 
 int SeqDecoder::GetBestStream(AVFormatContext *format, enum AVMediaType type, int *streamIndex)

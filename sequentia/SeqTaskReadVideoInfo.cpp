@@ -1,7 +1,6 @@
 #include "SeqTaskReadVideoInfo.h"
 #include "SeqLibrary.h"
 #include "SeqDecoder.h"
-#include "SeqVideoContext.h"
 #include <SDL.h>
 
 SeqTaskReadVideoInfo::SeqTaskReadVideoInfo(SeqLibraryLink *link) :

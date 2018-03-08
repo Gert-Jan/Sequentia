@@ -250,7 +250,7 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				}
 				
 				// move the frame to the GPU if the decoder is ready
-				AVFrame *frame = decoder->NextFrame(requestTime);
+				AVFrame *frame = decoder->NextFrame(clip->streamInfoIndex, requestTime);
 				if (SeqDecoder::IsValidFrame(frame) && frame != clipPlayer->lastFrame)
 				{
 					if (clipPlayer->lastFrame == nullptr ||
@@ -397,10 +397,10 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 		SeqClipPlayer *player = clipPlayers->GetPtr(clipPlayers->Count() - 1);
 		player->clip = clip;
 		player->decoderTask = new SeqTaskDecodeVideo(link);
-		if (link->defaultVideoStreamInfoIndex >= 0)
+		if (clip->streamInfoIndex >= 0)
 		{
-			int streamIndex = link->streamInfos[link->defaultVideoStreamInfoIndex].streamIndex;
-			player->decoderTask->AddDecodeStreamIndex(streamIndex);
+			int streamIndex = link->streamInfos[clip->streamInfoIndex].streamIndex;
+			player->decoderTask->StartDecodeStreamIndex(streamIndex);
 		}
 		player->material = SeqRenderer::CreateVideoMaterialInstance();
 		player->lastFrame = nullptr;

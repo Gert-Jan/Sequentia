@@ -93,8 +93,8 @@
     <ClCompile Include="SeqWidgets.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="SeqVideoContext.cpp">
-      <Filter>sys\video</Filter>
+    <ClCompile Include="SeqUtils.cpp">
+      <Filter>sys\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -221,9 +221,6 @@
     </ClInclude>
     <ClInclude Include="SeqWidgets.h">
       <Filter>ui</Filter>
-    </ClInclude>
-    <ClInclude Include="SeqVideoContext.h">
-      <Filter>sys\video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

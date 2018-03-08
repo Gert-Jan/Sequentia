@@ -9,7 +9,9 @@ extern "C"
 	#include "libavutil/timestamp.h"
 }
 
-class SeqVideoContext;
+template<class T>
+class SeqList;
+struct SeqStreamContext;
 struct SDL_mutex;
 
 enum class SeqDecoderStatus
@@ -20,6 +22,24 @@ enum class SeqDecoderStatus
 	Ready,
 	Stopping,
 	Disposing
+};
+
+struct SeqFrameBuffer
+{
+	int size;
+	AVFrame **buffer;
+	int inUseCursor = 0;
+	int insertCursor = 0;
+	SeqStreamContext *usedBy = nullptr;
+};
+
+struct SeqStreamContext
+{
+	int streamIndex = -1;
+	AVCodecContext *codecContext = nullptr;
+	SeqFrameBuffer *frameBuffer = nullptr;
+	int frameCount = 0;
+	double timeBase = 1;
 };
 
 class SeqDecoder
@@ -35,19 +55,23 @@ public:
 	int64_t GetBufferRight();
 
 	void Dispose();
+	SeqFrameBuffer* CreateFrameBuffer(int size);
+	void DisposeFrameBuffer(SeqFrameBuffer *buffer);
+	int IndexOfStreamContext(int streamIndex);
+	void DisposeStreamContext(int streamContextIndex);
 	static int OpenFormatContext(const char *fullPath, AVFormatContext **formatContext);
 	static void CloseFormatContext(AVFormatContext **formatContext);
 	static int OpenCodecContext(int streamIndex, AVFormatContext *format, AVCodec **codec, AVCodecContext **context, double* timeBase);
 	static void CloseCodecContext(AVCodecContext **codecContext);
 	static int GetBestStream(AVFormatContext *format, enum AVMediaType type, int *streamIndex);
-	int Preload(SeqVideoContext *videoContext);
+	int Preload();
 	int Loop();
 	void Stop();
 	void Seek(int64_t time);
-	AVFrame* NextFrame(int64_t);
-	AVFrame* NextFrame();
-	void SetVideoStreamIndex(int streamIndex);
-	void SetAudioStreamIndex(int streamIndex);
+	AVFrame* NextFrame(int streamContextIndex, int64_t time);
+	AVFrame* NextFrame(int streamContextIndex);
+	void StartDecodingStream(int streamIndex);
+	void StopDecodingStream(int streamIndex);
 	static bool IsValidFrame(AVFrame *frame);
 
 private:
@@ -62,34 +86,44 @@ private:
 	bool IsSlowAndShouldSkip();
 	bool NextKeyFrameDts(int64_t *result);
 	int DecodePacket(AVPacket packet, AVFrame *target, int *frameIndex, int cached);
-	void RefreshCodecContexts();
+	void RefreshStreamContexts();
+	void RefreshPrimaryStreamContext();
+	int NextFrameBuffer();
+	void ResetFrameBuffer(SeqFrameBuffer *buffer);
 	void PrintAVError(const char *message, int error);
-	
+
+public:
+	AVFormatContext *formatContext = nullptr;
+
 private:
 	static const int defaultFrameBufferSize = 60;
 	static const int defaultPacketBufferSize = 500;
 
 	SeqDecoderStatus status = SeqDecoderStatus::Inactive;
-	SeqVideoContext *context;
-	int frameBufferSize = defaultFrameBufferSize;
-	int packetBufferSize = defaultPacketBufferSize;
-	uint8_t *videoDestData[4] = { NULL };
+	SDL_mutex *statusMutex;
+
+	SeqList<SeqStreamContext> *streamContexts;
+	SeqStreamContext *primaryStreamContext = nullptr;
+
 	bool skipFramesIfSlow = false;
-	int64_t lastRequestedFrameTime = 0;
+	int64_t lastRequestedFrameTime;
+	int64_t lastReturnedFrameTime;
 	int64_t bufferPunctuality = 0;
 	int64_t lowestKeyFrameDecodeTime = 0;
+
+	bool shouldRefreshStreamContexts = false;
+	SeqList<int> *startStreams;
+	SeqList<int> *stopStreams;
+	SDL_mutex *refreshStreamContextsMutex;
+	
 	bool shouldSeek = false;
 	int64_t seekTime = 0;
-	bool shouldRefreshCodex = false;
-	int newVideoStreamIndex = -1;
-	int newAudioStreamIndex = -1;
 	SDL_mutex *seekMutex;
-	SDL_mutex *statusMutex;
-	AVFrame *audioFrame = NULL;
-	int displayFrameCursor;
-	int frameBufferCursor = 0;
-	AVFrame **frameBuffer;
+	
+	SeqList<SeqFrameBuffer*> *frameBuffers;
+
+	int packetBufferSize = defaultPacketBufferSize;
+	AVPacket *packetBuffer;
 	int displayPacketCursor = 0;
 	int packetBufferCursor = 0;
-	AVPacket *packetBuffer;
 };

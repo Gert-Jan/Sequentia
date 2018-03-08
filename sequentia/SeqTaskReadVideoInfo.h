@@ -10,7 +10,6 @@ extern "C"
 
 enum class SeqWorkerTaskPriority;
 struct SeqLibraryLink;
-class SeqVideoContext;
 
 class SeqTaskReadVideoInfo : public SeqWorkerTask
 {

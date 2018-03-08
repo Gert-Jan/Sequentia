@@ -4,7 +4,7 @@
 #include "SeqUILibrary.h"
 #include "SeqProjectHeaders.h"
 #include "SeqActionFactory.h"
-#include "SeqVideoContext.h"
+#include "SeqUtils.h"
 #include "SeqDialogs.h"
 #include "SeqString.h"
 
@@ -106,7 +106,7 @@ void SeqUILibrary::Draw()
 				}
 				ImGui::Text(SeqString::Temp->Buffer);
 				ImGui::NextColumn();
-				SeqVideoContext::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, link->duration);
+				SeqUtils::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, link->duration);
 				ImGui::Text(SeqString::Temp->Buffer);
 				ImGui::NextColumn();
 			}

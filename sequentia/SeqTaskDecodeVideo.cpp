@@ -1,6 +1,5 @@
 #include "SeqTaskDecodeVideo.h"
 #include "SeqLibrary.h"
-#include "SeqVideoContext.h"
 #include "SeqDecoder.h"
 #include <SDL.h>
 
@@ -20,10 +19,14 @@ SeqLibraryLink* SeqTaskDecodeVideo::GetLink()
 	return link;
 }
 
-void SeqTaskDecodeVideo::AddDecodeStreamIndex(int streamIndex)
+void SeqTaskDecodeVideo::StartDecodeStreamIndex(int streamIndex)
 {
-	// TODO: decoder should get a list of decoder indexes instead of just dumping it on the video stream index
-	decoder->SetVideoStreamIndex(streamIndex);
+	decoder->StartDecodingStream(streamIndex);
+}
+
+void SeqTaskDecodeVideo::StopDecodedStreamIndex(int streamIndex)
+{
+	decoder->StopDecodingStream(streamIndex);
 }
 
 void SeqTaskDecodeVideo::Start()
@@ -32,16 +35,13 @@ void SeqTaskDecodeVideo::Start()
 		SDL_Delay(10);
 
 	// start decoding
-	SeqVideoContext *context = new SeqVideoContext();
-	error = SeqDecoder::OpenFormatContext(link->fullPath, &context->formatContext);
+	error = SeqDecoder::OpenFormatContext(link->fullPath, &decoder->formatContext);
 	if (error == 0)
 	{
-		decoder->Preload(context);
+		decoder->Preload();
 		decoder->Loop();
 	}
 
-	// cleanup
-	delete context;
 	while (!done)
 		SDL_Delay(10);
 }

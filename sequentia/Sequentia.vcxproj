@@ -187,7 +187,7 @@
     <ClCompile Include="SeqUILibrary.cpp" />
     <ClCompile Include="SeqUISequencer.cpp" />
     <ClCompile Include="SeqUIVideo.cpp" />
-    <ClCompile Include="SeqVideoContext.cpp" />
+    <ClCompile Include="SeqUtils.cpp" />
     <ClCompile Include="SeqWidgets.cpp" />
     <ClCompile Include="SeqWorker.cpp" />
     <ClCompile Include="SeqWorkerManager.cpp" />
@@ -228,7 +228,6 @@
     <ClInclude Include="SeqUISequencer.h" />
     <ClInclude Include="SeqUIVideo.h" />
     <ClInclude Include="SeqUtils.h" />
-    <ClInclude Include="SeqVideoContext.h" />
     <ClInclude Include="SeqWidgets.h" />
     <ClInclude Include="SeqWindow.h" />
     <ClInclude Include="SeqWorker.h" />
