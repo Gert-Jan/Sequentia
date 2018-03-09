@@ -381,7 +381,7 @@ int SeqDecoder::Loop()
 		}
 
 		// wait until we have room in the buffer
-		SeqFrameBuffer *frameBuffer = streamContexts->frameBuffer;
+		SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
 		int nextInsertCursor = (frameBuffer->insertCursor + 1) % frameBuffer->size;
 		while (nextInsertCursor == frameBuffer->inUseCursor)
 		{
