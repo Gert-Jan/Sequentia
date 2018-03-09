@@ -35,7 +35,6 @@ struct SeqFrameBuffer
 
 struct SeqStreamContext
 {
-	int streamIndex = -1;
 	AVCodecContext *codecContext = nullptr;
 	SeqFrameBuffer *frameBuffer = nullptr;
 	int frameCount = 0;
@@ -57,8 +56,7 @@ public:
 	void Dispose();
 	SeqFrameBuffer* CreateFrameBuffer(int size);
 	void DisposeFrameBuffer(SeqFrameBuffer *buffer);
-	int IndexOfStreamContext(int streamIndex);
-	void DisposeStreamContext(int streamContextIndex);
+	void DisposeStreamContext(SeqStreamContext *context);
 	static int OpenFormatContext(const char *fullPath, AVFormatContext **formatContext);
 	static void CloseFormatContext(AVFormatContext **formatContext);
 	static int OpenCodecContext(int streamIndex, AVFormatContext *format, AVCodec **codec, AVCodecContext **context, double* timeBase);
@@ -68,8 +66,8 @@ public:
 	int Loop();
 	void Stop();
 	void Seek(int64_t time);
-	AVFrame* NextFrame(int streamContextIndex, int64_t time);
-	AVFrame* NextFrame(int streamContextIndex);
+	AVFrame* NextFrame(int streamIndex, int64_t time);
+	AVFrame* NextFrame(int streamIndex);
 	void StartDecodingStream(int streamIndex);
 	void StopDecodingStream(int streamIndex);
 	static bool IsValidFrame(AVFrame *frame);
@@ -102,8 +100,8 @@ private:
 	SeqDecoderStatus status = SeqDecoderStatus::Inactive;
 	SDL_mutex *statusMutex;
 
-	SeqList<SeqStreamContext> *streamContexts;
-	SeqStreamContext *primaryStreamContext = nullptr;
+	SeqStreamContext *streamContexts;
+	int primaryStreamIndex = -1;
 
 	bool skipFramesIfSlow = false;
 	int64_t lastRequestedFrameTime;
