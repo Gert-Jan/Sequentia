@@ -1,6 +1,7 @@
 #include "SeqClip.h"
 #include "Sequentia.h"
 #include "SeqLibrary.h"
+#include "SeqStreamInfo.h"
 #include "SeqChannel.h"
 #include "SeqSerializer.h"
 #include "SeqTime.h"
@@ -12,7 +13,8 @@ SeqClip::SeqClip(SeqLibraryLink *link):
 	actionId(-1)
 {
 	// TODO: for now use the defaultVideoStreamInfoIndex here, this should be a parameter later on
-	streamInfo = link->streamInfos[link->defaultVideoStreamInfoIndex];
+	streamIndex = link->defaultVideoStreamIndex;
+	//streamIndex = link->defaultAudioStreamIndex;
 	if (link->metaDataLoaded)
 		location.rightTime = link->duration;
 	else
@@ -66,6 +68,11 @@ SeqLibraryLink* SeqClip::GetLink()
 	return link;
 }
 
+SeqStreamInfo* SeqClip::GetStreamInfo()
+{
+	return &link->streamInfos[streamIndex];
+}
+
 void SeqClip::Serialize(SeqSerializer *serializer)
 {
 	serializer->Write(link->fullPath);
@@ -76,6 +83,6 @@ void SeqClip::Deserialize(SeqSerializer *serializer)
 {
 	link = Sequentia::GetLibrary()->GetLink(serializer->ReadString());
 	// TODO: for now use the defaultVideoStreamInfoIndex here, this should be a serialized value later on
-	streamInfoIndex = link->defaultVideoStreamInfoIndex;
+	streamIndex = link->defaultVideoStreamIndex;
 	location.Deserialize(serializer);
 }

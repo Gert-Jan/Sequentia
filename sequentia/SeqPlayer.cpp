@@ -6,6 +6,7 @@
 #include "Sequentia.h"
 #include "SeqWorkerManager.h"
 #include "SeqTaskDecodeVideo.h"
+#include "SeqStreamInfo.h"
 #include "SeqDecoder.h"
 #include "SeqRenderer.h"
 #include "SeqMaterialInstance.h"
@@ -250,18 +251,25 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				}
 				
 				// move the frame to the GPU if the decoder is ready
-				AVFrame *frame = decoder->NextFrame(clip->streamInfo.streamIndex, requestTime);
+				AVFrame *frame = decoder->NextFrame(clip->streamIndex, requestTime);
 				if (SeqDecoder::IsValidFrame(frame) && frame != clipPlayer->lastFrame)
 				{
-					if (clipPlayer->lastFrame == nullptr ||
-						frame->linesize[0] > clipPlayer->maxLineSize)
+					if (clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
 					{
-						clipPlayer->maxLineSize = frame->linesize[0];
-						SeqRenderer::CreateVideoTextures(frame, clipPlayer->material->textureHandles);
+						if (clipPlayer->lastFrame == nullptr ||
+							frame->linesize[0] > clipPlayer->videoPlayer.maxLineSize)
+						{
+							clipPlayer->videoPlayer.maxLineSize = frame->linesize[0];
+							SeqRenderer::CreateVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
+						}
+						else
+						{
+							SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
+						}
 					}
-					else
+					else if (clip->GetStreamInfo()->type == SeqStreamInfoType::Audio)
 					{
-						SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->material->textureHandles);
+						// TODO: queue audio data
 					}
 
 					clipPlayer->lastFrame = frame;
@@ -340,9 +348,9 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 			SeqProject* project = Sequentia::GetProject();
 			if (player->lastFrame != nullptr)
 			{
-				drawList->AddImage(player->material, 
+				drawList->AddImage(player->videoPlayer.material, 
 					ImVec2(0, 0), ImVec2(project->width, project->height), 
-					ImVec2(0, 0), ImVec2((float)player->lastFrame->width / (float)player->maxLineSize, 1));
+					ImVec2(0, 0), ImVec2((float)player->lastFrame->width / (float)player->videoPlayer.maxLineSize, 1));
 			}
 		}
 	}
@@ -397,14 +405,21 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 		SeqClipPlayer *player = clipPlayers->GetPtr(clipPlayers->Count() - 1);
 		player->clip = clip;
 		player->decoderTask = new SeqTaskDecodeVideo(link);
-		if (clip->streamInfo.streamIndex >= 0)
+		if (clip->streamIndex >= 0)
 		{
-			player->decoderTask->StartDecodeStreamIndex(clip->streamInfo.streamIndex);
+			player->decoderTask->StartDecodeStreamIndex(clip->streamIndex);
 		}
-		player->material = SeqRenderer::CreateVideoMaterialInstance();
 		player->lastFrame = nullptr;
-		player->maxLineSize = 0;
 		player->isWaitingForSeek = false;
+		if (clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
+		{
+			player->videoPlayer.material = SeqRenderer::CreateVideoMaterialInstance();
+			player->videoPlayer.maxLineSize = 0;
+		}
+		else if (clip->GetStreamInfo()->type == SeqStreamInfoType::Audio)
+		{
+			// TODO: create audio device
+		}
 		SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
 		return player;
 	}
@@ -424,6 +439,13 @@ int SeqPlayer::GetClipPlayerIndexFor(SeqClip *clip)
 void SeqPlayer::DisposeClipPlayerAt(const int index)
 {
 	SeqClipPlayer player = clipPlayers->Get(index);
-	player.decoderTask->Stop();
-	SeqRenderer::RemoveMaterialInstance(player.material);
+	player.decoderTask->Stop(); 
+	if (player.clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
+	{
+		SeqRenderer::RemoveMaterialInstance(player.videoPlayer.material);
+	}
+	else
+	{
+		// TODO: dispose audio device
+	}
 }

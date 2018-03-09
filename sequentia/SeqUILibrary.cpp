@@ -4,6 +4,7 @@
 #include "SeqUILibrary.h"
 #include "SeqProjectHeaders.h"
 #include "SeqActionFactory.h"
+#include "SeqStreamInfo.h"
 #include "SeqUtils.h"
 #include "SeqDialogs.h"
 #include "SeqString.h"
@@ -95,9 +96,9 @@ void SeqUILibrary::Draw()
 			ImGui::NextColumn();
 			if (link->metaDataLoaded)
 			{
-				if (link->defaultVideoStreamInfoIndex >= 0)
+				if (link->defaultVideoStreamIndex >= 0)
 				{
-					SeqVideoStreamInfo *videoInfo = &link->streamInfos[link->defaultVideoStreamInfoIndex].videoInfo;
+					SeqVideoStreamInfo *videoInfo = &link->streamInfos[link->defaultVideoStreamIndex].videoInfo;
 					SeqString::Temp->Format("%ix%i", videoInfo->width, videoInfo->height);
 				}
 				else

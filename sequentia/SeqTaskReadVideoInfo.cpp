@@ -1,4 +1,5 @@
 #include "SeqTaskReadVideoInfo.h"
+#include "SeqStreamInfo.h"
 #include "SeqLibrary.h"
 #include "SeqDecoder.h"
 #include <SDL.h>
@@ -21,11 +22,10 @@ void SeqTaskReadVideoInfo::Start()
 {
 	// read format
 	AVFormatContext *format = nullptr;
-	int bestVideoStream = -1, bestAudioStream = -1;
 	SeqDecoder::OpenFormatContext(tempLink->fullPath, &format);
 	tempLink->duration = format->duration;
-	SeqDecoder::GetBestStream(format, AVMediaType::AVMEDIA_TYPE_VIDEO, &bestVideoStream);
-	SeqDecoder::GetBestStream(format, AVMediaType::AVMEDIA_TYPE_AUDIO, &bestAudioStream);
+	SeqDecoder::GetBestStream(format, AVMediaType::AVMEDIA_TYPE_VIDEO, &tempLink->defaultVideoStreamIndex);
+	SeqDecoder::GetBestStream(format, AVMediaType::AVMEDIA_TYPE_AUDIO, &tempLink->defaultAudioStreamIndex);
 
 	// count video/audio streams and create arrays for info for both types
 	for (int i = 0; i < format->nb_streams; i++)
@@ -40,42 +40,36 @@ void SeqTaskReadVideoInfo::Start()
 				break;
 		}
 	}
-	if (tempLink->videoStreamCount + tempLink->audioStreamCount > 0)
-		tempLink->streamInfos = new SeqStreamInfo[tempLink->videoStreamCount + tempLink->audioStreamCount];
+	
+	tempLink->streamInfos = new SeqStreamInfo[format->nb_streams];
 
 	// read codec info for all relevant streams
 	AVCodecContext *codec = nullptr;
 	double timeBase;
-	int infoIndex = 0;
 	for (int i = 0; i < format->nb_streams; i++)
 	{
 		SeqDecoder::OpenCodecContext(i, format, nullptr, &codec, &timeBase);
 		AVMediaType type = format->streams[i]->codecpar->codec_type;
+		SeqStreamInfo *info = &tempLink->streamInfos[i];
+		info->streamIndex = i;
+		info->timeBase = timeBase;
 		if (type == AVMediaType::AVMEDIA_TYPE_VIDEO)
 		{
-			SeqStreamInfo *info = &tempLink->streamInfos[infoIndex];
-			info->streamIndex = i;
-			info->timeBase = timeBase;
 			info->type = SeqStreamInfoType::Video;
 			info->videoInfo.width = codec->width;
 			info->videoInfo.height = codec->height;
 			info->videoInfo.pixelFormat = codec->pix_fmt;
-			if (i == bestVideoStream)
-				tempLink->defaultVideoStreamInfoIndex = infoIndex;
-			infoIndex++;
 		}
 		else if (type == AVMediaType::AVMEDIA_TYPE_AUDIO)
 		{
-			SeqStreamInfo *info = &tempLink->streamInfos[infoIndex];
-			info->streamIndex = i;
-			info->timeBase = timeBase;
 			info->type = SeqStreamInfoType::Audio;
 			info->audioInfo.sampleRate = codec->sample_rate;
 			info->audioInfo.channelCount = codec->channels;
 			info->audioInfo.format = FromAVSampleFormat(codec->sample_fmt, &info->audioInfo.isPlanar);
-			if (i == bestAudioStream)
-				tempLink->defaultAudioStreamInfoIndex = infoIndex;
-			infoIndex++;
+		}
+		else
+		{
+			info->type = SeqStreamInfoType::Other;
 		}
 		SeqDecoder::CloseCodecContext(&codec);
 	}

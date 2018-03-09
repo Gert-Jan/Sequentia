@@ -12,15 +12,30 @@ template<class T>
 class SeqList;
 
 struct AVFrame;
+struct SDL_AudioDevice;
+
+struct SeqClipPlayerVideo
+{
+	SeqMaterialInstance *material;
+	int maxLineSize;
+};
+
+struct SeqClipPlayerAudio
+{
+	SDL_AudioDevice *device;
+};
 
 struct SeqClipPlayer
 {
 	SeqClip *clip;
 	SeqTaskDecodeVideo *decoderTask;
-	SeqMaterialInstance *material;
 	AVFrame *lastFrame;
-	int maxLineSize;
 	bool isWaitingForSeek;
+	union
+	{
+		SeqClipPlayerVideo videoPlayer;
+		SeqClipPlayerAudio audioPlayer;
+	};
 };
 
 struct SeqPlayerRenderTarget

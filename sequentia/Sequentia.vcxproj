@@ -219,6 +219,7 @@
     <ClInclude Include="SeqScene.h" />
     <ClInclude Include="SeqSerializer.h" />
     <ClInclude Include="SeqSerializerBin.h" />
+    <ClInclude Include="SeqStreamInfo.h" />
     <ClInclude Include="SeqString.h" />
     <ClInclude Include="SeqTaskDecodeVideo.h" />
     <ClInclude Include="SeqTaskReadVideoInfo.h" />

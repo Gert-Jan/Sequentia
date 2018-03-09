@@ -222,6 +222,9 @@
     <ClInclude Include="SeqWidgets.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="SeqStreamInfo.h">
+      <Filter>data</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />

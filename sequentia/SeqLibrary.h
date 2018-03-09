@@ -1,49 +1,13 @@
 #pragma once
 
-extern "C"
-{
-	#include <libavutil/pixfmt.h>
-}
 #include <SDL_atomic.h>
-#include <SDL_audio.h>
 
 class SeqProject;
 template<class T>
 class SeqList;
 class SeqSerializer;
 class SeqLibrary;
-
-struct SeqVideoStreamInfo
-{
-	int width, height;
-	AVPixelFormat pixelFormat;
-};
-
-struct SeqAudioStreamInfo
-{
-	int sampleRate;
-	SDL_AudioFormat format;
-	int channelCount;
-	bool isPlanar;
-};
-
-enum class SeqStreamInfoType
-{
-	Video,
-	Audio
-};
-
-struct SeqStreamInfo
-{
-	int streamIndex = -1;
-	double timeBase;
-	SeqStreamInfoType type;
-	union
-	{
-		SeqVideoStreamInfo videoInfo;
-		SeqAudioStreamInfo audioInfo;
-	};
-};
+struct SeqStreamInfo;
 
 struct SeqLibraryLink
 {
@@ -54,8 +18,8 @@ struct SeqLibraryLink
 	int64_t duration;
 	int videoStreamCount;
 	int audioStreamCount;
-	int defaultVideoStreamInfoIndex;
-	int defaultAudioStreamInfoIndex;
+	int defaultVideoStreamIndex;
+	int defaultAudioStreamIndex;
 	SeqStreamInfo *streamInfos;
 };
 

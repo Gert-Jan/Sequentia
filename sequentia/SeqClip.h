@@ -5,6 +5,7 @@
 
 class SeqChannel;
 struct SeqLibraryLink;
+struct SeqStreamInfo;
 class SeqSerializer;
 
 class SeqClip
@@ -19,6 +20,7 @@ public:
 	SeqChannel* GetParent();
 	char* GetLabel();
 	SeqLibraryLink* GetLink();
+	SeqStreamInfo* GetStreamInfo();
 
 public:
 	void Serialize(SeqSerializer *serializer);
@@ -29,7 +31,7 @@ public:
 	int actionId;
 	bool isHidden;
 	SeqClipLocation location;
-	SeqStreamInfo streamInfo;
+	int streamIndex;
 private:
 	SeqLibraryLink *link;
 };
