@@ -29,7 +29,7 @@ public:
 	int actionId;
 	bool isHidden;
 	SeqClipLocation location;
-	int streamInfoIndex;
+	SeqStreamInfo streamInfo;
 private:
 	SeqLibraryLink *link;
 };

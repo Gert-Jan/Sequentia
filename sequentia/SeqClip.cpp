@@ -12,7 +12,7 @@ SeqClip::SeqClip(SeqLibraryLink *link):
 	actionId(-1)
 {
 	// TODO: for now use the defaultVideoStreamInfoIndex here, this should be a parameter later on
-	streamInfoIndex = link->defaultVideoStreamInfoIndex;
+	streamInfo = link->streamInfos[link->defaultVideoStreamInfoIndex];
 	if (link->metaDataLoaded)
 		location.rightTime = link->duration;
 	else

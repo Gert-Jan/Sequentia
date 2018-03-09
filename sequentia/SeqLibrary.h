@@ -35,7 +35,7 @@ enum class SeqStreamInfoType
 
 struct SeqStreamInfo
 {
-	int streamIndex;
+	int streamIndex = -1;
 	double timeBase;
 	SeqStreamInfoType type;
 	union
