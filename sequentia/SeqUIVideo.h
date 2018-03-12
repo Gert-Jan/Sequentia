@@ -18,8 +18,7 @@ public:
 	SeqUIVideo(SeqSerializer *serializer);
 	~SeqUIVideo();
 
-	void ActionDone(const SeqAction action);
-	void ActionUndone(const SeqAction action);
+	void PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data);
 	SeqWindowType GetWindowType();
 	void Draw();
 	void Serialize(SeqSerializer *serializer);

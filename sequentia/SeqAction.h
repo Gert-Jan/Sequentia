@@ -34,8 +34,7 @@ struct SeqAction
 class SeqActionHandler
 {
 public:
-	virtual void ActionDone(const SeqAction action) = 0;
-	virtual void ActionUndone(const SeqAction action) = 0;
+	virtual void PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data) = 0;
 };
 
 struct SeqActionAddChannel

@@ -59,18 +59,8 @@ SeqUIVideo::~SeqUIVideo()
 	scene->player->RemoveViewer(0);
 }
 
-void SeqUIVideo::ActionDone(const SeqAction action)
+void SeqUIVideo::PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data)
 {
-	switch (action.type)
-	{
-	}
-}
-
-void SeqUIVideo::ActionUndone(const SeqAction action)
-{
-	switch (action.type)
-	{
-	}
 }
 
 SeqWindowType SeqUIVideo::GetWindowType()

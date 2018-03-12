@@ -72,30 +72,27 @@ SeqUISequencer::~SeqUISequencer()
 	delete sceneUISettings;
 }
 
-void SeqUISequencer::ActionDone(const SeqAction action)
+void SeqUISequencer::PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *actionData)
 {
-	switch (action.type)
+	switch (type)
 	{
 		case SeqActionType::AddChannel:
-			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-			SeqProject *project = Sequentia::GetProject();
-			SeqScene *scene = project->GetSceneById(data->sceneId);
-			SeqSceneUISettings *settings = GetSceneUISettings(scene);
-			settings->channelHeights->Add(initialChannelHeight);
-			break;
-	}
-}
-
-void SeqUISequencer::ActionUndone(const SeqAction action)
-{
-	switch (action.type)
-	{
-		case SeqActionType::AddChannel:
-			SeqActionAddChannel *data = (SeqActionAddChannel*)action.data;
-			SeqProject *project = Sequentia::GetProject();
-			SeqScene *scene = project->GetSceneById(data->sceneId);
-			SeqSceneUISettings *settings = GetSceneUISettings(scene);
-			settings->channelHeights->RemoveAt(settings->channelHeights->Count() - 1);
+			if (execution == SeqActionExecution::Do)
+			{
+				SeqActionAddChannel *data = (SeqActionAddChannel*)actionData;
+				SeqProject *project = Sequentia::GetProject();
+				SeqScene *scene = project->GetSceneById(data->sceneId);
+				SeqSceneUISettings *settings = GetSceneUISettings(scene);
+				settings->channelHeights->Add(initialChannelHeight);
+			}
+			else
+			{
+				SeqActionAddChannel *data = (SeqActionAddChannel*)actionData;
+				SeqProject *project = Sequentia::GetProject();
+				SeqScene *scene = project->GetSceneById(data->sceneId);
+				SeqSceneUISettings *settings = GetSceneUISettings(scene);
+				settings->channelHeights->RemoveAt(settings->channelHeights->Count() - 1);
+			}
 			break;
 	}
 }

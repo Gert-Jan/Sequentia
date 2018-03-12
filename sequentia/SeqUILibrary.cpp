@@ -39,16 +39,9 @@ SeqUILibrary::~SeqUILibrary()
 	delete[] name;
 }
 
-void SeqUILibrary::ActionDone(const SeqAction action)
+void SeqUILibrary::PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data)
 {
-	switch (action.type)
-	{
-	}
-}
-
-void SeqUILibrary::ActionUndone(const SeqAction action)
-{
-	switch (action.type)
+	switch (type)
 	{
 	}
 }

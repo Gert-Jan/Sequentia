@@ -65,8 +65,7 @@ public:
 	void Update();
 	void Render();
 
-	void ActionDone(const SeqAction action);
-	void ActionUndone(const SeqAction action);
+	void PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data);
 
 private:
 	SeqClipPlayer* GetClipPlayerFor(SeqClip *clip);

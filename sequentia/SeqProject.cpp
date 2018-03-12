@@ -356,7 +356,7 @@ void SeqProject::DoAction(const SeqAction action)
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
-		actionHandlers->Get(i)->ActionDone(action);
+		actionHandlers->Get(i)->PreExecuteAction(action.type, execution, action.data);
 	}
 	// do the action
 	ExecuteAction(action, execution);
@@ -373,7 +373,7 @@ void SeqProject::UndoAction(const SeqAction action)
 	// fire events
 	for (int i = 0; i < actionHandlers->Count(); i++)
 	{
-		actionHandlers->Get(i)->ActionDone(action);
+		actionHandlers->Get(i)->PreExecuteAction(action.type, execution, action.data);
 	}
 	// do the action
 	ExecuteAction(action, execution);

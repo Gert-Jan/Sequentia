@@ -23,8 +23,7 @@ public:
 	SeqUISequencer(SeqScene *scene, SeqSerializer *serializer);
 	~SeqUISequencer();
 
-	void ActionDone(const SeqAction action);
-	void ActionUndone(const SeqAction action);
+	void PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data);
 	SeqWindowType GetWindowType();
 	void Draw();
 	static void DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered = false);

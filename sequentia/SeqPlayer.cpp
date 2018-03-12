@@ -380,16 +380,16 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 	}
 }
 
-void SeqPlayer::ActionDone(const SeqAction action)
+void SeqPlayer::PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *actionData)
 {
-	switch (action.type)
+	switch (type)
 	{
 		case SeqActionType::AddClipToChannel:
-			SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
+			SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)actionData;
 			if (data->sceneId == scene->id)
 			{
 				// removing a clip for a channel
-				if (action.execution == SeqActionExecution::Undo)
+				if (execution == SeqActionExecution::Undo)
 				{
 					// dispose the clip player if we have a clip player associated to the clip that is being removed
 					SeqClip *clip = scene->GetChannelByActionId(data->channelId)->GetClipByActionId(data->clipId);
@@ -403,10 +403,6 @@ void SeqPlayer::ActionDone(const SeqAction action)
 			}
 			break;
 	}
-}
-
-void SeqPlayer::ActionUndone(const SeqAction action)
-{
 }
 
 SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
