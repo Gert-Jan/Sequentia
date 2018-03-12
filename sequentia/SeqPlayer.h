@@ -2,6 +2,7 @@
 
 #include "SDL_config.h"
 #include "SeqAction.h"
+#include "SDL_audio.h";
 
 class SeqScene;
 class SeqClip;
@@ -12,7 +13,6 @@ template<class T>
 class SeqList;
 
 struct AVFrame;
-struct SDL_AudioDevice;
 
 struct SeqClipPlayerVideo
 {
@@ -22,7 +22,7 @@ struct SeqClipPlayerVideo
 
 struct SeqClipPlayerAudio
 {
-	SDL_AudioDevice *device;
+	SDL_AudioDeviceID deviceId;
 };
 
 struct SeqClipPlayer

@@ -248,10 +248,6 @@ int SeqDecoder::Preload()
 		pkt->size = 0;
 	}
 
-		{
-		}
-	}
-
 	SetStatusLoading();
 	// prefetch a bunch of packets
 	packetBufferCursor = 0;

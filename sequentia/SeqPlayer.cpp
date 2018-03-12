@@ -254,7 +254,8 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				AVFrame *frame = decoder->NextFrame(clip->streamIndex, requestTime);
 				if (SeqDecoder::IsValidFrame(frame) && frame != clipPlayer->lastFrame)
 				{
-					if (clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
+					SeqStreamInfo *streamInfo = clip->GetStreamInfo();
+					if (streamInfo->type == SeqStreamInfoType::Video)
 					{
 						if (clipPlayer->lastFrame == nullptr ||
 							frame->linesize[0] > clipPlayer->videoPlayer.maxLineSize)
@@ -267,9 +268,33 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 							SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
 						}
 					}
-					else if (clip->GetStreamInfo()->type == SeqStreamInfoType::Audio)
+					else if (streamInfo->type == SeqStreamInfoType::Audio)
 					{
-						// TODO: queue audio data
+						int bytesPerSample = (streamInfo->audioInfo.format & 0xff) / 8;
+						const int dataSizeInBytes = frame->nb_samples * bytesPerSample;
+						if (streamInfo->audioInfo.isPlanar)
+						{
+							// the channel data is planar and needs to be interleaved for the SDL audio queue to be played
+							int channels = streamInfo->audioInfo.channelCount;
+							const int bufSize = dataSizeInBytes * channels;
+							char* buf = new char[bufSize];
+							int bufCursor = 0;
+							for (int dataCursor = 0; dataCursor < dataSizeInBytes; dataCursor += bytesPerSample)
+							{
+								for (int channel = 0; channel < channels; channel++)
+								{
+									memcpy(&buf[bufCursor], &frame->data[channel][dataCursor], bytesPerSample);
+									bufCursor += bytesPerSample;
+								}
+							}
+							SDL_QueueAudio(clipPlayer->audioPlayer.deviceId, buf, bufSize);
+							delete buf;
+						}
+						else
+						{
+							// the channel data is already interleaved, we can immediatly queue it
+							SDL_QueueAudio(clipPlayer->audioPlayer.deviceId, frame->data[0], dataSizeInBytes);
+						}
 					}
 
 					clipPlayer->lastFrame = frame;
@@ -339,23 +364,21 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 	{
 		SeqChannel *channel = scene->GetChannel(i);
 		SeqClip *clip = channel->GetClipAt(playTime);
-		if (clip != nullptr)
+		if (clip != nullptr && clip->GetLink()->metaDataLoaded && 
+			clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
 		{
 			SeqClipPlayer *player = GetClipPlayerFor(clip);
-			if (player == nullptr)
-				continue;
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 			SeqProject* project = Sequentia::GetProject();
 			if (player->lastFrame != nullptr)
 			{
-				drawList->AddImage(player->videoPlayer.material, 
-					ImVec2(0, 0), ImVec2(project->width, project->height), 
+				drawList->AddImage(player->videoPlayer.material,
+					ImVec2(0, 0), ImVec2(project->width, project->height),
 					ImVec2(0, 0), ImVec2((float)player->lastFrame->width / (float)player->videoPlayer.maxLineSize, 1));
 			}
 		}
 	}
 }
-
 
 void SeqPlayer::ActionDone(const SeqAction action)
 {
@@ -411,14 +434,21 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 		}
 		player->lastFrame = nullptr;
 		player->isWaitingForSeek = false;
-		if (clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
+		SeqStreamInfo *streamInfo = clip->GetStreamInfo();
+		if (streamInfo->type == SeqStreamInfoType::Video)
 		{
 			player->videoPlayer.material = SeqRenderer::CreateVideoMaterialInstance();
 			player->videoPlayer.maxLineSize = 0;
 		}
-		else if (clip->GetStreamInfo()->type == SeqStreamInfoType::Audio)
+		else if (streamInfo->type == SeqStreamInfoType::Audio)
 		{
-			// TODO: create audio device
+			SDL_AudioSpec audioSpec = SDL_AudioSpec();
+			audioSpec.freq = streamInfo->audioInfo.sampleRate;
+			audioSpec.format = streamInfo->audioInfo.format;
+			audioSpec.channels = streamInfo->audioInfo.channelCount;
+			audioSpec.samples = 1024;
+			player->audioPlayer.deviceId = SDL_OpenAudioDevice(nullptr, false, &audioSpec, nullptr, true);
+			SDL_PauseAudioDevice(player->audioPlayer.deviceId, false);
 		}
 		SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
 		return player;
@@ -439,13 +469,14 @@ int SeqPlayer::GetClipPlayerIndexFor(SeqClip *clip)
 void SeqPlayer::DisposeClipPlayerAt(const int index)
 {
 	SeqClipPlayer player = clipPlayers->Get(index);
-	player.decoderTask->Stop(); 
-	if (player.clip->GetStreamInfo()->type == SeqStreamInfoType::Video)
+	player.decoderTask->Stop();
+	SeqStreamInfo *streamInfo = player.clip->GetStreamInfo();
+	if (streamInfo->type == SeqStreamInfoType::Video)
 	{
 		SeqRenderer::RemoveMaterialInstance(player.videoPlayer.material);
 	}
-	else
+	else if (streamInfo->type == SeqStreamInfoType::Audio)
 	{
-		// TODO: dispose audio device
+		SDL_CloseAudioDevice(player.audioPlayer.deviceId);
 	}
 }
