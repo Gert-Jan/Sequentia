@@ -418,7 +418,8 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 			SeqChannel* channel = scene->GetChannelByActionId(data->channelId);
 			if (execution == SeqActionExecution::Do)
 			{
-				SeqClip* clip = new SeqClip(library->GetLink(data->libraryLinkIndex));
+				SeqLibraryLink *link = library->GetLink(data->libraryLinkIndex);
+				SeqClip* clip = new SeqClip(link, data->streamIndex);
 				clip->location.leftTime = data->leftTime;
 				clip->location.rightTime = data->rightTime;
 				clip->location.startTime = data->startTime;

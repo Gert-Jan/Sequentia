@@ -89,7 +89,7 @@ void SeqUILibrary::Draw()
 			{
 				if (!Sequentia::IsDragging())
 				{
-					Sequentia::SetDragClipNew(link);
+					Sequentia::SetDragClipNew(link, link->defaultVideoStreamIndex);
 				}
 			}
 			AddContextMenu(link);

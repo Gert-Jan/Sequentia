@@ -28,7 +28,7 @@ public:
 	static SeqLibrary* GetLibrary();
 	static bool IsDragging();
 	static SeqClipProxy* GetDragClipProxy();
-	static void SetDragClipNew(SeqLibraryLink *link);
+	static void SetDragClipNew(SeqLibraryLink *link, int streamIndex);
 	static void SetDragClip(SeqClip *clip, const int64_t grip = 0);
 	static void SetPreviewLibraryLink(SeqLibraryLink *link);
 

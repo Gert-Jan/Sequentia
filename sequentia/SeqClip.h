@@ -11,7 +11,7 @@ class SeqSerializer;
 class SeqClip
 {
 public:
-	SeqClip(SeqLibraryLink *link);
+	SeqClip(SeqLibraryLink *link, int streamIndex);
 	SeqClip(SeqSerializer *serializer);
 	~SeqClip();
 

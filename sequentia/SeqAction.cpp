@@ -18,6 +18,7 @@ SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClipProxy* proxy)
 	sceneId = channel->GetParent()->id;
 	channelId = channel->actionId;
 	libraryLinkIndex = library->GetLinkIndex(proxy->GetClip()->GetLink()->fullPath);
+	streamIndex = proxy->GetClip()->streamIndex;
 	clipId = -1; // filled in after placing the new clip
 	leftTime = proxy->location.leftTime;
 	rightTime = proxy->location.rightTime;

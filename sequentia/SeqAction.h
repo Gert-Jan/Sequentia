@@ -52,6 +52,7 @@ struct SeqActionAddClipToChannel
 	int sceneId;
 	int channelId;
 	int libraryLinkIndex;
+	int streamIndex;
 	int clipId;
 	int64_t leftTime;
 	int64_t rightTime;
