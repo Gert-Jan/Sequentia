@@ -18,8 +18,8 @@ struct SeqLibraryLink
 	int64_t duration;
 	int videoStreamCount;
 	int audioStreamCount;
-	int defaultVideoStreamIndex;
-	int defaultAudioStreamIndex;
+	int defaultVideoStreamIndex = -1;
+	int defaultAudioStreamIndex = -1;
 	SeqStreamInfo *streamInfos;
 };
 

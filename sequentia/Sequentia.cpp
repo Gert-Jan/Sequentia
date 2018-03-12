@@ -389,15 +389,21 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 		if (link->metaDataLoaded && previewScene->player->IsActive())
 		{
 			// video clip
-			SetDragClipNew(link, link->defaultVideoStreamIndex);
-			dragClipProxy->SetParent(previewScene->GetChannel(0));
-			dragClipProxy->location.leftTime = 0;
-			project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+			if (link->defaultVideoStreamIndex != -1)
+			{
+				SetDragClipNew(link, link->defaultVideoStreamIndex);
+				dragClipProxy->SetParent(previewScene->GetChannel(0));
+				dragClipProxy->location.leftTime = 0;
+				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+			}
 			// audio clip
-			SetDragClipNew(link, link->defaultAudioStreamIndex);
-			dragClipProxy->SetParent(previewScene->GetChannel(1));
-			dragClipProxy->location.leftTime = 0;
-			project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+			if (link->defaultAudioStreamIndex != -1)
+			{
+				SetDragClipNew(link, link->defaultAudioStreamIndex);
+				dragClipProxy->SetParent(previewScene->GetChannel(1));
+				dragClipProxy->location.leftTime = 0;
+				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+			}
 		}
 		// play
 		previewScene->player->Play();
