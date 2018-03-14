@@ -96,6 +96,9 @@
     <ClCompile Include="SeqUtils.cpp">
       <Filter>sys\util</Filter>
     </ClCompile>
+    <ClCompile Include="SeqClipGroup.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -223,6 +226,9 @@
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="SeqStreamInfo.h">
+      <Filter>data</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqClipGroup.h">
       <Filter>data</Filter>
     </ClInclude>
   </ItemGroup>

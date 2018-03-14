@@ -33,26 +33,14 @@ UI
 - Sequencer - video/audio arrangement
 	- Add channel collapsing
 	- Add clearer channel selection color
+	- Allow for changing stream index on clips (for example, change audio channel to another language)
+- Clip grouping
+	- Grouped clips should be connected in the Sequencer and should always have the same left time
+	- When dragging in a video clip from library to sequencer a ClipGroup should be made
 
 Video
 - Add a pause function
-- Find a color calibration video, check which YUV420p fragment shader matrix should be used.
 - Figure out if we can do gpu/spu accalerated decoding with ffmpeg.
-
-Audio
-- Decode audio in a separate thread, so frame skipping doesn't influence audio performance
-- Buffer audio data
-- Feed audio data to SDL2
-
-Graphics
-- Add a separate SeqScene rendering path.
 
 Development
 - Test dev environment on another machine, write a setup guide in the README.txt
-
-Ideas
-- Add concept of 'Scenes' between SeqProject and SeqChannel
-	- When dragging one or multiple clips into the 'void' a temp scene can be spawned in a new SeqUISequencer window.
-	- This could allow for intermediate editing between dragging and dropping.
-	- Furthermore having different scenes allows for doing quick non destructive edits.
-	- Scenes could be quick/temp instanced with a single channel for video previews. This way the same video player can be used for everything.

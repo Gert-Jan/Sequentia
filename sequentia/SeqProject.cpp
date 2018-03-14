@@ -411,11 +411,27 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 			}
 			break;
 		}
+		case SeqActionType::AddClipGroup:
+		{
+			SeqActionAddClipGroup *data = (SeqActionAddClipGroup*)action.data;
+			SeqScene* scene = GetSceneById(data->sceneId);
+			if (execution == SeqActionExecution::Do)
+			{
+				scene->AddClipGroup();
+				SeqClipGroup *group = scene->GetClipGroup(scene->ClipGroupCount() - 1);
+				data->groupId = group->actionId;
+			}
+			else
+			{
+				scene->RemoveClipGroup(scene->GetClipGroupIndexByActionId(data->groupId));
+			}
+			break;
+		}
 		case SeqActionType::AddClipToChannel:
 		{
 			SeqActionAddClipToChannel *data = (SeqActionAddClipToChannel*)action.data;
-			SeqScene* scene = GetSceneById(data->sceneId);
-			SeqChannel* channel = scene->GetChannelByActionId(data->channelId);
+			SeqScene *scene = GetSceneById(data->sceneId);
+			SeqChannel *channel = scene->GetChannelByActionId(data->channelId);
 			if (execution == SeqActionExecution::Do)
 			{
 				SeqLibraryLink *link = library->GetLink(data->libraryLinkIndex);
@@ -442,6 +458,23 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 				channel->RemoveClipAt(clipIndex);
 				delete clip;
 				scene->RefreshLastClip();
+			}
+			break;
+		}
+		case SeqActionType::AddClipToGroup:
+		{
+			SeqActionAddClipToGroup *data = (SeqActionAddClipToGroup*)action.data;
+			SeqScene *scene = GetSceneById(data->sceneId);
+			SeqChannel *channel = scene->GetChannelByActionId(data->channelId);
+			SeqClipGroup *group = scene->GetClipGroupByActionId(data->groupId);
+			SeqClip *clip = channel->GetClipByActionId(data->clipId);
+			if (execution == SeqActionExecution::Do)
+			{
+				group->AddClip(clip);
+			}
+			else
+			{
+				group->RemoveClip(clip);
 			}
 			break;
 		}

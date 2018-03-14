@@ -388,21 +388,35 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 		// build up a previewScene
 		if (link->metaDataLoaded && previewScene->player->IsActive())
 		{
+			SeqClip *videoClip = nullptr;
+			SeqClip *audioClip = nullptr;
 			// video clip
 			if (link->defaultVideoStreamIndex != -1)
 			{
 				SetDragClipNew(link, link->defaultVideoStreamIndex);
-				dragClipProxy->SetParent(previewScene->GetChannel(0));
+				SeqChannel *channel = previewScene->GetChannel(0);
+				dragClipProxy->SetParent(channel);
 				dragClipProxy->location.leftTime = 0;
 				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+				videoClip = channel->GetClip(0);
 			}
 			// audio clip
 			if (link->defaultAudioStreamIndex != -1)
 			{
 				SetDragClipNew(link, link->defaultAudioStreamIndex);
-				dragClipProxy->SetParent(previewScene->GetChannel(1));
+				SeqChannel *channel = previewScene->GetChannel(1);
+				dragClipProxy->SetParent(channel);
 				dragClipProxy->location.leftTime = 0;
 				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+				audioClip = channel->GetClip(0);
+			}
+			// group the clips if there are 2
+			if (videoClip != nullptr && audioClip != nullptr)
+			{
+				project->DoAndForgetAction(SeqActionFactory::AddClipGroup(previewScene));
+				SeqClipGroup* group = previewScene->GetClipGroup(0);
+				project->DoAndForgetAction(SeqActionFactory::AddClipToGroup(videoClip, group));
+				project->DoAndForgetAction(SeqActionFactory::AddClipToGroup(audioClip, group));
 			}
 		}
 		// play

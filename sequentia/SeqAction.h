@@ -1,16 +1,20 @@
 #pragma once
 
-#include "stdint.h"
+#include "SDL_config.h"
 
+class SeqScene;
 enum class SeqChannelType;
 class SeqClip;
 class SeqClipProxy;
+class SeqClipGroup;
 
 enum class SeqActionType
 {
 	AddChannel,
 	AddLibraryLink,
+	AddClipGroup,
 	AddClipToChannel,
+	AddClipToGroup,
 	MoveClip,
 	COUNT
 };
@@ -58,6 +62,22 @@ struct SeqActionAddClipToChannel
 	int64_t startTime;
 	SeqActionAddClipToChannel(SeqClipProxy* proxy);
 	SeqActionAddClipToChannel(SeqClip* clip);
+};
+
+struct SeqActionAddClipGroup
+{
+	int sceneId;
+	int groupId;
+	SeqActionAddClipGroup(SeqScene* scene);
+};
+
+struct SeqActionAddClipToGroup
+{
+	int sceneId;
+	int channelId;
+	int clipId;
+	int groupId;
+	SeqActionAddClipToGroup(SeqClip* clip, SeqClipGroup* group);
 };
 
 struct SeqActionMoveClip

@@ -12,6 +12,7 @@ SeqScene::SeqScene(int id, const char *sceneName) :
 {
 	name = SeqString::Copy(sceneName);
 	channels = new SeqList<SeqChannel*>();
+	clipGroups = new SeqList <SeqClipGroup*>();
 	player = new SeqPlayer(this);
 }
 
@@ -22,6 +23,7 @@ SeqScene::SeqScene(SeqSerializer *serializer):
 	nextActionId(0)
 {
 	channels = new SeqList<SeqChannel*>();
+	clipGroups = new SeqList<SeqClipGroup*>();
 	Deserialize(serializer);
 	player = new SeqPlayer(this);
 }
@@ -31,6 +33,7 @@ SeqScene::~SeqScene()
 	for (int i = 0; i < channels->Count(); i++)
 		delete channels->Get(i);
 	delete channels;
+	delete clipGroups;
 	delete[] name;
 }
 
@@ -51,6 +54,7 @@ void SeqScene::AddChannel(SeqChannel *channel)
 
 void SeqScene::RemoveChannel(const int index)
 {
+	delete channels->Get(index);
 	channels->RemoveAt(index);
 }
 
@@ -73,6 +77,56 @@ int SeqScene::GetChannelIndexByActionId(const int id)
 {
 	for (int i = 0; i < channels->Count(); i++)
 		if (channels->Get(i)->actionId == id)
+			return i;
+	return -1;
+}
+
+void SeqScene::AddClipGroup()
+{
+	SeqClipGroup *clipGroup = new SeqClipGroup(this);
+	AddClipGroup(clipGroup);
+}
+
+void SeqScene::AddClipGroup(SeqClipGroup *clipGroup)
+{
+	clipGroups->Add(clipGroup);
+	if (clipGroup->actionId == -1)
+		clipGroup->actionId = NextActionId();
+	else if (clipGroup->actionId >= nextActionId)
+		nextActionId = clipGroup->actionId + 1;
+}
+
+void SeqScene::RemoveClipGroup(const int index)
+{
+	delete clipGroups->Get(index);
+	clipGroups->RemoveAt(index);
+}
+
+void SeqScene::RemoveClipGroup(SeqClipGroup *group)
+{
+	int index = clipGroups->IndexOf(group);
+	RemoveClipGroup(index);
+}
+
+int SeqScene::ClipGroupCount()
+{
+	return clipGroups->Count();
+}
+
+SeqClipGroup* SeqScene::GetClipGroup(const int index)
+{
+	return clipGroups->Get(index);
+}
+
+SeqClipGroup* SeqScene::GetClipGroupByActionId(const int id)
+{
+	return GetClipGroup(GetClipGroupIndexByActionId(id));
+}
+
+int SeqScene::GetClipGroupIndexByActionId(const int id)
+{
+	for (int i = 0; i < clipGroups->Count(); i++)
+		if (clipGroups->Get(i)->actionId == id)
 			return i;
 	return -1;
 }
@@ -117,17 +171,26 @@ void SeqScene::Serialize(SeqSerializer *serializer)
 	serializer->Write(channels->Count());
 	for (int i = 0; i < channels->Count(); i++)
 		channels->Get(i)->Serialize(serializer);
+	serializer->Write(clipGroups->Count());
+	for (int i = 0; i < clipGroups->Count(); i++)
+		clipGroups->Get(i)->Serialize(serializer);
 }
 
 void SeqScene::Deserialize(SeqSerializer *serializer)
 {
 	id = serializer->ReadInt();
 	name = serializer->ReadString();
-	int count = serializer->ReadInt();
-	for (int i = 0; i < count; i++)
+	int channelCount = serializer->ReadInt();
+	for (int i = 0; i < channelCount; i++)
 	{
 		SeqChannel *channel = new SeqChannel(this, serializer);
 		AddChannel(channel);
+	}
+	int clipGroupCount = serializer->ReadInt();
+	for (int i = 0; i < clipGroupCount; i++)
+	{
+		SeqClipGroup *clipGroup = new SeqClipGroup(this, serializer);
+		AddClipGroup(clipGroup);
 	}
 	RefreshLastClip();
 }

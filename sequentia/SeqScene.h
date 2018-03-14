@@ -3,6 +3,7 @@
 class SeqChannel;
 enum class SeqChannelType;
 class SeqClip;
+class SeqClipGroup;
 
 class SeqPlayer;
 class SeqSerializer;
@@ -22,13 +23,22 @@ public:
 	SeqChannel* GetChannel(const int index);
 	SeqChannel* GetChannelByActionId(const int id);
 	int GetChannelIndexByActionId(const int id);
-	void RefreshLastClip();
 
+	void AddClipGroup();
+	void RemoveClipGroup(const int index);
+	void RemoveClipGroup(SeqClipGroup *group);
+	int ClipGroupCount();
+	SeqClipGroup* GetClipGroup(const int index);
+	SeqClipGroup* GetClipGroupByActionId(const int id);
+	int GetClipGroupIndexByActionId(const int id);
+
+	void RefreshLastClip();
 	int64_t GetLength();
 
 private:
 	int NextActionId();
 	void AddChannel(SeqChannel *channel);
+	void AddClipGroup(SeqClipGroup *clipGroup);
 
 public:
 	void Serialize(SeqSerializer *serializer);
@@ -42,6 +52,7 @@ public:
 
 private:
 	SeqList<SeqChannel*> *channels;
+	SeqList<SeqClipGroup*> *clipGroups;
 	SeqClip *lastClip;
 	int nextActionId = 0;
 };

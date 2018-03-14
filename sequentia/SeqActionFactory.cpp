@@ -35,6 +35,14 @@ SeqAction SeqActionFactory::RemoveLibraryLink(const char *fullPath)
 		SeqString::Copy(fullPath));
 }
 
+SeqAction SeqActionFactory::AddClipGroup(SeqScene *scene)
+{
+	return SeqAction(
+		SeqActionType::AddClipGroup,
+		SeqActionExecution::Do,
+		new SeqActionAddClipGroup(scene));
+}
+
 SeqAction SeqActionFactory::AddClipToChannel(SeqClipProxy* clipProxy)
 {
 	return SeqAction(
@@ -49,6 +57,14 @@ SeqAction SeqActionFactory::RemoveClipFromChannel(SeqClip* clip)
 		SeqActionType::AddClipToChannel,
 		SeqActionExecution::Undo,
 		new SeqActionAddClipToChannel(clip));
+}
+
+SeqAction SeqActionFactory::AddClipToGroup(SeqClip* clip, SeqClipGroup * group)
+{
+	return SeqAction(
+		SeqActionType::AddClipToGroup,
+		SeqActionExecution::Do,
+		new SeqActionAddClipToGroup(clip, group));
 }
 
 SeqAction SeqActionFactory::MoveClip(SeqClipProxy* clipProxy)

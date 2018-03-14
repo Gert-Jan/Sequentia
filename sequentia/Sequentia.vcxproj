@@ -167,6 +167,7 @@
     <ClCompile Include="SeqActionFactory.cpp" />
     <ClCompile Include="SeqChannel.cpp" />
     <ClCompile Include="SeqClip.cpp" />
+    <ClCompile Include="SeqClipGroup.cpp" />
     <ClCompile Include="SeqClipLocation.cpp" />
     <ClCompile Include="SeqClipProxy.cpp" />
     <ClCompile Include="SeqDecoder.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="SeqAction.h" />
     <ClInclude Include="SeqActionFactory.h" />
     <ClInclude Include="SeqClip.h" />
+    <ClInclude Include="SeqClipGroup.h" />
     <ClInclude Include="SeqClipLocation.h" />
     <ClInclude Include="SeqClipProxy.h" />
     <ClInclude Include="SeqDecoder.h" />

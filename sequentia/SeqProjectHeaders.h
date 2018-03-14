@@ -6,3 +6,4 @@
 #include "SeqChannel.h"
 #include "SeqClip.h"
 #include "SeqClipProxy.h"
+#include "SeqClipGroup.h"

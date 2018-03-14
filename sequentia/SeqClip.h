@@ -7,6 +7,7 @@ class SeqChannel;
 struct SeqLibraryLink;
 struct SeqStreamInfo;
 class SeqSerializer;
+class SeqClipGroup;
 
 class SeqClip
 {
@@ -32,6 +33,7 @@ public:
 	bool isHidden;
 	SeqClipLocation location;
 	int streamIndex;
+	SeqClipGroup *group;
 private:
 	SeqLibraryLink *link;
 };

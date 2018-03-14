@@ -11,7 +11,7 @@ SeqActionAddChannel::SeqActionAddChannel(int sceneId, SeqChannelType type, const
 }
 
 // on add
-SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClipProxy* proxy)
+SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClipProxy *proxy)
 {
 	SeqLibrary *library = Sequentia::GetLibrary();
 	SeqChannel *channel = proxy->GetParent();
@@ -26,7 +26,7 @@ SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClipProxy* proxy)
 }
 
 // on remove
-SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClip* clip)
+SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClip *clip)
 {
 	SeqLibrary *library = Sequentia::GetLibrary();
 	SeqChannel *channel = clip->GetParent();
@@ -39,7 +39,22 @@ SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClip* clip)
 	startTime = clip->location.startTime;
 }
 
-SeqActionMoveClip::SeqActionMoveClip(SeqClipProxy* proxy)
+SeqActionAddClipGroup::SeqActionAddClipGroup(SeqScene *scene)
+{
+	sceneId = scene->id;
+	groupId = -1; // filled after adding the clip group
+}
+
+SeqActionAddClipToGroup::SeqActionAddClipToGroup(SeqClip *clip, SeqClipGroup *group)
+{
+	SeqChannel *channel = clip->GetParent();
+	sceneId = channel->GetParent()->id;
+	channelId = channel->actionId;
+	clipId = clip->actionId;
+	groupId = group->actionId;
+}
+
+SeqActionMoveClip::SeqActionMoveClip(SeqClipProxy *proxy)
 {
 	SeqClip *clip = proxy->GetClip();
 	fromSceneId = clip->GetParent()->GetParent()->id;

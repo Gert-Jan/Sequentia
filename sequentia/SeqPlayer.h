@@ -70,6 +70,7 @@ public:
 private:
 	SeqClipPlayer* GetClipPlayerFor(SeqClip *clip);
 	int GetClipPlayerIndexFor(SeqClip *clip);
+	SeqClipPlayer* GetGroupedClipPlayer(SeqClip *clip);
 	void DisposeClipPlayerAt(const int index);
 	void UpdateClipPlayers(bool *canPlay);
 	void Render(const int fromChannelIndex, const int toChannelIndex);

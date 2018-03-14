@@ -1,8 +1,6 @@
-#include "SeqClip.h"
+#include "SeqProjectHeaders.h"
 #include "Sequentia.h"
-#include "SeqLibrary.h"
 #include "SeqStreamInfo.h"
-#include "SeqChannel.h"
 #include "SeqSerializer.h"
 #include "SeqTime.h"
 
@@ -11,6 +9,7 @@ SeqClip::SeqClip(SeqLibraryLink *link, int streamIndex):
 	streamIndex(streamIndex),
 	isHidden(false),
 	location(SeqClipLocation()),
+	group(nullptr),
 	actionId(-1)
 {
 	if (link->metaDataLoaded)
@@ -22,6 +21,7 @@ SeqClip::SeqClip(SeqLibraryLink *link, int streamIndex):
 SeqClip::SeqClip(SeqSerializer *serializer):
 	isHidden(false),
 	location(SeqClipLocation()),
+	group(nullptr),
 	actionId(-1)
 {
 	Deserialize(serializer);
@@ -29,6 +29,13 @@ SeqClip::SeqClip(SeqSerializer *serializer):
 
 SeqClip::~SeqClip()
 {
+	if (group != nullptr)
+	{
+		if (group->ClipCount() <= 2)
+		{
+			group->GetParent()->RemoveClipGroup(group);
+		}
+	}
 }
 
 void SeqClip::SetPosition(int64_t leftTime)
