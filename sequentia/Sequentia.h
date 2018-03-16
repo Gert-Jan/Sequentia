@@ -16,7 +16,7 @@ struct SeqLibraryLink;
 enum class SeqDragMode
 {
 	None,
-	Clip,
+	Selection,
 	Ruler
 };
 
@@ -27,7 +27,7 @@ public:
 	static SeqProject* GetProject();
 	static SeqLibrary* GetLibrary();
 	static bool IsDragging();
-	static SeqSelection* GetDragClipProxy();
+	static SeqSelection* GetDragClipSelection();
 	static void SetDragClipNew(SeqLibraryLink *link, int steamIndex);
 	static void SetDragClip(SeqClip *clip, const int64_t grip = 0);
 	static void SetPreviewLibraryLink(SeqLibraryLink *link);
@@ -53,5 +53,5 @@ private:
 	static double time;
 	static bool mousePressed[3];
 	static float mouseWheel;
-	static SeqSelection *dragClipProxy;
+	static SeqSelection *dragClipSelection;
 };

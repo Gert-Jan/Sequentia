@@ -371,33 +371,33 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 avai
 	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + availableSize.x, cursor.y + height));
 
 	bool isHovering = false;
-	SeqSelection *dragClipProxy = Sequentia::GetDragClipProxy();
-	if (dragClipProxy != nullptr)
+	SeqSelection *dragClipSelection = Sequentia::GetDragClipSelection();
+	if (dragClipSelection != nullptr)
 	{
 		if (ImGui::IsMouseHoveringRect(totalRect.Min, totalRect.Max))
 		{
 			if (ImGui::IsMouseDown(0))
 			{
 				isHovering = true;
-				if (dragClipProxy->GetParent() != channel)
-					dragClipProxy->SetParent(channel);
-				dragClipProxy->location.SetPosition((position + PixelsToTime(ImGui::GetMousePos().x - cursor.x)) - dragClipProxy->grip);
+				if (dragClipSelection->GetParent() != channel)
+					dragClipSelection->SetParent(channel);
+				dragClipSelection->location.SetPosition((position + PixelsToTime(ImGui::GetMousePos().x - cursor.x)) - dragClipSelection->grip);
 			}
 			else
 			{
-				if (dragClipProxy->IsNewClip())
+				if (dragClipSelection->IsNewClip())
 				{
-					Sequentia::GetProject()->AddAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+					Sequentia::GetProject()->AddAction(SeqActionFactory::AddClipToChannel(dragClipSelection));
 				}
-				else if (dragClipProxy->IsMoved())
+				else if (dragClipSelection->IsMoved())
 				{
-					Sequentia::GetProject()->AddAction(SeqActionFactory::MoveClip(dragClipProxy));
+					Sequentia::GetProject()->AddAction(SeqActionFactory::MoveClip(dragClipSelection));
 				}
 			}
 		}
-		else if (dragClipProxy->GetParent() == channel)
+		else if (dragClipSelection->GetParent() == channel)
 		{
-			dragClipProxy->SetParent(nullptr);
+			dragClipSelection->SetParent(nullptr);
 		}
 	}
 
@@ -428,20 +428,20 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 avai
 			}
 		}
 	}
-	// draw clip proxies
-	for (int i = 0; i < channel->ClipProxyCount(); i++)
+	// draw clip selections
+	for (int i = 0; i < channel->ClipSelectionCount(); i++)
 	{
-		SeqSelection *proxy = channel->GetClipProxy(i);
-		const double left = (double)proxy->location.leftTime;
-		const double right = (double)proxy->location.rightTime;
+		SeqSelection *selection = channel->GetClipSelection(i);
+		const double left = (double)selection->location.leftTime;
+		const double right = (double)selection->location.rightTime;
 		// culling
 		if (left > end)
-			break; // clip proxies are sorted by left position, so we can exit the loop here
+			break; // clip selections are sorted by left position, so we can exit the loop here
 		if (left >= start || right >= start)
 		{
 			const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
 			const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
-			DrawClip(proxy->GetClip(), clipPosition, clipSize, true);
+			DrawClip(selection->GetClip(), clipPosition, clipSize, true);
 		}
 	}
 }

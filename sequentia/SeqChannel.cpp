@@ -13,7 +13,7 @@ SeqChannel::SeqChannel(SeqScene *parent, const char *channelName, SeqChannelType
 {
 	name = SeqString::Copy(channelName);
 	clips = new SeqList<SeqClip*>();
-	clipProxies = new SeqList<SeqSelection*>();
+	clipSelections = new SeqList<SeqSelection*>();
 }
 
 SeqChannel::SeqChannel(SeqScene *parent, SeqSerializer *serializer) :
@@ -22,7 +22,7 @@ SeqChannel::SeqChannel(SeqScene *parent, SeqSerializer *serializer) :
 	nextActionId(-1)
 {
 	clips = new SeqList<SeqClip*>();
-	clipProxies = new SeqList<SeqSelection*>();
+	clipSelections = new SeqList<SeqSelection*>();
 	Deserialize(serializer);
 }
 
@@ -30,7 +30,7 @@ SeqChannel::~SeqChannel()
 {
 	for (int i = 0; i < clips->Count(); i++)
 		delete clips->Get(i);
-	clipProxies->Clear(); // proxies should be deleted in the SeqProject Proxy pool
+	clipSelections->Clear(); // selections should be deleted in the SeqProject Selections pool
 	delete[] name;
 }
 
@@ -159,90 +159,90 @@ void SeqChannel::SwapClips(const int index0, const int index1)
 	clips->Set(index1, clip0);
 }
 
-void SeqChannel::AddClipProxy(SeqSelection *proxy)
+void SeqChannel::AddClipSelection(SeqSelection *selection)
 {
-	if (proxy->GetParent() == nullptr)
+	if (selection->GetParent() == nullptr)
 	{
-		proxy->SetParent(this);
+		selection->SetParent(this);
 	}
 	else
 	{
 		int i = 0;
-		while (i < clipProxies->Count() && clipProxies->Get(i)->location.leftTime <= proxy->location.leftTime)
+		while (i < clipSelections->Count() && clipSelections->Get(i)->location.leftTime <= selection->location.leftTime)
 			i++;
-		AddClipProxyAt(proxy, i);
+		AddClipSelectionAt(selection, i);
 	}
 }
 
-void SeqChannel::AddClipProxyAt(SeqSelection *proxy, int const index)
+void SeqChannel::AddClipSelectionAt(SeqSelection *selection, int const index)
 {
-	if (proxy->GetParent() == nullptr)
+	if (selection->GetParent() == nullptr)
 	{
-		proxy->SetParent(this);
+		selection->SetParent(this);
 	}
 	else
 	{
-		clipProxies->InsertAt(proxy, index);
+		clipSelections->InsertAt(selection, index);
 	}
 }
 
-void SeqChannel::RemoveClipProxy(SeqSelection *proxy)
+void SeqChannel::RemoveClipSelection(SeqSelection *selection)
 {
-	int index = clipProxies->IndexOf(proxy);
+	int index = clipSelections->IndexOf(selection);
 	if (index > -1)
-		RemoveClipProxyAt(index);
+		RemoveClipSelectionAt(index);
 }
 
-void SeqChannel::RemoveClipProxyAt(const int index)
+void SeqChannel::RemoveClipSelectionAt(const int index)
 {
-	SeqSelection *proxy = clipProxies->Get(index);
-	clipProxies->RemoveAt(index);
+	SeqSelection *selection = clipSelections->Get(index);
+	clipSelections->RemoveAt(index);
 }
 
-void SeqChannel::MoveClipProxy(SeqSelection *proxy, int64_t leftTime)
+void SeqChannel::MoveClipSelection(SeqSelection *selection, int64_t leftTime)
 {
-	// move proxy
-	int64_t width = proxy->location.rightTime - proxy->location.leftTime;
-	proxy->location.leftTime = leftTime;
-	proxy->location.rightTime = leftTime + width;
-	// sort proxy
-	int index = clipProxies->IndexOf(proxy);
-	SortClipProxy(index);
+	// move selection
+	int64_t width = selection->location.rightTime - selection->location.leftTime;
+	selection->location.leftTime = leftTime;
+	selection->location.rightTime = leftTime + width;
+	// sort selection
+	int index = clipSelections->IndexOf(selection);
+	SortClipSelection(index);
 }
 
-int SeqChannel::ClipProxyCount()
+int SeqChannel::ClipSelectionCount()
 {
-	return clipProxies->Count();
+	return clipSelections->Count();
 }
 
-SeqSelection* SeqChannel::GetClipProxy(const int index)
+SeqSelection* SeqChannel::GetClipSelection(const int index)
 {
-	return clipProxies->Get(index);
+	return clipSelections->Get(index);
 }
 
-void SeqChannel::SortClipProxy(int index)
+void SeqChannel::SortClipSelection(int index)
 {
-	SeqSelection* proxy = clipProxies->Get(index);
+	SeqSelection* selection = clipSelections->Get(index);
 	// sort down
-	while (index > 0 && clipProxies->Get(index - 1)->location.leftTime < proxy->location.leftTime)
+	while (index > 0 && clipSelections->Get(index - 1)->location.leftTime < selection->location.leftTime)
 	{
-		SwapClipProxies(index, index - 1);
+		SwapClipSelections(index, index - 1);
 		index--;
 	}
 	// sort up
-	while (index < clipProxies->Count() - 1 && clipProxies->Get(index + 1)->location.leftTime >= proxy->location.leftTime)
+	while (index < clipSelections->Count() - 1 && clipSelections->Get(index + 1)->location.leftTime >= selection->location.leftTime)
 	{
-		SwapClipProxies(index, index + 1);
+		SwapClipSelections(index, index + 1);
 		index++;
 	}
 }
 
-void SeqChannel::SwapClipProxies(const int index0, const int index1)
+void SeqChannel::SwapClipSelections(const int index0, const int index1)
 {
-	SeqSelection* proxy0 = clipProxies->Get(index0);
-	SeqSelection* proxy1 = clipProxies->Get(index1);
-	clipProxies->Set(index0, proxy1);
-	clipProxies->Set(index1, proxy0);
+	SeqSelection* selection0 = clipSelections->Get(index0);
+	SeqSelection* selection1 = clipSelections->Get(index1);
+	clipSelections->Set(index0, selection1);
+	clipSelections->Set(index1, selection0);
 }
 
 int SeqChannel::NextActionId()

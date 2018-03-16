@@ -37,20 +37,20 @@ public:
 	SeqClip* GetClipByActionId(const int id);
 	int GetClipIndexByActionId(const int id);
 
-	void AddClipProxy(SeqSelection *proxy);
-	void AddClipProxyAt(SeqSelection *proxy, int const index);
-	void RemoveClipProxy(SeqSelection *proxy);
-	void RemoveClipProxyAt(const int index);
-	void MoveClipProxy(SeqSelection *proxy, int64_t leftTime);
-	int ClipProxyCount();
-	SeqSelection* GetClipProxy(const int index);
+	void AddClipSelection(SeqSelection *selection);
+	void AddClipSelectionAt(SeqSelection *selection, int const index);
+	void RemoveClipSelection(SeqSelection *selection);
+	void RemoveClipSelectionAt(const int index);
+	void MoveClipSelection(SeqSelection *selection, int64_t leftTime);
+	int ClipSelectionCount();
+	SeqSelection* GetClipSelection(const int index);
 
 private:
 	void SortClip(int index);
 	void SwapClips(const int index0, const int index1);
 
-	void SortClipProxy(int index);
-	void SwapClipProxies(const int index0, const int index1);
+	void SortClipSelection(int index);
+	void SwapClipSelections(const int index0, const int index1);
 
 	int NextActionId();
 
@@ -66,6 +66,6 @@ public:
 private:
 	SeqScene *scene;
 	SeqList<SeqClip*> *clips;
-	SeqList<SeqSelection*> *clipProxies;
+	SeqList<SeqSelection*> *clipSelections;
 	int nextActionId;
 };

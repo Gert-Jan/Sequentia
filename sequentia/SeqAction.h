@@ -60,7 +60,7 @@ struct SeqActionAddClipToChannel
 	int64_t leftTime;
 	int64_t rightTime;
 	int64_t startTime;
-	SeqActionAddClipToChannel(SeqSelection* proxy);
+	SeqActionAddClipToChannel(SeqSelection* selection);
 	SeqActionAddClipToChannel(SeqClip* clip);
 };
 
@@ -90,5 +90,5 @@ struct SeqActionMoveClip
 	int toChannelId;
 	int toClipId;
 	int64_t toLeftTime;
-	SeqActionMoveClip(SeqSelection* proxy);
+	SeqActionMoveClip(SeqSelection* selection);
 };

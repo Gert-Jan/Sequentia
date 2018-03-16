@@ -43,12 +43,12 @@ SeqAction SeqActionFactory::AddClipGroup(SeqScene *scene)
 		new SeqActionAddClipGroup(scene));
 }
 
-SeqAction SeqActionFactory::AddClipToChannel(SeqSelection* clipProxy)
+SeqAction SeqActionFactory::AddClipToChannel(SeqSelection* clipSelection)
 {
 	return SeqAction(
 		SeqActionType::AddClipToChannel,
 		SeqActionExecution::Do,
-		new SeqActionAddClipToChannel(clipProxy));
+		new SeqActionAddClipToChannel(clipSelection));
 }
 
 SeqAction SeqActionFactory::RemoveClipFromChannel(SeqClip* clip)
@@ -67,10 +67,10 @@ SeqAction SeqActionFactory::AddClipToGroup(SeqClip* clip, SeqClipGroup * group)
 		new SeqActionAddClipToGroup(clip, group));
 }
 
-SeqAction SeqActionFactory::MoveClip(SeqSelection* clipProxy)
+SeqAction SeqActionFactory::MoveClip(SeqSelection* clipSelection)
 {
 	return SeqAction(
 		SeqActionType::MoveClip,
 		SeqActionExecution::Do,
-		new SeqActionMoveClip(clipProxy));
+		new SeqActionMoveClip(clipSelection));
 }

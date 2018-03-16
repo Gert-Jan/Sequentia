@@ -11,18 +11,18 @@ SeqActionAddChannel::SeqActionAddChannel(int sceneId, SeqChannelType type, const
 }
 
 // on add
-SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqSelection *proxy)
+SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqSelection *selection)
 {
 	SeqLibrary *library = Sequentia::GetLibrary();
-	SeqChannel *channel = proxy->GetParent();
+	SeqChannel *channel = selection->GetParent();
 	sceneId = channel->GetParent()->id;
 	channelId = channel->actionId;
-	libraryLinkIndex = library->GetLinkIndex(proxy->GetClip()->GetLink()->fullPath);
-	streamIndex = proxy->GetClip()->streamIndex;
+	libraryLinkIndex = library->GetLinkIndex(selection->GetClip()->GetLink()->fullPath);
+	streamIndex = selection->GetClip()->streamIndex;
 	clipId = -1; // filled in after placing the new clip
-	leftTime = proxy->location.leftTime;
-	rightTime = proxy->location.rightTime;
-	startTime = proxy->location.startTime;
+	leftTime = selection->location.leftTime;
+	rightTime = selection->location.rightTime;
+	startTime = selection->location.startTime;
 }
 
 // on remove
@@ -54,15 +54,15 @@ SeqActionAddClipToGroup::SeqActionAddClipToGroup(SeqClip *clip, SeqClipGroup *gr
 	groupId = group->actionId;
 }
 
-SeqActionMoveClip::SeqActionMoveClip(SeqSelection *proxy)
+SeqActionMoveClip::SeqActionMoveClip(SeqSelection *selection)
 {
-	SeqClip *clip = proxy->GetClip();
+	SeqClip *clip = selection->GetClip();
 	fromSceneId = clip->GetParent()->GetParent()->id;
 	fromChannelId = clip->GetParent()->actionId;
 	fromClipId = clip->actionId;
 	fromLeftTime = clip->location.leftTime;
-	toSceneId = proxy->GetParent()->GetParent()->id;
-	toChannelId = proxy->GetParent()->actionId;
+	toSceneId = selection->GetParent()->GetParent()->id;
+	toChannelId = selection->GetParent()->actionId;
 	toClipId = -1; // filled after moving the clip
-	toLeftTime = proxy->location.leftTime;
+	toLeftTime = selection->location.leftTime;
 }

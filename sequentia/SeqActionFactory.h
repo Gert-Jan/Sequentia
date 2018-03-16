@@ -16,8 +16,8 @@ public:
 	static SeqAction AddLibraryLink(const char *fullPath);
 	static SeqAction RemoveLibraryLink(const char *fullPath);
 	static SeqAction AddClipGroup(SeqScene *scene);
-	static SeqAction AddClipToChannel(SeqSelection* clipProxy);
+	static SeqAction AddClipToChannel(SeqSelection* clipSelection);
 	static SeqAction RemoveClipFromChannel(SeqClip* clip);
 	static SeqAction AddClipToGroup(SeqClip* clip, SeqClipGroup* group);
-	static SeqAction MoveClip(SeqSelection* clipProxy);
+	static SeqAction MoveClip(SeqSelection* clipSelection);
 };

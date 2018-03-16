@@ -41,8 +41,8 @@ public:
 	SeqScene* GetSceneById(const int id);
 	SeqScene* GetPreviewScene();
 
-	SeqSelection* NextClipProxy();
-	void DeactivateAllClipProxies();
+	SeqSelection* NextClipSelection();
+	void DeactivateAllClipSelections();
 
 	int NextWindowId();
 	void AddWindowSequencer();
@@ -87,7 +87,7 @@ private:
 	int nextWindowId;
 	SeqLibrary *library;
 	SeqList<SeqScene*> *scenes;
-	SeqList<SeqSelection*> *clipProxyPool;
+	SeqList<SeqSelection*> *clipSelectionPool;
 	SeqList<SeqWindow*> *windows;
 
 	SeqList<SeqActionHandler*> *actionHandlers;

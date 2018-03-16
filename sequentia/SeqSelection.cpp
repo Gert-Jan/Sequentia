@@ -24,7 +24,7 @@ void SeqSelection::Deactivate()
 {
 	isActive = false;
 	if (location.parent != nullptr)
-		location.parent->RemoveClipProxy(this);
+		location.parent->RemoveClipSelection(this);
 	location.Reset();
 	grip = 0;
 	clip = nullptr;
@@ -54,21 +54,21 @@ SeqClip* SeqSelection::GetClip()
 
 void SeqSelection::SetPosition(int64_t newLeftTime)
 {
-	location.parent->MoveClipProxy(this, newLeftTime);
+	location.parent->MoveClipSelection(this, newLeftTime);
 }
 
 void SeqSelection::SetParent(SeqChannel* channel)
 {
 	if (location.parent != channel)
 	{
-		// remove the proxy from current parent
+		// remove the selection from current parent
 		if (location.parent != nullptr)
-			location.parent->RemoveClipProxy(this);
+			location.parent->RemoveClipSelection(this);
 		// set new parent
 		location.parent = channel;
-		// add proxy to new parent
+		// add selection to new parent
 		if (channel != nullptr)
-			channel->AddClipProxy(this);
+			channel->AddClipSelection(this);
 	}
 }
 

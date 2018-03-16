@@ -18,7 +18,7 @@ bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
-SeqSelection* Sequentia::dragClipProxy = nullptr;
+SeqSelection* Sequentia::dragClipSelection = nullptr;
 
 int Sequentia::Run(const char *openProject)
 {
@@ -300,13 +300,13 @@ SeqLibrary* Sequentia::GetLibrary()
 
 void Sequentia::HandleDragging()
 {
-	if (DragMode == SeqDragMode::Clip)
+	if (DragMode == SeqDragMode::Selection)
 	{
 		const ImVec2 size = ImVec2(150, 50);
-		if (dragClipProxy->GetParent() == nullptr)
+		if (dragClipSelection->GetParent() == nullptr)
 		{
 			ImGui::BeginTooltip();
-			SeqUISequencer::DrawClip(dragClipProxy->GetClip(), ImGui::GetCursorScreenPos(), size);
+			SeqUISequencer::DrawClip(dragClipSelection->GetClip(), ImGui::GetCursorScreenPos(), size);
 			ImGui::EndTooltip();
 		}
 		if (ImGui::IsMouseReleased(0))
@@ -325,33 +325,33 @@ void Sequentia::SetDragClipNew(SeqLibraryLink* link, int streamIndex)
 
 void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 {
-	if (dragClipProxy == nullptr || dragClipProxy->GetClip() != clip)
+	if (dragClipSelection == nullptr || dragClipSelection->GetClip() != clip)
 	{
 		if (clip != nullptr)
 		{
-			DragMode = SeqDragMode::Clip;
-			project->DeactivateAllClipProxies();
-			dragClipProxy = project->NextClipProxy();
-			dragClipProxy->location.leftTime = clip->location.leftTime;
-			dragClipProxy->location.rightTime = clip->location.rightTime;
-			dragClipProxy->location.startTime = clip->location.startTime;
+			DragMode = SeqDragMode::Selection;
+			project->DeactivateAllClipSelections();
+			dragClipSelection = project->NextClipSelection();
+			dragClipSelection->location.leftTime = clip->location.leftTime;
+			dragClipSelection->location.rightTime = clip->location.rightTime;
+			dragClipSelection->location.startTime = clip->location.startTime;
 			clip->isHidden = true;
-			dragClipProxy->grip = grip;
-			dragClipProxy->SetParent(clip->GetParent());
-			dragClipProxy->Activate(clip);
+			dragClipSelection->grip = grip;
+			dragClipSelection->SetParent(clip->GetParent());
+			dragClipSelection->Activate(clip);
 		}
 		else // set drag clip to nullptr
 		{
-			SeqClip *dragClip = dragClipProxy->GetClip();
-			if (dragClipProxy->IsNewClip())
+			SeqClip *dragClip = dragClipSelection->GetClip();
+			if (dragClipSelection->IsNewClip())
 			{
 				// if dragged from a library window
 				delete dragClip;
 			}
-			else if (dragClipProxy->GetParent() == nullptr)
+			else if (dragClipSelection->GetParent() == nullptr)
 			{
 				// make sure the remove action will not call SetDragClip(nullptr) again.
-				dragClipProxy = nullptr;
+				dragClipSelection = nullptr;
 				// if dragged from a sequencer window to the void
 				project->AddAction(SeqActionFactory::RemoveClipFromChannel(dragClip));
 			}
@@ -360,8 +360,8 @@ void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 				// nothing happened, unhide original clip
 				dragClip->isHidden = false;
 			}
-			project->DeactivateAllClipProxies();
-			dragClipProxy = nullptr;
+			project->DeactivateAllClipSelections();
+			dragClipSelection = nullptr;
 			DragMode = SeqDragMode::None;
 		}
 	}
@@ -396,9 +396,9 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 			{
 				SetDragClipNew(link, link->defaultVideoStreamIndex);
 				SeqChannel *channel = previewScene->GetChannel(0);
-				dragClipProxy->SetParent(channel);
-				dragClipProxy->location.leftTime = 0;
-				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+				dragClipSelection->SetParent(channel);
+				dragClipSelection->location.leftTime = 0;
+				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipSelection));
 				videoClip = channel->GetClip(0);
 			}
 			// audio clip
@@ -406,9 +406,9 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 			{
 				SetDragClipNew(link, link->defaultAudioStreamIndex);
 				SeqChannel *channel = previewScene->GetChannel(1);
-				dragClipProxy->SetParent(channel);
-				dragClipProxy->location.leftTime = 0;
-				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipProxy));
+				dragClipSelection->SetParent(channel);
+				dragClipSelection->location.leftTime = 0;
+				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipSelection));
 				audioClip = channel->GetClip(0);
 			}
 			// group the clips if there are 2
@@ -430,7 +430,7 @@ bool Sequentia::IsDragging()
 	return DragMode != SeqDragMode::None;
 }
 
-SeqSelection* Sequentia::GetDragClipProxy()
+SeqSelection* Sequentia::GetDragClipSelection()
 {
-	return dragClipProxy;
+	return dragClipSelection;
 }
