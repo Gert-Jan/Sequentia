@@ -5,7 +5,7 @@
 class SeqScene;
 enum class SeqChannelType;
 class SeqClip;
-class SeqClipProxy;
+class SeqSelection;
 class SeqClipGroup;
 
 enum class SeqActionType
@@ -60,7 +60,7 @@ struct SeqActionAddClipToChannel
 	int64_t leftTime;
 	int64_t rightTime;
 	int64_t startTime;
-	SeqActionAddClipToChannel(SeqClipProxy* proxy);
+	SeqActionAddClipToChannel(SeqSelection* proxy);
 	SeqActionAddClipToChannel(SeqClip* clip);
 };
 
@@ -90,5 +90,5 @@ struct SeqActionMoveClip
 	int toChannelId;
 	int toClipId;
 	int64_t toLeftTime;
-	SeqActionMoveClip(SeqClipProxy* proxy);
+	SeqActionMoveClip(SeqSelection* proxy);
 };

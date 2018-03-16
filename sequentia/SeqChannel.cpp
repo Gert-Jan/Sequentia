@@ -1,6 +1,6 @@
 #include "SeqChannel.h"
 #include "SeqClip.h"
-#include "SeqClipProxy.h"
+#include "SeqSelection.h"
 #include "SeqSerializer.h"
 #include "SeqList.h"
 #include "SeqString.h"
@@ -13,7 +13,7 @@ SeqChannel::SeqChannel(SeqScene *parent, const char *channelName, SeqChannelType
 {
 	name = SeqString::Copy(channelName);
 	clips = new SeqList<SeqClip*>();
-	clipProxies = new SeqList<SeqClipProxy*>();
+	clipProxies = new SeqList<SeqSelection*>();
 }
 
 SeqChannel::SeqChannel(SeqScene *parent, SeqSerializer *serializer) :
@@ -22,7 +22,7 @@ SeqChannel::SeqChannel(SeqScene *parent, SeqSerializer *serializer) :
 	nextActionId(-1)
 {
 	clips = new SeqList<SeqClip*>();
-	clipProxies = new SeqList<SeqClipProxy*>();
+	clipProxies = new SeqList<SeqSelection*>();
 	Deserialize(serializer);
 }
 
@@ -159,7 +159,7 @@ void SeqChannel::SwapClips(const int index0, const int index1)
 	clips->Set(index1, clip0);
 }
 
-void SeqChannel::AddClipProxy(SeqClipProxy *proxy)
+void SeqChannel::AddClipProxy(SeqSelection *proxy)
 {
 	if (proxy->GetParent() == nullptr)
 	{
@@ -174,7 +174,7 @@ void SeqChannel::AddClipProxy(SeqClipProxy *proxy)
 	}
 }
 
-void SeqChannel::AddClipProxyAt(SeqClipProxy *proxy, int const index)
+void SeqChannel::AddClipProxyAt(SeqSelection *proxy, int const index)
 {
 	if (proxy->GetParent() == nullptr)
 	{
@@ -186,7 +186,7 @@ void SeqChannel::AddClipProxyAt(SeqClipProxy *proxy, int const index)
 	}
 }
 
-void SeqChannel::RemoveClipProxy(SeqClipProxy *proxy)
+void SeqChannel::RemoveClipProxy(SeqSelection *proxy)
 {
 	int index = clipProxies->IndexOf(proxy);
 	if (index > -1)
@@ -195,11 +195,11 @@ void SeqChannel::RemoveClipProxy(SeqClipProxy *proxy)
 
 void SeqChannel::RemoveClipProxyAt(const int index)
 {
-	SeqClipProxy *proxy = clipProxies->Get(index);
+	SeqSelection *proxy = clipProxies->Get(index);
 	clipProxies->RemoveAt(index);
 }
 
-void SeqChannel::MoveClipProxy(SeqClipProxy *proxy, int64_t leftTime)
+void SeqChannel::MoveClipProxy(SeqSelection *proxy, int64_t leftTime)
 {
 	// move proxy
 	int64_t width = proxy->location.rightTime - proxy->location.leftTime;
@@ -215,14 +215,14 @@ int SeqChannel::ClipProxyCount()
 	return clipProxies->Count();
 }
 
-SeqClipProxy* SeqChannel::GetClipProxy(const int index)
+SeqSelection* SeqChannel::GetClipProxy(const int index)
 {
 	return clipProxies->Get(index);
 }
 
 void SeqChannel::SortClipProxy(int index)
 {
-	SeqClipProxy* proxy = clipProxies->Get(index);
+	SeqSelection* proxy = clipProxies->Get(index);
 	// sort down
 	while (index > 0 && clipProxies->Get(index - 1)->location.leftTime < proxy->location.leftTime)
 	{
@@ -239,8 +239,8 @@ void SeqChannel::SortClipProxy(int index)
 
 void SeqChannel::SwapClipProxies(const int index0, const int index1)
 {
-	SeqClipProxy* proxy0 = clipProxies->Get(index0);
-	SeqClipProxy* proxy1 = clipProxies->Get(index1);
+	SeqSelection* proxy0 = clipProxies->Get(index0);
+	SeqSelection* proxy1 = clipProxies->Get(index1);
 	clipProxies->Set(index0, proxy1);
 	clipProxies->Set(index1, proxy0);
 }

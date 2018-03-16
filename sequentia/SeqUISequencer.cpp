@@ -371,7 +371,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 avai
 	const ImRect totalRect(ImVec2(cursor.x, cursor.y), ImVec2(cursor.x + availableSize.x, cursor.y + height));
 
 	bool isHovering = false;
-	SeqClipProxy *dragClipProxy = Sequentia::GetDragClipProxy();
+	SeqSelection *dragClipProxy = Sequentia::GetDragClipProxy();
 	if (dragClipProxy != nullptr)
 	{
 		if (ImGui::IsMouseHoveringRect(totalRect.Min, totalRect.Max))
@@ -431,7 +431,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 avai
 	// draw clip proxies
 	for (int i = 0; i < channel->ClipProxyCount(); i++)
 	{
-		SeqClipProxy *proxy = channel->GetClipProxy(i);
+		SeqSelection *proxy = channel->GetClipProxy(i);
 		const double left = (double)proxy->location.leftTime;
 		const double right = (double)proxy->location.rightTime;
 		// culling

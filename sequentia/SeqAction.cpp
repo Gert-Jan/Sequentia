@@ -11,7 +11,7 @@ SeqActionAddChannel::SeqActionAddChannel(int sceneId, SeqChannelType type, const
 }
 
 // on add
-SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqClipProxy *proxy)
+SeqActionAddClipToChannel::SeqActionAddClipToChannel(SeqSelection *proxy)
 {
 	SeqLibrary *library = Sequentia::GetLibrary();
 	SeqChannel *channel = proxy->GetParent();
@@ -54,7 +54,7 @@ SeqActionAddClipToGroup::SeqActionAddClipToGroup(SeqClip *clip, SeqClipGroup *gr
 	groupId = group->actionId;
 }
 
-SeqActionMoveClip::SeqActionMoveClip(SeqClipProxy *proxy)
+SeqActionMoveClip::SeqActionMoveClip(SeqSelection *proxy)
 {
 	SeqClip *clip = proxy->GetClip();
 	fromSceneId = clip->GetParent()->GetParent()->id;

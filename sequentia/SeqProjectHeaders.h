@@ -5,5 +5,5 @@
 #include "SeqScene.h"
 #include "SeqChannel.h"
 #include "SeqClip.h"
-#include "SeqClipProxy.h"
+#include "SeqSelection.h"
 #include "SeqClipGroup.h"

@@ -5,7 +5,7 @@ class SeqSerializer;
 
 class SeqLibrary;
 class SeqScene;
-class SeqClipProxy;
+class SeqSelection;
 
 class SeqWindow;
 
@@ -41,7 +41,7 @@ public:
 	SeqScene* GetSceneById(const int id);
 	SeqScene* GetPreviewScene();
 
-	SeqClipProxy* NextClipProxy();
+	SeqSelection* NextClipProxy();
 	void DeactivateAllClipProxies();
 
 	int NextWindowId();
@@ -87,7 +87,7 @@ private:
 	int nextWindowId;
 	SeqLibrary *library;
 	SeqList<SeqScene*> *scenes;
-	SeqList<SeqClipProxy*> *clipProxyPool;
+	SeqList<SeqSelection*> *clipProxyPool;
 	SeqList<SeqWindow*> *windows;
 
 	SeqList<SeqActionHandler*> *actionHandlers;

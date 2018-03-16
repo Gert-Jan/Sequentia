@@ -8,7 +8,7 @@ class SeqList;
 class SeqLibrary;
 class SeqScene;
 class SeqClip;
-class SeqClipProxy;
+class SeqSelection;
 
 enum class SeqChannelType
 {
@@ -37,13 +37,13 @@ public:
 	SeqClip* GetClipByActionId(const int id);
 	int GetClipIndexByActionId(const int id);
 
-	void AddClipProxy(SeqClipProxy *proxy);
-	void AddClipProxyAt(SeqClipProxy *proxy, int const index);
-	void RemoveClipProxy(SeqClipProxy *proxy);
+	void AddClipProxy(SeqSelection *proxy);
+	void AddClipProxyAt(SeqSelection *proxy, int const index);
+	void RemoveClipProxy(SeqSelection *proxy);
 	void RemoveClipProxyAt(const int index);
-	void MoveClipProxy(SeqClipProxy *proxy, int64_t leftTime);
+	void MoveClipProxy(SeqSelection *proxy, int64_t leftTime);
 	int ClipProxyCount();
-	SeqClipProxy* GetClipProxy(const int index);
+	SeqSelection* GetClipProxy(const int index);
 
 private:
 	void SortClip(int index);
@@ -66,6 +66,6 @@ public:
 private:
 	SeqScene *scene;
 	SeqList<SeqClip*> *clips;
-	SeqList<SeqClipProxy*> *clipProxies;
+	SeqList<SeqSelection*> *clipProxies;
 	int nextActionId;
 };

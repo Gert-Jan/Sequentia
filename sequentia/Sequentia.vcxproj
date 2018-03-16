@@ -169,7 +169,7 @@
     <ClCompile Include="SeqClip.cpp" />
     <ClCompile Include="SeqClipGroup.cpp" />
     <ClCompile Include="SeqClipLocation.cpp" />
-    <ClCompile Include="SeqClipProxy.cpp" />
+    <ClCompile Include="SeqSelection.cpp" />
     <ClCompile Include="SeqDecoder.cpp" />
     <ClCompile Include="SeqDialogs.cpp" />
     <ClCompile Include="SeqLibrary.cpp" />
@@ -204,7 +204,7 @@
     <ClInclude Include="SeqClip.h" />
     <ClInclude Include="SeqClipGroup.h" />
     <ClInclude Include="SeqClipLocation.h" />
-    <ClInclude Include="SeqClipProxy.h" />
+    <ClInclude Include="SeqSelection.h" />
     <ClInclude Include="SeqDecoder.h" />
     <ClInclude Include="SeqDialogs.h" />
     <ClInclude Include="SeqMaterial.h" />

@@ -1,8 +1,8 @@
-#include "SeqClipProxy.h"
+#include "SeqSelection.h"
 #include "SeqClip.h"
 #include "SeqChannel.h"
 
-SeqClipProxy::SeqClipProxy() :
+SeqSelection::SeqSelection():
 	isActive(false),
 	grip(0),
 	location(SeqClipLocation()),
@@ -10,17 +10,17 @@ SeqClipProxy::SeqClipProxy() :
 {
 }
 
-SeqClipProxy::~SeqClipProxy()
+SeqSelection::~SeqSelection()
 {
 }
 
-void SeqClipProxy::Activate(SeqClip *childClip)
+void SeqSelection::Activate(SeqClip *childClip)
 {
 	clip = childClip;
 	isActive = true;
 }
 
-void SeqClipProxy::Deactivate()
+void SeqSelection::Deactivate()
 {
 	isActive = false;
 	if (location.parent != nullptr)
@@ -30,34 +30,34 @@ void SeqClipProxy::Deactivate()
 	clip = nullptr;
 }
 
-bool SeqClipProxy::IsActive()
+bool SeqSelection::IsActive()
 {
 	return isActive;
 }
 
-bool SeqClipProxy::IsNewClip()
+bool SeqSelection::IsNewClip()
 {
 	return clip->GetParent() == nullptr;
 }
 
-bool SeqClipProxy::IsMoved()
+bool SeqSelection::IsMoved()
 {
 	return
 		clip->GetParent() != GetParent() ||
 		clip->location.leftTime != location.leftTime;
 }
 
-SeqClip* SeqClipProxy::GetClip()
+SeqClip* SeqSelection::GetClip()
 {
 	return clip;
 }
 
-void SeqClipProxy::SetPosition(int64_t newLeftTime)
+void SeqSelection::SetPosition(int64_t newLeftTime)
 {
 	location.parent->MoveClipProxy(this, newLeftTime);
 }
 
-void SeqClipProxy::SetParent(SeqChannel* channel)
+void SeqSelection::SetParent(SeqChannel* channel)
 {
 	if (location.parent != channel)
 	{
@@ -72,7 +72,7 @@ void SeqClipProxy::SetParent(SeqChannel* channel)
 	}
 }
 
-SeqChannel* SeqClipProxy::GetParent()
+SeqChannel* SeqSelection::GetParent()
 {
 	return location.parent;
 }

@@ -10,7 +10,7 @@ class SeqScene;
 class SeqLibrary;
 class SeqRenderer;
 class SeqClip;
-class SeqClipProxy;
+class SeqSelection;
 struct SeqLibraryLink;
 
 enum class SeqDragMode
@@ -27,8 +27,8 @@ public:
 	static SeqProject* GetProject();
 	static SeqLibrary* GetLibrary();
 	static bool IsDragging();
-	static SeqClipProxy* GetDragClipProxy();
-	static void SetDragClipNew(SeqLibraryLink *link, int streamIndex);
+	static SeqSelection* GetDragClipProxy();
+	static void SetDragClipNew(SeqLibraryLink *link, int steamIndex);
 	static void SetDragClip(SeqClip *clip, const int64_t grip = 0);
 	static void SetPreviewLibraryLink(SeqLibraryLink *link);
 
@@ -53,5 +53,5 @@ private:
 	static double time;
 	static bool mousePressed[3];
 	static float mouseWheel;
-	static SeqClipProxy *dragClipProxy;
+	static SeqSelection *dragClipProxy;
 };

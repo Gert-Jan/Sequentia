@@ -5,11 +5,11 @@
 class SeqChannel;
 class SeqClip;
 
-class SeqClipProxy
+class SeqSelection
 {
 public:
-	SeqClipProxy();
-	~SeqClipProxy();
+	SeqSelection();
+	~SeqSelection();
 
 	void Activate(SeqClip *childClip);
 	void Deactivate();

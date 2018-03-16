@@ -5,7 +5,7 @@ enum class SeqChannelType;
 class SeqScene;
 class SeqChannel;
 class SeqClip;
-class SeqClipProxy;
+class SeqSelection;
 class SeqClipGroup;
 
 class SeqActionFactory
@@ -16,8 +16,8 @@ public:
 	static SeqAction AddLibraryLink(const char *fullPath);
 	static SeqAction RemoveLibraryLink(const char *fullPath);
 	static SeqAction AddClipGroup(SeqScene *scene);
-	static SeqAction AddClipToChannel(SeqClipProxy* clipProxy);
+	static SeqAction AddClipToChannel(SeqSelection* clipProxy);
 	static SeqAction RemoveClipFromChannel(SeqClip* clip);
 	static SeqAction AddClipToGroup(SeqClip* clip, SeqClipGroup* group);
-	static SeqAction MoveClip(SeqClipProxy* clipProxy);
+	static SeqAction MoveClip(SeqSelection* clipProxy);
 };

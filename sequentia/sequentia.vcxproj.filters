@@ -75,9 +75,6 @@
     <ClCompile Include="SeqActionFactory.cpp">
       <Filter>sys\action</Filter>
     </ClCompile>
-    <ClCompile Include="SeqClipProxy.cpp">
-      <Filter>data</Filter>
-    </ClCompile>
     <ClCompile Include="SeqClipLocation.cpp">
       <Filter>data</Filter>
     </ClCompile>
@@ -97,6 +94,9 @@
       <Filter>sys\util</Filter>
     </ClCompile>
     <ClCompile Include="SeqClipGroup.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqSelection.cpp">
       <Filter>data</Filter>
     </ClCompile>
   </ItemGroup>
@@ -198,9 +198,6 @@
     <ClInclude Include="SeqClip.h">
       <Filter>data</Filter>
     </ClInclude>
-    <ClInclude Include="SeqClipProxy.h">
-      <Filter>data</Filter>
-    </ClInclude>
     <ClInclude Include="SeqClipLocation.h">
       <Filter>data</Filter>
     </ClInclude>
@@ -229,6 +226,9 @@
       <Filter>data</Filter>
     </ClInclude>
     <ClInclude Include="SeqClipGroup.h">
+      <Filter>data</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqSelection.h">
       <Filter>data</Filter>
     </ClInclude>
   </ItemGroup>

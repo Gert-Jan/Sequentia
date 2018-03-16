@@ -18,7 +18,7 @@ bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
-SeqClipProxy* Sequentia::dragClipProxy = nullptr;
+SeqSelection* Sequentia::dragClipProxy = nullptr;
 
 int Sequentia::Run(const char *openProject)
 {
@@ -318,6 +318,7 @@ void Sequentia::HandleDragging()
 
 void Sequentia::SetDragClipNew(SeqLibraryLink* link, int streamIndex)
 {
+
 	SeqClip *clip = new SeqClip(link, streamIndex);
 	Sequentia::SetDragClip(clip);
 }
@@ -429,7 +430,7 @@ bool Sequentia::IsDragging()
 	return DragMode != SeqDragMode::None;
 }
 
-SeqClipProxy* Sequentia::GetDragClipProxy()
+SeqSelection* Sequentia::GetDragClipProxy()
 {
 	return dragClipProxy;
 }

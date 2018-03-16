@@ -24,7 +24,7 @@ SeqProject::SeqProject():
 {
 	library = new SeqLibrary();
 	scenes = new SeqList<SeqScene*>();
-	clipProxyPool = new SeqList<SeqClipProxy*>();
+	clipProxyPool = new SeqList<SeqSelection*>();
 
 	windows = new SeqList<SeqWindow*>();
 
@@ -217,19 +217,19 @@ SeqScene* SeqProject::GetPreviewScene()
 	return scenes->Get(0);
 }
 
-SeqClipProxy* SeqProject::NextClipProxy()
+SeqSelection* SeqProject::NextClipProxy()
 {
 	// reuse proxy
 	for (int i = 0; i < clipProxyPool->Count(); i++)
 	{
-		SeqClipProxy *proxy = clipProxyPool->Get(i);
+		SeqSelection *proxy = clipProxyPool->Get(i);
 		if (!proxy->IsActive())
 		{
 			return proxy;
 		}
 	}
 	// make new proxy
-	SeqClipProxy *proxy = new SeqClipProxy();
+	SeqSelection *proxy = new SeqSelection();
 	clipProxyPool->Add(proxy);
 	return proxy;
 }
@@ -450,7 +450,7 @@ void SeqProject::ExecuteAction(const SeqAction action, const SeqActionExecution 
 			{
 				int clipIndex = channel->GetClipIndexByActionId(data->clipId);
 				SeqClip *clip = channel->GetClip(clipIndex);
-				SeqClipProxy *dragProxy = Sequentia::GetDragClipProxy();
+				SeqSelection *dragProxy = Sequentia::GetDragClipProxy();
 				if (dragProxy != nullptr && dragProxy->GetClip() == clip)
 				{
 					Sequentia::SetDragClip(nullptr);
