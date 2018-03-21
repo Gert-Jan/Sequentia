@@ -411,14 +411,6 @@ void Sequentia::SetPreviewLibraryLink(SeqLibraryLink *link)
 				project->DoAndForgetAction(SeqActionFactory::AddClipToChannel(dragClipSelection));
 				audioClip = channel->GetClip(0);
 			}
-			// group the clips if there are 2
-			if (videoClip != nullptr && audioClip != nullptr)
-			{
-				project->DoAndForgetAction(SeqActionFactory::AddClipGroup(previewScene));
-				SeqClipGroup* group = previewScene->GetClipGroup(0);
-				project->DoAndForgetAction(SeqActionFactory::AddClipToGroup(videoClip, group));
-				project->DoAndForgetAction(SeqActionFactory::AddClipToGroup(audioClip, group));
-			}
 		}
 		// play
 		previewScene->player->Play();

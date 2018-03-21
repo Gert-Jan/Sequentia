@@ -29,6 +29,11 @@ void SeqClipLocation::SetPosition(int64_t newLeftTime)
 	rightTime = leftTime + width;
 }
 
+int64_t SeqClipLocation::VideoStartTime()
+{
+	return leftTime - startTime;
+}
+
 bool SeqClipLocation::ContainsTime(int64_t time)
 {
 	return time >= leftTime && time <= rightTime;

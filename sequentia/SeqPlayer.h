@@ -1,8 +1,9 @@
 #pragma once
 
 #include "SDL_config.h"
+#include "SDL_audio.h"
 #include "SeqAction.h"
-#include "SDL_audio.h";
+#include "SeqTime.h"
 
 class SeqScene;
 class SeqClip;
@@ -38,6 +39,13 @@ struct SeqClipPlayer
 	};
 };
 
+enum class SeqPlayerSyncState
+{
+	INDEPENDANT,
+	INVALID_SYNC,
+	SYNCED
+};
+
 struct SeqPlayerRenderTarget
 {
 	int untilChannel;
@@ -69,13 +77,19 @@ public:
 
 private:
 	SeqClipPlayer* GetClipPlayerFor(SeqClip *clip);
+	void CreateDecoderTaskFor(SeqClipPlayer *player);
 	int GetClipPlayerIndexFor(SeqClip *clip);
-	SeqClipPlayer* GetGroupedClipPlayer(SeqClip *clip);
+	SeqClipPlayer* GetSyncedClipPlayerFor(SeqClipPlayer* player);
+	SeqClipPlayer* GetSyncableClipPlayer(SeqClip *clip);
+	bool ClipsSyncable(SeqClip *clipA, SeqClip *clipB);
+	SeqPlayerSyncState ValidateSyncing(SeqClipPlayer *player);
 	void DisposeClipPlayerAt(const int index);
+	void SafeStopDecodingStream(SeqClipPlayer* palyer);
 	void UpdateClipPlayers(bool *canPlay);
 	void Render(const int fromChannelIndex, const int toChannelIndex);
 
 private:
+	static const int64_t DECODER_SYNC_TOLERANCE = SEQ_TIME_FROM_MILLISECONDS(100);
 	SeqScene *scene;
 	SeqList<SeqClipPlayer> *clipPlayers;
 	SeqList<int> *viewers;

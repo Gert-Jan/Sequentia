@@ -13,6 +13,7 @@ public:
 	void Reset();
 	void SetPosition(int64_t leftTime);
 
+	int64_t VideoStartTime();
 	bool ContainsTime(int64_t time);
 	bool OverlapsTimeRange(int64_t leftBound, int64_t rightBound);
 

@@ -217,6 +217,40 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				if (clipPlayer == nullptr)
 					continue;
 
+				// check if we are syncing with another player and if that sync is still valid
+				SeqPlayerSyncState syncState = ValidateSyncing(clipPlayer);
+				if (syncState == SeqPlayerSyncState::INVALID_SYNC)
+				{
+					// the sync was no longer valid, stop using the decoder of the synced to player
+					SafeStopDecodingStream(clipPlayer);
+					// check if the player can sync with another player
+					SeqClipPlayer *syncablePlayer = GetSyncableClipPlayer(clip);
+					if (syncablePlayer != nullptr)
+					{
+						// sync with found player
+						clipPlayer->decoderTask = syncablePlayer->decoderTask;
+						clipPlayer->decoderTask->StartDecodeStreamIndex(clipPlayer->clip->streamIndex);
+					}
+					else
+					{
+						// there was no clip to sync with spawn a new task
+						CreateDecoderTaskFor(clipPlayer);
+					}
+				}
+				else if (syncState == SeqPlayerSyncState::INDEPENDANT)
+				{
+					// not synced, see if there are possibilities to sync
+					SeqClipPlayer *syncablePlayer = GetSyncableClipPlayer(clip);
+					if (syncablePlayer != nullptr)
+					{
+						// stop the current decoder task
+						clipPlayer->decoderTask->Stop();
+						// sync with found player
+						clipPlayer->decoderTask = syncablePlayer->decoderTask;
+						clipPlayer->decoderTask->StartDecodeStreamIndex(clipPlayer->clip->streamIndex);
+					}
+				}
+
 				// get the decoder
 				SeqDecoder *decoder = clipPlayer->decoderTask->GetDecoder();
 
@@ -404,68 +438,6 @@ void SeqPlayer::PreExecuteAction(const SeqActionType type, const SeqActionExecut
 			}
 			break;
 		}
-		case SeqActionType::AddClipToGroup:
-		{
-			SeqActionAddClipToGroup *data = (SeqActionAddClipToGroup*)actionData;
-			if (data->sceneId == scene->id)
-			{
-				SeqClipGroup *group = scene->GetClipGroupByActionId(data->groupId);
-				SeqChannel *channel = scene->GetChannelByActionId(data->channelId);
-				SeqClip *clip = channel->GetClipByActionId(data->clipId);
-				int playerIndex = GetClipPlayerIndexFor(clip);
-				if (playerIndex > -1)
-				{ 
-					// reduce decoder tasks
-					if (execution == SeqActionExecution::Do)
-					{
-						// find another clip using the same decoder
-						for (int i = 0; i < group->ClipCount(); i++)
-						{
-							SeqClip *groupedClip = group->GetClip(i);
-							if (groupedClip != clip)
-							{
-								int groupedPlayerIndex = GetClipPlayerIndexFor(groupedClip);
-								if (groupedPlayerIndex != -1)
-								{
-									// we found a grouped clip with a connected player, reduce decoders
-									SeqClipPlayer *player = clipPlayers->GetPtr(playerIndex);
-									SeqClipPlayer *groupedPlayer = clipPlayers->GetPtr(groupedPlayerIndex);
-									player->decoderTask->Stop();
-									player->decoderTask = groupedPlayer->decoderTask;
-									player->decoderTask->StartDecodeStreamIndex(clip->streamIndex);
-								}
-							}
-						}
-					}
-					// increase decoder tasks
-					else
-					{
-						// find another clip using the same decoder
-						for (int i = 0; i < group->ClipCount(); i++)
-						{
-							SeqClip *groupedClip = group->GetClip(i);
-							if (groupedClip != clip)
-							{
-								int groupedPlayerIndex = GetClipPlayerIndexFor(groupedClip);
-								if (groupedPlayerIndex != -1)
-								{
-									// we found a grouped clip with a connected player, reduce decoders
-									SeqClipPlayer *player = clipPlayers->GetPtr(playerIndex);
-									SeqClipPlayer *groupedPlayer = clipPlayers->GetPtr(groupedPlayerIndex);
-									if (player->decoderTask == groupedPlayer->decoderTask)
-									{
-										player->decoderTask = new SeqTaskDecodeVideo(clip->GetLink());
-										SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
-										player->decoderTask->StartDecodeStreamIndex(clip->streamIndex);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			break;
-		}
 	}
 }
 
@@ -506,22 +478,25 @@ SeqClipPlayer* SeqPlayer::GetClipPlayerFor(SeqClip *clip)
 			SDL_PauseAudioDevice(player->audioPlayer.deviceId, false);
 		}
 		// create decoder task
-		SeqClipPlayer *groupedPlayer = GetGroupedClipPlayer(clip);
-		if (groupedPlayer == nullptr)
+		SeqClipPlayer *syncablePlayer = GetSyncableClipPlayer(clip);
+		if (syncablePlayer == nullptr)
 		{
-			player->decoderTask = new SeqTaskDecodeVideo(link);
-			SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
+			CreateDecoderTaskFor(player);
 		}
 		else
 		{
-			player->decoderTask = groupedPlayer->decoderTask;
-		}
-		if (clip->streamIndex >= 0)
-		{
+			player->decoderTask = syncablePlayer->decoderTask;
 			player->decoderTask->StartDecodeStreamIndex(clip->streamIndex);
 		}
 		return player;
 	}
+}
+
+void SeqPlayer::CreateDecoderTaskFor(SeqClipPlayer *player)
+{
+	player->decoderTask = new SeqTaskDecodeVideo(player->clip->GetLink());
+	SeqWorkerManager::Instance()->PerformTask(player->decoderTask);
+	player->decoderTask->StartDecodeStreamIndex(player->clip->streamIndex);
 }
 
 int SeqPlayer::GetClipPlayerIndexFor(SeqClip *clip)
@@ -535,41 +510,93 @@ int SeqPlayer::GetClipPlayerIndexFor(SeqClip *clip)
 	return -1;
 }
 
-SeqClipPlayer* SeqPlayer::GetGroupedClipPlayer(SeqClip *clip)
+SeqClipPlayer* SeqPlayer::GetSyncedClipPlayerFor(SeqClipPlayer *player)
 {
-	SeqClipGroup *group = clip->group;
-	if (group != nullptr)
+	for (int i = 0; i < clipPlayers->Count(); i++)
 	{
-		for (int i = 0; i < group->ClipCount(); i++)
+		SeqClipPlayer *otherPlayer = clipPlayers->GetPtr(i);
+		if (otherPlayer != player &&
+			otherPlayer->decoderTask == player->decoderTask)
 		{
-			SeqClip *groupedClip = group->GetClip(i);
-			if (groupedClip != clip)
-			{
-				int index = GetClipPlayerIndexFor(groupedClip);
-				if (index > -1)
-					return clipPlayers->GetPtr(index);
-			}
+			return clipPlayers->GetPtr(i);
 		}
 	}
 	return nullptr;
 }
 
+// find a player of which we can use the SeqTaskDecodeVideo from as they are synced up in time and use the same media content.
+SeqClipPlayer* SeqPlayer::GetSyncableClipPlayer(SeqClip *clip)
+{
+	for (int i = 0; i < clipPlayers->Count(); i++)
+	{
+		SeqClipPlayer player = clipPlayers->Get(i);
+		SeqClip *otherClip = player.clip;
+		if (ClipsSyncable(clip, otherClip))
+		{
+			return clipPlayers->GetPtr(i);
+		}
+	}
+	return nullptr;
+}
+
+bool SeqPlayer::ClipsSyncable(SeqClip *clipA, SeqClip *clipB)
+{
+	return clipA != clipB &&
+		clipA->GetLink() == clipB->GetLink() &&
+		abs(clipA->location.VideoStartTime() - clipB->location.VideoStartTime()) < DECODER_SYNC_TOLERANCE;
+}
+
+SeqPlayerSyncState SeqPlayer::ValidateSyncing(SeqClipPlayer *player)
+{
+	SeqClipPlayer *syncedPlayer = GetSyncedClipPlayerFor(player);
+	// no sync active so it's valid
+	if (syncedPlayer == nullptr)
+	{
+		return SeqPlayerSyncState::INDEPENDANT;
+	}
+	else if (ClipsSyncable(player->clip, syncedPlayer->clip))
+	{
+		return SeqPlayerSyncState::SYNCED;
+	}
+	else
+	{
+		return SeqPlayerSyncState::INVALID_SYNC;
+	}
+}
+
 void SeqPlayer::DisposeClipPlayerAt(const int index)
 {
-	SeqClipPlayer player = clipPlayers->Get(index);
-	player.decoderTask->StopDecodedStreamIndex(player.clip->streamIndex);
-	SeqClipPlayer *groupedClipPlayer = GetGroupedClipPlayer(player.clip);
-	if (groupedClipPlayer == nullptr)
+	SeqClipPlayer *player = clipPlayers->GetPtr(index);
+	SafeStopDecodingStream(player);
+	SeqClipPlayer *syncedClipPlayer = GetSyncedClipPlayerFor(player);
+	if (syncedClipPlayer == nullptr)
 	{
-		player.decoderTask->Stop();
+		player->decoderTask->Stop();
 	}
-	SeqStreamInfo *streamInfo = player.clip->GetStreamInfo();
+	SeqStreamInfo *streamInfo = player->clip->GetStreamInfo();
 	if (streamInfo->type == SeqStreamInfoType::Video)
 	{
-		SeqRenderer::RemoveMaterialInstance(player.videoPlayer.material);
+		SeqRenderer::RemoveMaterialInstance(player->videoPlayer.material);
 	}
 	else if (streamInfo->type == SeqStreamInfoType::Audio)
 	{
-		SDL_CloseAudioDevice(player.audioPlayer.deviceId);
+		SDL_CloseAudioDevice(player->audioPlayer.deviceId);
 	}
+}
+
+void SeqPlayer::SafeStopDecodingStream(SeqClipPlayer *player)
+{
+	// makes sure not to stop a stream that is also used by another player
+	for (int i = 0; i < clipPlayers->Count(); i++)
+	{
+		SeqClipPlayer *otherPlayer = clipPlayers->GetPtr(i);
+		if (player != otherPlayer &&
+			player->decoderTask == otherPlayer->decoderTask &&
+			player->clip->streamIndex == otherPlayer->clip->streamIndex)
+		{
+			return;
+		}
+	}
+	// we can safely stop the associated stream
+	player->decoderTask->StopDecodedStreamIndex(player->clip->streamIndex);
 }

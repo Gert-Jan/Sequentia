@@ -512,6 +512,8 @@ AVFrame* SeqDecoder::NextFrame(int streamIndex)
 
 void SeqDecoder::StartDecodingStream(int streamIndex)
 {
+	if (streamIndex < 0)
+		return;
 	SDL_LockMutex(refreshStreamContextsMutex);
 	int index = stopStreams->IndexOf(streamIndex);
 	if (index > -1)
@@ -527,6 +529,8 @@ void SeqDecoder::StartDecodingStream(int streamIndex)
 
 void SeqDecoder::StopDecodingStream(int streamIndex)
 {
+	if (streamIndex < 0)
+		return;
 	SDL_LockMutex(refreshStreamContextsMutex);
 	int index = startStreams->IndexOf(streamIndex);
 	if (index > -1)
