@@ -16,6 +16,8 @@ public:
 	virtual void Finalize() = 0;
 	// main thread: used by the SeqWorkerManager to prioritize tasks
 	virtual SeqWorkerTaskPriority GetPriority() = 0;
+	// main thread: used for debugging
+	virtual char* GetName() = 0;
 	
 	//debug
 	// main thread: returns a number between 0 and 1 indicating how far the task has progressed

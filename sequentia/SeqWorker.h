@@ -28,6 +28,10 @@ public:
 	void Finalize();
 	// worker status
 	SeqWorkerStatus GetStatus();
+	// progress as provided by the task if present
+	float GetProgress();
+	// name as provided by the task if present
+	char* GetName();
 private:
 	// static, SDL compatible thread reference
 	static int ThreadProxy(void* instance);

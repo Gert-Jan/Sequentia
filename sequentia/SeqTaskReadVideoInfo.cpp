@@ -2,6 +2,7 @@
 #include "SeqStreamInfo.h"
 #include "SeqLibrary.h"
 #include "SeqDecoder.h"
+#include "SeqString.h"
 #include <SDL.h>
 
 SeqTaskReadVideoInfo::SeqTaskReadVideoInfo(SeqLibraryLink *link) :
@@ -110,6 +111,14 @@ SeqWorkerTaskPriority SeqTaskReadVideoInfo::GetPriority()
 float SeqTaskReadVideoInfo::GetProgress()
 {
 	return progress;
+}
+
+char* SeqTaskReadVideoInfo::GetName()
+{
+	SeqString::Temp->Clear();
+	SeqString::Temp->Append("Read Metadata: ");
+	SeqString::Temp->Append(link->fullPath);
+	return SeqString::Temp->Buffer;
 }
 
 SDL_AudioFormat SeqTaskReadVideoInfo::FromAVSampleFormat(AVSampleFormat format, bool *isPlanar)

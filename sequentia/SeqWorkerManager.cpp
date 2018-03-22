@@ -2,6 +2,7 @@
 #include "SeqWorker.h"
 #include "SeqWorkerTask.h"
 #include "SeqList.h"
+#include "imgui.h"
 
 SeqWorkerManager* SeqWorkerManager::Instance()
 {
@@ -56,4 +57,27 @@ void SeqWorkerManager::StartTasks()
 			taskQueue->RemoveAt(0);
 		}
 	}
+}
+
+void SeqWorkerManager::DrawDebugWindow()
+{
+	ImGui::Columns(2, "workersTable");
+	ImGui::Separator();
+	ImGui::Text("Name"); ImGui::NextColumn();
+	ImGui::Text("Progress"); ImGui::NextColumn();
+	ImGui::Separator();
+	for (int i = 0; i < workers->Count(); i++)
+	{
+		SeqWorker *worker = workers->Get(i);
+		ImGui::Text(worker->GetName()); ImGui::NextColumn();
+		ImGui::Text("%.3f%%", worker->GetProgress() * 100); ImGui::NextColumn();
+	}
+	ImGui::Separator();
+	for (int i = 0; i < taskQueue->Count(); i++)
+	{
+		SeqWorkerTask *task = taskQueue->Get(i);
+		ImGui::Text(task->GetName()); ImGui::NextColumn();
+		ImGui::NextColumn();
+	}
+	ImGui::Columns(1);
 }

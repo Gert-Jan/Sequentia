@@ -1,5 +1,6 @@
 #include "SeqWorker.h"
 #include "SeqWorkerTask.h"
+#include "SeqString.h"
 #include <SDL.h>
 
 SeqWorker::SeqWorker():
@@ -72,4 +73,30 @@ void SeqWorker::Finalize()
 SeqWorkerStatus SeqWorker::GetStatus()
 {
 	return status;
+}
+
+float SeqWorker::GetProgress()
+{
+	if (activeTask != nullptr)
+	{
+		return activeTask->GetProgress();
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+char* SeqWorker::GetName()
+{
+	if (activeTask != nullptr)
+	{
+		return activeTask->GetName();
+	}
+	else
+	{
+		SeqString::Temp->Clear();
+		SeqString::Temp->Append("[idle]");
+		return SeqString::Temp->Buffer;
+	}
 }

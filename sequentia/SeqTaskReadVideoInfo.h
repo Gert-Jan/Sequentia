@@ -21,6 +21,7 @@ public:
 	void Finalize();
 	SeqWorkerTaskPriority GetPriority();
 	float GetProgress();
+	char* GetName();
 private:
 	SDL_AudioFormat FromAVSampleFormat(AVSampleFormat format, bool *isPlanar);
 private:

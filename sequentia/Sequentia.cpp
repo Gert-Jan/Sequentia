@@ -14,11 +14,14 @@ SeqDragMode Sequentia::DragMode = SeqDragMode::None;
 bool Sequentia::done = false;
 SDL_Window* Sequentia::window = nullptr;
 SeqProject* Sequentia::project = nullptr;
-bool Sequentia::showImGuiDemo = false;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
 SeqSelection* Sequentia::dragClipSelection = nullptr;
+
+// debug
+bool Sequentia::showImGuiDemo = false;
+bool Sequentia::showWorkers = true;
 
 int Sequentia::Run(const char *openProject)
 {
@@ -79,6 +82,18 @@ int Sequentia::Run(const char *openProject)
 		if (showImGuiDemo)
 		{
 			ImGui::ShowTestWindow(&showImGuiDemo);
+		}
+
+		if (showWorkers)
+		{
+			bool isOpen = true;
+			if (ImGui::Begin("Workers", &isOpen))
+			{
+				SeqWorkerManager::Instance()->DrawDebugWindow();
+			}
+			ImGui::End();
+			if (!isOpen)
+				showWorkers = false;
 		}
 
 		// Rendering
@@ -281,7 +296,8 @@ void Sequentia::HandleMainMenuBar()
 			if (ImGui::MenuItem("Sequencer", "")) { project->AddWindowSequencer(); }
 			if (ImGui::MenuItem("Library", "")) { project->AddWindowLibrary(); }
 			ImGui::Separator();
-			if (ImGui::MenuItem("ImGui Demo", "")) { showImGuiDemo = true; }
+			if (ImGui::MenuItem("Workers", "", showWorkers)) { showWorkers = !showWorkers; }
+			if (ImGui::MenuItem("ImGui Demo", "", showImGuiDemo)) { showImGuiDemo = !showImGuiDemo; }
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();

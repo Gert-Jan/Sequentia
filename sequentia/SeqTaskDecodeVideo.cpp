@@ -1,6 +1,7 @@
 #include "SeqTaskDecodeVideo.h"
 #include "SeqLibrary.h"
 #include "SeqDecoder.h"
+#include "SeqString.h"
 #include <SDL.h>
 
 SeqTaskDecodeVideo::SeqTaskDecodeVideo(SeqLibraryLink *link):
@@ -73,5 +74,24 @@ SeqWorkerTaskPriority SeqTaskDecodeVideo::GetPriority()
 
 float SeqTaskDecodeVideo::GetProgress()
 {
-	return (float)decoder->GetPlaybackTime() / (float)decoder->GetDuration();
+	if (decoder->GetStatus() == SeqDecoderStatus::Inactive)
+	{
+		return 0;
+	}
+	else if (decoder->GetStatus() == SeqDecoderStatus::Disposing)
+	{
+		return 1;
+	}
+	else
+	{
+		return (float)decoder->GetPlaybackTime() / (float)decoder->GetDuration();
+	}
+}
+
+char* SeqTaskDecodeVideo::GetName()
+{
+	SeqString::Temp->Clear();
+	SeqString::Temp->Append("DecodeVideo: ");
+	SeqString::Temp->Append(link->fullPath);
+	return SeqString::Temp->Buffer;
 }

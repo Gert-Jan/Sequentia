@@ -49,9 +49,12 @@ private:
 	static bool done;
 	static SDL_Window *window;
 	static SeqProject *project;
-	static bool showImGuiDemo;
 	static double time;
 	static bool mousePressed[3];
 	static float mouseWheel;
 	static SeqSelection *dragClipSelection;
+
+	// debug
+	static bool showImGuiDemo;
+	static bool showWorkers;
 };

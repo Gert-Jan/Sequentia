@@ -21,6 +21,7 @@ public:
 	SeqDecoder* GetDecoder();
 	SeqWorkerTaskPriority GetPriority();
 	float GetProgress();
+	char* GetName();
 private:
 	SeqLibraryLink *link;
 	SeqDecoder *decoder;

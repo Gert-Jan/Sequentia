@@ -12,6 +12,7 @@ public:
 	static SeqWorkerManager* Instance();
 	void PerformTask(SeqWorkerTask *task);
 	void Update();
+	void DrawDebugWindow();
 private:
 	SeqWorkerManager();
 	~SeqWorkerManager();
