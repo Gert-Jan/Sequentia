@@ -70,7 +70,7 @@ void SeqWorkerManager::DrawDebugWindow()
 	{
 		SeqWorker *worker = workers->Get(i);
 		ImGui::Text(worker->GetName()); ImGui::NextColumn();
-		ImGui::Text("%.3f%%", worker->GetProgress() * 100); ImGui::NextColumn();
+		ImGui::ProgressBar(worker->GetProgress()); ImGui::NextColumn();
 	}
 	ImGui::Separator();
 	for (int i = 0; i < taskQueue->Count(); i++)
