@@ -255,8 +255,9 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				SeqDecoder *decoder = clipPlayer->decoderTask->GetDecoder();
 
 				// continue if the decoder is not ready yet
-				if (decoder->GetStatus() != SeqDecoderStatus::Loading &&
-					decoder->GetStatus() != SeqDecoderStatus::Ready)
+				if (decoder == nullptr || 
+					(decoder->GetStatus() != SeqDecoderStatus::Loading &&
+					decoder->GetStatus() != SeqDecoderStatus::Ready))
 				{
 					*canPlay = false;
 					continue;
