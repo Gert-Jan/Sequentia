@@ -272,7 +272,7 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 					clipPlayer->isWaitingForSeek = true;
 					*canPlay = false;
 				}
-				else if (clipPlayer->isWaitingForSeek)
+				else if (decoder->GetStatus() == SeqDecoderStatus::Seeking)
 				{
 					if (requestTime >= decoder->GetBufferLeft() &&
 						requestTime <= decoder->GetBufferRight())

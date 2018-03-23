@@ -314,8 +314,6 @@ int SeqDecoder::Loop()
 			lastRequestedFrameTime = tempSeekTime;
 			printf("SEEKING time:%d lb: %d rb: %d disp_pkt:%d pkt_cur:%d\n", 
 				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor);
-			// set state to 'loading' as the complete buffer is now invalid
-			SetStatusLoading();
 		}
 		// fill the packet buffer
 		FillPacketBuffer();
@@ -410,6 +408,13 @@ int SeqDecoder::Loop()
 		frameBuffer->buffer[frameBuffer->insertCursor] = tempFrame;
 		tempFrame = swapFrame;
 		bufferPunctuality = frameBuffer->buffer[frameBuffer->insertCursor]->pkt_dts - lastRequestedFrameTime;
+
+		// stay in the seeking state until GetBufferLeft() and GetBufferRight() can return valid values again
+		if (status == SeqDecoderStatus::Seeking && pkt.stream_index == primaryStreamIndex)
+		{
+			frameBuffer->inUseCursor = frameBuffer->insertCursor;
+			SetStatusLoading();
+		}
 
 		// move the buffer cursor
 		frameBuffer->insertCursor = nextInsertCursor;
