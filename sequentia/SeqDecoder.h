@@ -19,6 +19,7 @@ enum class SeqDecoderStatus
 	Inactive,
 	Opening,
 	Loading,
+	Seeking,
 	Ready,
 	Stopping,
 	Disposing
@@ -76,6 +77,7 @@ private:
 	void SetStatusInactive();
 	void SetStatusOpening();
 	void SetStatusLoading();
+	void SetStatusSeeking();
 	void SetStatusReady();
 	void SetStatusStopping();
 	void SetStatusDisposing();

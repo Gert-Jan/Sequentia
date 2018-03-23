@@ -60,6 +60,14 @@ void SeqDecoder::SetStatusLoading()
 	SDL_UnlockMutex(statusMutex);
 }
 
+void SeqDecoder::SetStatusSeeking()
+{
+	SDL_LockMutex(statusMutex);
+	if (status < SeqDecoderStatus::Stopping)
+		status = SeqDecoderStatus::Seeking;
+	SDL_UnlockMutex(statusMutex);
+}
+
 void SeqDecoder::SetStatusReady()
 {
 	SDL_LockMutex(statusMutex);
@@ -271,7 +279,10 @@ int SeqDecoder::Loop()
 	AVPacket pkt;
 	av_init_packet(&pkt);
 	// read frames from the file
-	while (status == SeqDecoderStatus::Loading || status == SeqDecoderStatus::Ready)
+	while (
+		status == SeqDecoderStatus::Loading || 
+		status == SeqDecoderStatus::Seeking || 
+		status == SeqDecoderStatus::Ready)
 	{
 		// switching codex, when for example switching audio channel or removing an audio channel all together
 		if (shouldRefreshStreamContexts)
@@ -292,8 +303,6 @@ int SeqDecoder::Loop()
 			SDL_UnlockMutex(seekMutex);
 			// ffmpeg seek
 			avformat_seek_file(formatContext, primaryStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
-			// set state to 'loading' as the complete buffer is now invalid
-			SetStatusLoading();
 			// reset the packet and frame buffer so it will completely be refilled
 			displayPacketCursor = 0;
 			packetBufferCursor = 0;
@@ -305,6 +314,8 @@ int SeqDecoder::Loop()
 			lastRequestedFrameTime = tempSeekTime;
 			printf("SEEKING time:%d lb: %d rb: %d disp_pkt:%d pkt_cur:%d\n", 
 				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor);
+			// set state to 'loading' as the complete buffer is now invalid
+			SetStatusLoading();
 		}
 		// fill the packet buffer
 		FillPacketBuffer();
@@ -454,6 +465,7 @@ void SeqDecoder::Seek(int64_t time)
 	// if the seek time was not in the buffer:
 	// schedule a ffmpeg seek which will later be done in loop()
 	SDL_LockMutex(seekMutex);
+	SetStatusSeeking();
 	shouldSeek = true;
 	seekTime = streamTime;
 	SDL_UnlockMutex(seekMutex);
@@ -463,6 +475,10 @@ AVFrame* SeqDecoder::NextFrame(int streamIndex, int64_t time)
 {
 	SeqStreamContext *streamContext = &streamContexts[streamIndex];
 	SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
+	if (frameBuffer == nullptr)
+		return nullptr;
+	if (status == SeqDecoderStatus::Seeking)
+		return frameBuffer->buffer[frameBuffer->inUseCursor];
 	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, streamContext->timeBase);
 	// remember in the decoder what time was last requested, we can use this for buffering more relevant frames
 	lastRequestedFrameTime = streamTime;
@@ -500,6 +516,10 @@ AVFrame* SeqDecoder::NextFrame(int streamIndex)
 	// simply return the next display frame in the buffer
 	SeqStreamContext *streamContext = &streamContexts[streamIndex];
 	SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
+	if (frameBuffer == nullptr)
+		return nullptr;
+	if (status == SeqDecoderStatus::Seeking)
+		return frameBuffer->buffer[frameBuffer->inUseCursor];
 	int nextInUseCursor = (frameBuffer->inUseCursor + 1) % frameBuffer->size;
 	if (nextInUseCursor != frameBuffer->insertCursor)
 	{
@@ -546,7 +566,7 @@ void SeqDecoder::StopDecodingStream(int streamIndex)
 
 bool SeqDecoder::IsValidFrame(AVFrame *frame)
 {
-	return frame->pkt_dts >= 0;
+	return frame != nullptr && frame->pkt_dts >= 0;
 }
 
 void SeqDecoder::FillPacketBuffer()
