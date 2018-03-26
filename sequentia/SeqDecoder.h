@@ -53,6 +53,7 @@ public:
 	int64_t GetPlaybackTime();
 	int64_t GetBufferLeft();
 	int64_t GetBufferRight();
+	int64_t GetSeqTimeForStreamTime(int64_t streamTime, int streamIndex);
 
 	void Dispose();
 	SeqFrameBuffer* CreateFrameBuffer(int size);

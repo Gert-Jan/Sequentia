@@ -175,18 +175,21 @@ void SeqPlayer::Update()
 	// update all clip players
 	UpdateClipPlayers(&canPlay);
 
-	// increment playtime if possible
-	Uint32 measuredTime = SDL_GetTicks();
-	if (canPlay)
+	if (isPlaying)
 	{
-		playTime += SEQ_TIME_FROM_MILLISECONDS(measuredTime - lastMeasuredTime);
-		if (playTime >= scene->GetLength())
+		// increment playtime if possible
+		Uint32 measuredTime = SDL_GetTicks();
+		if (canPlay)
 		{
-			isPlaying = false;
-			playTime = scene->GetLength();
+			playTime += SEQ_TIME_FROM_MILLISECONDS(measuredTime - lastMeasuredTime);
+			if (playTime >= scene->GetLength())
+			{
+				isPlaying = false;
+				playTime = scene->GetLength();
+			}
 		}
+		lastMeasuredTime = measuredTime;
 	}
-	lastMeasuredTime = measuredTime;
 }
 
 void SeqPlayer::UpdateClipPlayers(bool *canPlay)
@@ -287,52 +290,63 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				
 				// move the frame to the GPU if the decoder is ready
 				AVFrame *frame = decoder->NextFrame(clip->streamIndex, requestTime);
-				if (SeqDecoder::IsValidFrame(frame) && frame != clipPlayer->lastFrame)
+				if (SeqDecoder::IsValidFrame(frame))
 				{
-					SeqStreamInfo *streamInfo = clip->GetStreamInfo();
-					if (streamInfo->type == SeqStreamInfoType::Video)
+					// check if we got the right frame for the given time
+					if (decoder->GetSeqTimeForStreamTime(frame->pkt_dts, clip->streamIndex) < requestTime)
 					{
-						if (clipPlayer->lastFrame == nullptr ||
-							frame->linesize[0] > clipPlayer->videoPlayer.maxLineSize)
-						{
-							clipPlayer->videoPlayer.maxLineSize = frame->linesize[0];
-							SeqRenderer::CreateVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
-						}
-						else
-						{
-							SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
-						}
+						// the decoder did not catch up yet, stop the player for now until it did
+						*canPlay = false;
 					}
-					else if (streamInfo->type == SeqStreamInfoType::Audio)
+					// yes, we got a frame for the right time, check if the frame has changed since the last displayed frame
+					else if (frame != clipPlayer->lastFrame)
 					{
-						int bytesPerSample = (streamInfo->audioInfo.format & 0xff) / 8;
-						const int dataSizeInBytes = frame->nb_samples * bytesPerSample;
-						if (streamInfo->audioInfo.isPlanar)
+						// display frame
+						SeqStreamInfo *streamInfo = clip->GetStreamInfo();
+						if (streamInfo->type == SeqStreamInfoType::Video)
 						{
-							// the channel data is planar and needs to be interleaved for the SDL audio queue to be played
-							int channels = streamInfo->audioInfo.channelCount;
-							const int bufSize = dataSizeInBytes * channels;
-							char* buf = new char[bufSize];
-							int bufCursor = 0;
-							for (int dataCursor = 0; dataCursor < dataSizeInBytes; dataCursor += bytesPerSample)
+							if (clipPlayer->lastFrame == nullptr ||
+								frame->linesize[0] > clipPlayer->videoPlayer.maxLineSize)
 							{
-								for (int channel = 0; channel < channels; channel++)
-								{
-									memcpy(&buf[bufCursor], &frame->data[channel][dataCursor], bytesPerSample);
-									bufCursor += bytesPerSample;
-								}
+								clipPlayer->videoPlayer.maxLineSize = frame->linesize[0];
+								SeqRenderer::CreateVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
 							}
-							SDL_QueueAudio(clipPlayer->audioPlayer.deviceId, buf, bufSize);
-							delete buf;
+							else
+							{
+								SeqRenderer::OverwriteVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
+							}
 						}
-						else
+						else if (streamInfo->type == SeqStreamInfoType::Audio)
 						{
-							// the channel data is already interleaved, we can immediatly queue it
-							SDL_QueueAudio(clipPlayer->audioPlayer.deviceId, frame->data[0], dataSizeInBytes);
+							int bytesPerSample = (streamInfo->audioInfo.format & 0xff) / 8;
+							const int dataSizeInBytes = frame->nb_samples * bytesPerSample;
+							if (streamInfo->audioInfo.isPlanar)
+							{
+								// the channel data is planar and needs to be interleaved for the SDL audio queue to be played
+								int channels = streamInfo->audioInfo.channelCount;
+								const int bufSize = dataSizeInBytes * channels;
+								char* buf = new char[bufSize];
+								int bufCursor = 0;
+								for (int dataCursor = 0; dataCursor < dataSizeInBytes; dataCursor += bytesPerSample)
+								{
+									for (int channel = 0; channel < channels; channel++)
+									{
+										memcpy(&buf[bufCursor], &frame->data[channel][dataCursor], bytesPerSample);
+										bufCursor += bytesPerSample;
+									}
+								}
+								SDL_QueueAudio(clipPlayer->audioPlayer.deviceId, buf, bufSize);
+								delete buf;
+							}
+							else
+							{
+								// the channel data is already interleaved, we can immediatly queue it
+								SDL_QueueAudio(clipPlayer->audioPlayer.deviceId, frame->data[0], dataSizeInBytes);
+							}
 						}
-					}
 
-					clipPlayer->lastFrame = frame;
+						clipPlayer->lastFrame = frame;
+					}
 				}
 
 				if (clipPlayer->lastFrame == nullptr)

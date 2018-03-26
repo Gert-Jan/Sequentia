@@ -118,6 +118,12 @@ int64_t SeqDecoder::GetBufferRight()
 	return STREAM_TIME_TO_SEQ_TIME(SDL_max(frameBuffer->buffer[(frameBuffer->insertCursor - 1 + frameBuffer->size) % frameBuffer->size]->pkt_dts, 0), streamContext->timeBase);
 }
 
+int64_t SeqDecoder::GetSeqTimeForStreamTime(int64_t streamTime, int streamIndex)
+{
+	SeqStreamContext *streamContext = &streamContexts[streamIndex];
+	return STREAM_TIME_TO_SEQ_TIME(streamTime, streamContext->timeBase);
+}
+
 void SeqDecoder::Dispose()
 {
 	if (status != SeqDecoderStatus::Disposing && status != SeqDecoderStatus::Inactive)
@@ -311,7 +317,7 @@ int SeqDecoder::Loop()
 				SeqFrameBuffer *frameBuffer = frameBuffers->Get(i);
 				frameBuffer->insertCursor = (frameBuffer->inUseCursor + 1) % frameBuffer->size;
 			}
-			lastRequestedFrameTime = tempSeekTime;
+			lastRequestedFrameTime = STREAM_TIME_TO_SEQ_TIME(tempSeekTime, (&streamContexts[primaryStreamIndex])->timeBase);
 			printf("SEEKING time:%d lb: %d rb: %d disp_pkt:%d pkt_cur:%d\n", 
 				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor);
 		}
@@ -339,7 +345,9 @@ int SeqDecoder::Loop()
 			continue;
 		}
 		// - we need to skip to keep up and it's not the yet the next key frame
-		if (skipFramesIfSlow && (IsSlowAndShouldSkip() || hasSkippedVideoFrame) && ((pkt.flags & AV_PKT_FLAG_KEY) == 0 || pkt.dts < lastRequestedFrameTime))
+		if (skipFramesIfSlow && 
+			(IsSlowAndShouldSkip() || hasSkippedVideoFrame) && 
+			((pkt.flags & AV_PKT_FLAG_KEY) == 0 || STREAM_TIME_TO_SEQ_TIME(pkt.dts, streamContext->timeBase) < lastRequestedFrameTime))
 		{
 			printf("skipping frame. pts:%d flags:%d size:%d SLOW!\n", pkt.pts, pkt.flags, pkt.size);
 			//printf("  sfis=%d && (isass=%d || hskf=%d) && (isNotKey=%d || isLate=%d)\n",
@@ -407,7 +415,7 @@ int SeqDecoder::Loop()
 		AVFrame* swapFrame = frameBuffer->buffer[frameBuffer->insertCursor];
 		frameBuffer->buffer[frameBuffer->insertCursor] = tempFrame;
 		tempFrame = swapFrame;
-		bufferPunctuality = frameBuffer->buffer[frameBuffer->insertCursor]->pkt_dts - lastRequestedFrameTime;
+		bufferPunctuality = STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[frameBuffer->insertCursor]->pkt_dts, streamContext->timeBase) - lastRequestedFrameTime;
 
 		// stay in the seeking state until GetBufferLeft() and GetBufferRight() can return valid values again
 		if (status == SeqDecoderStatus::Seeking && pkt.stream_index == primaryStreamIndex)
@@ -439,17 +447,17 @@ void SeqDecoder::Stop()
 void SeqDecoder::Seek(int64_t time)
 {
 	SeqStreamContext *streamContext = &streamContexts[primaryStreamIndex];
-	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, streamContext->timeBase);
 	SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
+	double timeBase = streamContext->timeBase;
 	// if searching forwards	
-	if (streamTime > frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts)
+	if (time > STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts, timeBase))
 	{
 		// first check if the location we're seeking for is already buffered
 		int nextInUseCursor = (frameBuffer->inUseCursor + 1) % frameBuffer->size;
 		int latest_frame = frameBuffer->inUseCursor;
 		int64_t latest_dts = -1;
 		while (nextInUseCursor != frameBuffer->insertCursor &&
-			frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts < streamTime)
+			STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts, timeBase) < time)
 		{
 			if (frameBuffer->buffer[nextInUseCursor]->pkt_dts > latest_dts)
 			{
@@ -459,8 +467,8 @@ void SeqDecoder::Seek(int64_t time)
 			nextInUseCursor = (nextInUseCursor + 1) % frameBuffer->size;
 		}
 		// did we find the requested frame in the buffer?
-		if (frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts < streamTime &&
-			frameBuffer->buffer[nextInUseCursor]->pkt_dts > streamTime)
+		if (STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts, timeBase) < time &&
+			STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[nextInUseCursor]->pkt_dts, timeBase) > time)
 		{
 			// the frame was in the buffer! we're done here!
 			return;
@@ -472,7 +480,7 @@ void SeqDecoder::Seek(int64_t time)
 	SDL_LockMutex(seekMutex);
 	SetStatusSeeking();
 	shouldSeek = true;
-	seekTime = streamTime;
+	seekTime = SEQ_TIME_TO_STREAM_TIME(time, timeBase);
 	SDL_UnlockMutex(seekMutex);
 }
 
@@ -484,9 +492,9 @@ AVFrame* SeqDecoder::NextFrame(int streamIndex, int64_t time)
 		return nullptr;
 	if (status == SeqDecoderStatus::Seeking)
 		return frameBuffer->buffer[frameBuffer->inUseCursor];
-	int64_t streamTime = SEQ_TIME_TO_STREAM_TIME(time, streamContext->timeBase);
+	double timeBase = streamContext->timeBase;
 	// remember in the decoder what time was last requested, we can use this for buffering more relevant frames
-	lastRequestedFrameTime = streamTime;
+	lastRequestedFrameTime = time;
 	// only look up to the frame buffer cursor, the decoder thread may be writing to the buffer_cursor index right now
 	int oneBeforeInsertCursor = (frameBuffer->insertCursor - 1 + frameBuffer->size) % frameBuffer->size;
 	// start looking from the last frame we displayed
@@ -494,7 +502,7 @@ AVFrame* SeqDecoder::NextFrame(int streamIndex, int64_t time)
 	// figure out the first candidate's frame time
 	int64_t candidateFrameDeltaTime = 0;
 	if (frameBuffer->buffer[candidateDisplayFrame])
-		candidateFrameDeltaTime = abs(frameBuffer->buffer[candidateDisplayFrame]->pkt_dts - streamTime);
+		candidateFrameDeltaTime = STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[candidateDisplayFrame]->pkt_dts, timeBase) - time;
 	int64_t lowestDeltaTime = candidateFrameDeltaTime;
 	// go through all frame in the buffer until we found one where the requested time is smaller than the frame time
 	while (candidateDisplayFrame != oneBeforeInsertCursor)
@@ -506,12 +514,12 @@ AVFrame* SeqDecoder::NextFrame(int streamIndex, int64_t time)
 			frameBuffer->inUseCursor = candidateDisplayFrame;
 		}
 		candidateDisplayFrame = (candidateDisplayFrame + 1) % frameBuffer->size;
-		candidateFrameDeltaTime = abs(frameBuffer->buffer[candidateDisplayFrame]->pkt_dts - streamTime);
+		candidateFrameDeltaTime = STREAM_TIME_TO_SEQ_TIME(frameBuffer->buffer[candidateDisplayFrame]->pkt_dts, timeBase) - time;
 	}
 	// frame to return
 	AVFrame *frame = frameBuffer->buffer[frameBuffer->inUseCursor];
 	// set playback time
-	lastReturnedFrameTime = STREAM_TIME_TO_SEQ_TIME(frame->pkt_dts, streamContext->timeBase);
+	lastReturnedFrameTime = STREAM_TIME_TO_SEQ_TIME(frame->pkt_dts, timeBase);
 	// return the best suited display frame
 	return frame;
 }
@@ -590,9 +598,10 @@ void SeqDecoder::FillPacketBuffer()
 bool SeqDecoder::IsSlowAndShouldSkip()
 {
 	int64_t nextKeyFrame;
-	SeqFrameBuffer *frameBuffer = streamContexts[primaryStreamIndex].frameBuffer;
+	SeqStreamContext* streamContext = &streamContexts[primaryStreamIndex];
+	SeqFrameBuffer *frameBuffer = streamContext->frameBuffer;
 	if (NextKeyFrameDts(&nextKeyFrame))
-		return bufferPunctuality < FFMAX(0, frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts) - nextKeyFrame + lowestKeyFrameDecodeTime;
+		return bufferPunctuality < STREAM_TIME_TO_SEQ_TIME(FFMAX(0, frameBuffer->buffer[frameBuffer->inUseCursor]->pkt_dts) - nextKeyFrame, streamContext->timeBase) + lowestKeyFrameDecodeTime;
 	else if (bufferPunctuality < 0)
 		return true;
 	else
@@ -667,7 +676,7 @@ int SeqDecoder::DecodePacket(AVPacket pkt, AVFrame *target, int *frameIndex, int
 				cached ? "(cached)" : "",
 				streamContext->frameCount++, target->coded_picture_number,
 				target->key_frame, pkt.flags, pkt.dts, pkt.pts, 
-				STREAM_TIME_TO_SEQ_TIME(lastRequestedFrameTime / 1000, streamContext->timeBase));
+				lastRequestedFrameTime / 1000);
 		}
 	}
 	else if (streamContext->codecContext->codec_type == AVMediaType::AVMEDIA_TYPE_AUDIO)
