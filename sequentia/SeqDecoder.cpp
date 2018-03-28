@@ -264,7 +264,7 @@ int SeqDecoder::Preload()
 
 	SetStatusLoading();
 	// prefetch a bunch of packets
-	packetBufferCursor = 0;
+	insertPacketCursor = 0;
 	FillPacketBuffer();
 	return 0;
 }
@@ -310,8 +310,8 @@ int SeqDecoder::Loop()
 			// ffmpeg seek
 			avformat_seek_file(formatContext, primaryStreamIndex, 0, tempSeekTime, tempSeekTime, 0);
 			// reset the packet and frame buffer so it will completely be refilled
-			displayPacketCursor = 0;
-			packetBufferCursor = 0;
+			decodedPacketCursor = 0;
+			insertPacketCursor = 0;
 			for (int i = 0; i < frameBuffers->Count(); i++)
 			{
 				SeqFrameBuffer *frameBuffer = frameBuffers->Get(i);
@@ -319,14 +319,14 @@ int SeqDecoder::Loop()
 			}
 			lastRequestedFrameTime = STREAM_TIME_TO_SEQ_TIME(tempSeekTime, (&streamContexts[primaryStreamIndex])->timeBase);
 			printf("SEEKING time:%d lb: %d rb: %d disp_pkt:%d pkt_cur:%d\n", 
-				seekTime, GetBufferLeft(), GetBufferRight(), displayPacketCursor, packetBufferCursor);
+				seekTime, GetBufferLeft(), GetBufferRight(), decodedPacketCursor, insertPacketCursor);
 		}
 		// fill the packet buffer
 		FillPacketBuffer();
 
 		// decode the next packet
-		displayPacketCursor = (displayPacketCursor + 1) % packetBufferSize;
-		pkt = packetBuffer[displayPacketCursor];
+		decodedPacketCursor = (decodedPacketCursor + 1) % packetBufferSize;
+		pkt = packetBuffer[decodedPacketCursor];
 
 		// skip the packet if:
 		// - there is no data in the packet
@@ -585,13 +585,13 @@ bool SeqDecoder::IsValidFrame(AVFrame *frame)
 void SeqDecoder::FillPacketBuffer()
 {
 	int ret = 0;
-	int nextPacketBufferCursor = (packetBufferCursor + 1) % packetBufferSize;
-	while (nextPacketBufferCursor != displayPacketCursor && ret >= 0)
+	int nextInsertPacketCursor = (insertPacketCursor + 1) % packetBufferSize;
+	while (nextInsertPacketCursor != decodedPacketCursor && ret >= 0)
 	{
-		packetBufferCursor = nextPacketBufferCursor;
-		ret = av_read_frame(formatContext, &packetBuffer[packetBufferCursor]);
+		insertPacketCursor = nextInsertPacketCursor;
+		ret = av_read_frame(formatContext, &packetBuffer[insertPacketCursor]);
 		if (ret >= 0)
-			nextPacketBufferCursor = (packetBufferCursor + 1) % packetBufferSize;
+			nextInsertPacketCursor = (insertPacketCursor + 1) % packetBufferSize;
 	}
 }
 
@@ -612,7 +612,7 @@ bool SeqDecoder::NextKeyFrameDts(int64_t *result)
 {
 	for (int i = 1; i < packetBufferSize; ++i)
 	{
-		AVPacket* pkt = &packetBuffer[(displayPacketCursor + i) % packetBufferSize];
+		AVPacket* pkt = &packetBuffer[(decodedPacketCursor + i) % packetBufferSize];
 		if (pkt->stream_index == primaryStreamIndex && (pkt->flags & AV_PKT_FLAG_KEY) > 0)
 		{
 			*result = pkt->dts;

@@ -125,6 +125,6 @@ private:
 
 	int packetBufferSize = defaultPacketBufferSize;
 	AVPacket *packetBuffer;
-	int displayPacketCursor = 0;
-	int packetBufferCursor = 0;
+	int decodedPacketCursor = 0;
+	int insertPacketCursor = 0;
 };
