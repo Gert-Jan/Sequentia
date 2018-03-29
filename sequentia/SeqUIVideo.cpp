@@ -22,17 +22,21 @@ extern "C"
 
 SeqUIVideo::SeqUIVideo() :
 	isSeeking(false),
-	seekVideoTime(0)
+	seekVideoTime(0),
+	scene(nullptr)
 {
 	Init();
+	InitScene();
 }
 
 SeqUIVideo::SeqUIVideo(SeqSerializer *serializer):
 	isSeeking(false),
-	seekVideoTime(0)
+	seekVideoTime(0),
+	scene(nullptr)
 {
 	Init();
 	Deserialize(serializer);
+	InitScene();
 }
 
 void SeqUIVideo::Init()
@@ -43,8 +47,16 @@ void SeqUIVideo::Init()
 	name = SeqString::Temp->Copy();
 	// start listening for project changes
 	project->AddActionHandler(this);
+}
+
+void SeqUIVideo::InitScene()
+{
+	if (scene == nullptr)
+	{
+		SeqProject *project = Sequentia::GetProject();
+		scene = project->GetPreviewScene();
+	}
 	// prepare material
-	scene = project->GetPreviewScene();
 	material = scene->player->AddViewer(0);
 }
 
@@ -157,6 +169,7 @@ void SeqUIVideo::Draw()
 		SeqUtils::GetTimeString(SeqString::Temp->Buffer, SeqString::Temp->BufferLen, player->GetDuration());
 		ImGui::Text(SeqString::Temp->Buffer);
 
+		// play control buttons
 		if (player->IsPlaying())
 		{
 			ImGui::SameLine();
@@ -180,6 +193,8 @@ void SeqUIVideo::Draw()
 		}
 	}
 	ImGui::SameLine();
+
+	// scene select
 	SeqScene *previousScene = scene;
 	if (SeqWidgets::SceneSelectCombo(&scene))
 	{

@@ -25,6 +25,7 @@ public:
 
 private:
 	void Init();
+	void InitScene();
 	void Deserialize(SeqSerializer *serializer);
 
 private:
