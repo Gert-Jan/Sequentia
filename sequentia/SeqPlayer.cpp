@@ -146,6 +146,8 @@ void SeqPlayer::Stop()
 {
 	isPlaying = false;
 	Seek(0);
+	for (int i = 0; i < clipPlayers->Count(); i++)
+		clipPlayers->GetPtr(i)->lastFrame = nullptr;
 }
 
 void SeqPlayer::Seek(int64_t time)
