@@ -100,7 +100,7 @@ void SeqPlayer::RemoveViewer(int untilChannel)
 			{
 				SeqRenderer::RemoveMaterialInstance(renderTarget.target);
 				renderTargets->RemoveAt(i);
-				return;
+				break;
 			}
 		}
 	}
