@@ -1,5 +1,4 @@
 #include <SDL.h>
-#include <imgui.h>
 
 #include "SeqPlayer.h"
 #include "SeqProjectHeaders.h"
@@ -12,6 +11,8 @@
 #include "SeqMaterialInstance.h"
 #include "SeqList.h"
 #include "SeqTime.h"
+
+ImU32 SeqPlayer::LOADING_FRAME_COLOR = ImGui::ColorConvertFloat4ToU32(ImVec4(0, 1, 0, 1));
 
 SeqPlayer::SeqPlayer(SeqScene *scene):
 	scene(scene),
@@ -90,7 +91,7 @@ void SeqPlayer::RemoveViewer(int untilChannel)
 		}
 	}
 
-	// there was only one render target representing this untilChannel, now there are none, remove the render targer
+	// there was only one render target representing this untilChannel, now there are none, remove the render target
 	if (similairCount == 1)
 	{
 		for (int i = 0; i < renderTargets->Count(); i++)
@@ -427,6 +428,10 @@ void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
 				drawList->AddImage(player->videoPlayer.material,
 					ImVec2(0, 0), ImVec2(project->width, project->height),
 					ImVec2(0, 0), ImVec2((float)player->lastFrame->width / (float)player->videoPlayer.maxLineSize, 1));
+			}
+			else
+			{
+				drawList->AddRectFilled(ImVec2(0, 0), ImVec2(project->width, project->height), LOADING_FRAME_COLOR);
 			}
 		}
 	}

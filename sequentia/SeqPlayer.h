@@ -2,6 +2,7 @@
 
 #include "SDL_config.h"
 #include "SDL_audio.h"
+#include <imgui.h>
 #include "SeqAction.h"
 #include "SeqTime.h"
 
@@ -89,6 +90,7 @@ private:
 	void Render(const int fromChannelIndex, const int toChannelIndex);
 
 private:
+	static ImU32 LOADING_FRAME_COLOR;
 	static const int64_t DECODER_SYNC_TOLERANCE = SEQ_TIME_FROM_MILLISECONDS(100);
 	SeqScene *scene;
 	SeqList<SeqClipPlayer> *clipPlayers;
