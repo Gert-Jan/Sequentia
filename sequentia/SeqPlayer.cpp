@@ -257,6 +257,9 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				// get the decoder
 				SeqDecoder *decoder = clipPlayer->decoderTask->GetDecoder();
 
+				if (decoder->IsAtEndOfStream(clip->streamIndex))
+					continue;
+
 				// continue if the decoder is not ready yet
 				if (decoder == nullptr || 
 					(decoder->GetStatus() != SeqDecoderStatus::Loading &&

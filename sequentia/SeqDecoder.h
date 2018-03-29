@@ -70,6 +70,7 @@ public:
 	void Seek(int64_t time);
 	AVFrame* NextFrame(int streamIndex, int64_t time);
 	AVFrame* NextFrame(int streamIndex);
+	bool IsAtEndOfStream(int streamIndex);
 	void StartDecodingStream(int streamIndex);
 	void StopDecodingStream(int streamIndex);
 	static bool IsValidFrame(AVFrame *frame);
@@ -83,7 +84,7 @@ private:
 	void SetStatusStopping();
 	void SetStatusDisposing();
 
-	void FillPacketBuffer();
+	int FillPacketBuffer();
 	bool IsSlowAndShouldSkip();
 	bool NextKeyFrameDts(int64_t *result);
 	int DecodePacket(AVPacket packet, AVFrame *target, int *frameIndex, int cached);
@@ -106,6 +107,7 @@ private:
 	SeqStreamContext *streamContexts;
 	int primaryStreamIndex = -1;
 
+	bool finishedDecoding = false;
 	bool skipFramesIfSlow = false;
 	int64_t lastRequestedFrameTime;
 	int64_t lastReturnedFrameTime;
