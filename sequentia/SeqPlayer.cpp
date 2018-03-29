@@ -258,9 +258,6 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				// get the decoder
 				SeqDecoder *decoder = clipPlayer->decoderTask->GetDecoder();
 
-				if (decoder->IsAtEndOfStream(clip->streamIndex))
-					continue;
-
 				// continue if the decoder is not ready yet
 				if (decoder == nullptr || 
 					(decoder->GetStatus() != SeqDecoderStatus::Loading &&
@@ -291,6 +288,10 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 						*canPlay = false;
 					}
 				}
+
+				// stop decoding frames if we reached the end of the stream
+				if (decoder->IsAtEndOfStream(clip->streamIndex))
+					continue;
 				
 				// move the frame to the GPU if the decoder is ready
 				AVFrame *frame = decoder->NextFrame(clip->streamIndex, requestTime);
