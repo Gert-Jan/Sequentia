@@ -17,7 +17,7 @@ ImU32 SeqPlayer::LOADING_FRAME_COLOR = ImGui::ColorConvertFloat4ToU32(ImVec4(0, 
 SeqPlayer::SeqPlayer(SeqScene *scene):
 	scene(scene),
 	isPlaying(false),
-	isSeeking(false),
+	isSeeking(true),
 	playTime(0)
 {
 	clipPlayers = new SeqList<SeqClipPlayer>();
@@ -122,6 +122,11 @@ bool SeqPlayer::IsPlaying()
 	return isPlaying;
 }
 
+bool SeqPlayer::IsSeeking()
+{
+	return isSeeking;
+}
+
 int64_t SeqPlayer::GetPlaybackTime()
 {
 	return playTime;
@@ -152,8 +157,11 @@ void SeqPlayer::Stop()
 
 void SeqPlayer::Seek(int64_t time)
 {
-	playTime = time;
-	// reset all seek waiting states so we can seek again.
+	// clamp requested time in the bounds of the scene
+	playTime = max(0, min(time, scene->GetLength()));
+	// make sure to wait until we can properly render the requested frame
+	isSeeking = true;
+	// reset all seek waiting states so we can seek again
 	for (int i = 0; i < clipPlayers->Count(); i++)
 		clipPlayers->GetPtr(i)->isWaitingForSeek = false;
 }
@@ -169,7 +177,10 @@ void SeqPlayer::Update()
 	if (!IsActive() || !isPlaying)
 	{
 		lastMeasuredTime = SDL_GetTicks();
-		return;
+		// make sure to only stop updating the clip players when we're not seeking
+		// while seeking continue until the time sought after can be displayed
+		if (!isSeeking)
+			return;
 	}
 
 	// keep track if we can contintue playback
@@ -177,6 +188,11 @@ void SeqPlayer::Update()
 
 	// update all clip players
 	UpdateClipPlayers(&canPlay);
+
+	// in case we were seeking, we should now be able to correctly render the sought after frame
+	// and therefor we're done seeking
+	if (canPlay)
+		isSeeking = false;
 
 	if (isPlaying)
 	{
@@ -221,7 +237,10 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 				SeqClipPlayer *clipPlayer = GetClipPlayerFor(clip);
 				// the clip link meta data is not always loaded, than we can't make a clip player yet...
 				if (clipPlayer == nullptr)
+				{
+					*canPlay = false;
 					continue;
+				}
 
 				// check if we are syncing with another player and if that sync is still valid
 				SeqPlayerSyncState syncState = ValidateSyncing(clipPlayer);

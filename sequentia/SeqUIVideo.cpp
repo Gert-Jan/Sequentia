@@ -191,6 +191,21 @@ void SeqUIVideo::Draw()
 		{
 			player->Stop();
 		}
+		if (!player->IsPlaying())
+		{
+			ImGui::SameLine();
+			if (!player->IsSeeking())
+			{
+				if (ImGui::Button("Step"))
+				{
+					player->Seek(player->GetPlaybackTime() + SEQ_TIME_FROM_MILLISECONDS(500));
+				}
+			}
+			else
+			{
+				ImGui::Text("Seeking...");
+			}
+		}
 	}
 	ImGui::SameLine();
 

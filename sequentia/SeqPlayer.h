@@ -63,6 +63,7 @@ public:
 	void RemoveViewer(int untilChannel);
 
 	bool IsPlaying();
+	bool IsSeeking();
 	int64_t GetPlaybackTime();
 	int64_t GetDuration();
 
