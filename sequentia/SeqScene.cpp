@@ -30,6 +30,7 @@ SeqScene::SeqScene(SeqSerializer *serializer):
 
 SeqScene::~SeqScene()
 {
+	delete player;
 	for (int i = 0; i < channels->Count(); i++)
 		delete channels->Get(i);
 	delete channels;
