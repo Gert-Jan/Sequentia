@@ -40,10 +40,11 @@ private:
 	static unsigned int elementsHandle;
 	static unsigned int frameBufferHandle;
 
-	static int framebufferWidth, framebufferHeight;
+	static int framebufferHeight;
+	static float displayMatrix[4][4];
+	static float projectOutputMatrix[4][4];
 
-	static SeqList<SeqMaterialInstance*> *materialsImGui;
-	static SeqList<SeqMaterialInstance*> *materialsPlayer;
+	static SeqList<SeqMaterialInstance*> *materials;
 	static SeqList<SeqMaterialInstance*> *deleteMaterials;
 	static SeqMaterial fontMaterial;
 	static SeqMaterial videoMaterial;

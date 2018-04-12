@@ -15,10 +15,22 @@ unsigned int SeqRenderer::vboHandle = 0;
 unsigned int SeqRenderer::vaoHandle = 0;
 unsigned int SeqRenderer::elementsHandle = 0;
 unsigned int SeqRenderer::frameBufferHandle = 0;
-int SeqRenderer::framebufferWidth = 1280;
 int SeqRenderer::framebufferHeight = 720;
-SeqList<SeqMaterialInstance*>* SeqRenderer::materialsImGui = new SeqList<SeqMaterialInstance*>();
-SeqList<SeqMaterialInstance*>* SeqRenderer::materialsPlayer = new SeqList<SeqMaterialInstance*>();
+float SeqRenderer::displayMatrix[4][4] =
+{
+	{ 2.0f / 1280.0f, 0.0f, 0.0f, 0.0f },
+	{ 0.0f, 2.0f / 720.0f, 0.0f, 0.0f },
+	{ 0.0f, 0.0f, -1.0f, 0.0f },
+	{ -1.0f, 1.0f, 0.0f, 1.0f },
+};
+float SeqRenderer::projectOutputMatrix[4][4] =
+{
+	{ 2.0f / 1280.0f, 0.0f, 0.0f, 0.0f },
+	{ 0.0f, 2.0f / 720.0f, 0.0f, 0.0f },
+	{ 0.0f, 0.0f, -1.0f, 0.0f },
+	{ -1.0f, 1.0f, 0.0f, 1.0f },
+};
+SeqList<SeqMaterialInstance*>* SeqRenderer::materials = new SeqList<SeqMaterialInstance*>();
 SeqList<SeqMaterialInstance*>* SeqRenderer::deleteMaterials = new SeqList<SeqMaterialInstance*>();
 SeqMaterial SeqRenderer::fontMaterial = SeqMaterial(1);
 SeqMaterial SeqRenderer::videoMaterial = SeqMaterial(3);
@@ -33,19 +45,19 @@ void SeqRenderer::InitGL()
 
 void SeqRenderer::RefreshDeviceObjects()
 {
-	if (materialsImGui->Count() == 0)
+	if (materials->Count() == 0)
 		CreateDeviceObjects();
 }
 
 void SeqRenderer::CreateDeviceObjects()
 {
 	// Backup GL state
-	GLint last_texture, last_array_buffer, last_vertex_array;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
-	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+	GLint lastTexture, lastArrayBuffer, lastVertexArray;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &lastArrayBuffer);
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &lastVertexArray);
 
-	const GLchar *vertex_shader =
+	const GLchar *vertexShader =
 		"#version 330\n"
 		"uniform mat4 ProjMtx;\n"
 		"in vec2 Position;\n"
@@ -60,7 +72,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
 		"}\n";
 
-	const GLchar *fragment_shader_default =
+	const GLchar *fragmentShaderDefault =
 		"#version 330\n"
 		"uniform sampler2D Texture0;\n"
 		"in vec2 Frag_UV;\n"
@@ -68,10 +80,18 @@ void SeqRenderer::CreateDeviceObjects()
 		"out vec4 Out_Color;\n"
 		"void main()\n"
 		"{\n"
-		"	Out_Color = Frag_Color * texture( Texture0, Frag_UV.st);\n"
+		"	Out_Color = Frag_Color * texture(Texture0, Frag_UV.st);\n"
 		"}\n";
 
-	const GLchar *fragment_shader_video =
+	// https://en.wikipedia.org/wiki/YUV
+	// https://github.com/webmproject/webm-tools/blob/master/vpx_ios/VPXExample/nv12_fragment_shader.glsl
+	// https://github.com/eile/bino/blob/master/src/video_output_color.fs.glsl
+	// http://www.fourcc.org/fccyvrgb.php
+	// http://www.martinreddy.net/gfx/faqs/colorconv.faq
+	// https://www.fourcc.org/source/YUV420P-OpenGL-GLSLang.c
+	// https://github.com/FNA-XNA/FNA/blob/master/src/Graphics/Effect/YUVToRGBA/YUVToRGBAEffect.fx
+	// https://www.voval.com/video/rgb-and-yuv-color-space-conversion/
+	const GLchar *fragmentShaderVideo =
 		"#version 330\n"
 		"uniform sampler2D Texture0;\n"
 		"uniform sampler2D Texture1;\n"
@@ -82,60 +102,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"void main()\n"
 		"{\n"
 		/*
-		"  mat3 toRGB = mat3(\n"
-		"    1,  0      ,  1.28033,\n"
-		"    1, -0.21482, -0.38059,\n"
-		"    1,  2.12798,  0      );\n"
-		*/
-		// BT.709 - https://en.wikipedia.org/wiki/YUV
-		/*
-		"  mat3 toRGB = mat3(\n"
-		"    1.0    ,  1.0    , 1.0    ,\n"
-		"    0.0    , -0.21482, 2.12798,\n"
-		"    1.28033, -0.38059, 0.0    );\n"
-		*/
-		// BT.601 - https://en.wikipedia.org/wiki/YUV
-		/*
-		"  mat3 toRGB = mat3(\n"
-		"    1.0    ,  1.0    , 1.0    ,\n"
-		"    0.0    , -0.39465, 2.03211,\n"
-		"    1.13983, -0.58060, 0.0    );\n"
-		*/
-		// BT.709 - https://github.com/webmproject/webm-tools/blob/master/vpx_ios/VPXExample/nv12_fragment_shader.glsl
-		/*
-		"  mat3 toRGB = mat3(\n"
-		"    1.0,     1.0,    1.0   ,\n"
-		"    0.0,    -0.1870, 1.8556,\n"
-		"    1.5701, -0.4664, 0.0   );\n"
-		*/
-		// BT.601 - https://github.com/eile/bino/blob/master/src/video_output_color.fs.glsl
-		/*
-		"  mat3 toRGB = mat3(\n"
-		"    1.0  ,  1.0     , 1.0   ,\n"
-		"    0.0  , -0.344136, 1.772 ,\n"
-		"    1.402, -0.714136, 0.0   );\n"
-		*/
-		/*
-		"  vec3 yuv = vec3(\n"
-		"    texture(Texture0, Frag_UV.st).r,\n"
-		"    texture(Texture1, Frag_UV.st).r - 0.5,\n"
-		"    texture(Texture2, Frag_UV.st).r - 0.5);\n"
-		"  vec3 rgb = toRGB * yuv;\n"
-		"  Out_Color = Frag_Color * vec4(rgb, 1.0);"
-		*/
-		//"	Out_Color = Frag_Color * (texture(Texture0, Frag_UV.st).r * vec4(1, 0, 0, 0) + texture(Texture1, Frag_UV.st).r * vec4(0, 1, 0, 0) + texture(Texture2, Frag_UV.st).r * vec4(0, 0, 1, 0) + vec4(0, 0, 0, 1));\n"
 		"	float r, g, b, y, u, v;\n"
-		/*
-		"	y = texture(Texture0, Frag_UV.st).r;\n"
-		"	u = texture(Texture1, Frag_UV.st).r - 0.5;\n"
-		"	v = texture(Texture2, Frag_UV.st).r - 0.5;\n"
-		"	r = y + 1.13983 * v;\n"
-		"	g = y - 0.39465 * u - 0.58060 * v;\n"
-		"	b = y + 2.03211 * u;\n"
-		*/
-		// http://www.fourcc.org/fccyvrgb.php
-		// http://www.martinreddy.net/gfx/faqs/colorconv.faq
-		// https://www.fourcc.org/source/YUV420P-OpenGL-GLSLang.c
 		"	y = 1.1643 * (texture(Texture0, Frag_UV.st).r - 0.0625);\n"
 		"	u = texture(Texture1, Frag_UV.st).r - 0.5;\n"
 		"	v = texture(Texture2, Frag_UV.st).r - 0.5;\n"
@@ -143,6 +110,23 @@ void SeqRenderer::CreateDeviceObjects()
 		"	g = y - 0.39173 * u - 0.8129 * v;\n"
 		"	b = y + 2.017 * u;\n"
 		"	Out_Color = Frag_Color * vec4(r, g, b, 1.0);\n"
+		*/
+		"	const vec3 offset = vec3(-0.0625, -0.5, -0.5);\n"
+		"	const vec3 Rcoeff = vec3(1.1643,  0.00000,  1.5958);\n"
+		"	const vec3 Gcoeff = vec3(1.1643, -0.39173, -0.8129);\n"
+		"	const vec3 Bcoeff = vec3(1.1643,  2.01700,  0.0000);\n"
+		"	vec3 yuv;\n"
+		"	yuv.x = texture(Texture0, Frag_UV.st).r;\n"
+		"	yuv.y = texture(Texture1, Frag_UV.st).r;\n"
+		"	yuv.z = texture(Texture2, Frag_UV.st).r;\n"
+		"	yuv += offset;\n"
+		"	vec4 rgba;\n;"
+		"	rgba.x = dot(yuv, Rcoeff);\n"
+		"	rgba.y = dot(yuv, Gcoeff);\n"
+		"	rgba.z = dot(yuv, Bcoeff);\n"
+		"	rgba.w = 1.0;\n"
+		"	Out_Color = Frag_Color * rgba;\n"
+		"}\n";
 		"}\n";
 
 	glGenBuffers(1, &vboHandle);
@@ -153,16 +137,16 @@ void SeqRenderer::CreateDeviceObjects()
 	glBindVertexArray(vaoHandle);
 	glBindBuffer(GL_ARRAY_BUFFER, vboHandle);
 
-	fontMaterial.Init(vertex_shader, fragment_shader_default);
-	videoMaterial.Init(vertex_shader, fragment_shader_video);
-	playerMaterial.Init(vertex_shader, fragment_shader_default);
+	fontMaterial.Init(vertexShader, fragmentShaderDefault);
+	videoMaterial.Init(vertexShader, fragmentShaderVideo);
+	playerMaterial.Init(vertexShader, fragmentShaderDefault);
 
 	CreateFontsMaterialInstance();
 
 	// Restore modified GL state
-	glBindTexture(GL_TEXTURE_2D, last_texture);
-	glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
-	glBindVertexArray(last_vertex_array);
+	glBindTexture(GL_TEXTURE_2D, lastTexture);
+	glBindBuffer(GL_ARRAY_BUFFER, lastArrayBuffer);
+	glBindVertexArray(lastVertexArray);
 }
 
 void SeqRenderer::InvalidateDeviceObjects()
@@ -177,10 +161,8 @@ void SeqRenderer::InvalidateDeviceObjects()
 
 	fontMaterial.Dispose();
 	ImGui::GetIO().Fonts->TexID = 0;
-	for (int i = 0; i < materialsImGui->Count(); i++)
-		materialsImGui->Get(i)->Dispose();
-	for (int i = 0; i < materialsPlayer->Count(); i++)
-		materialsPlayer->Get(i)->Dispose();
+	for (int i = 0; i < materials->Count(); i++)
+		materials->Get(i)->Dispose();
 	videoMaterial.Dispose();
 	playerMaterial.Dispose();
 }
@@ -199,7 +181,8 @@ void SeqRenderer::Render()
 
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 	SetImGuiViewport();
-	if (framebufferWidth == 0 || framebufferHeight == 0)
+	// TODO: keep rendering if exporting
+	if (io.DisplaySize.x == 0 || io.DisplaySize.y == 0)
 		return;
 	drawData->ScaleClipRects(io.DisplayFramebufferScale);
 
@@ -233,25 +216,13 @@ void SeqRenderer::Render()
 	glEnable(GL_SCISSOR_TEST);
 
 	// Setup viewport, orthographic projection matrix
-	const float orthoProjectionImGui[4][4] =
-	{
-		{ 2.0f / io.DisplaySize.x, 0.0f, 0.0f, 0.0f },
-		{ 0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 0.0f },
-		{ 0.0f, 0.0f, -1.0f, 0.0f },
-		{ -1.0f, 1.0f, 0.0f, 1.0f },
-	};
-	const float orthoProjectionPlayer[4][4] =
-	{
-		{ 2.0f / project->width, 0.0f, 0.0f, 0.0f },
-		{ 0.0f, 2.0f / -project->height, 0.0f, 0.0f },
-		{ 0.0f, 0.0f, -1.0f, 0.0f },
-		{ -1.0f, 1.0f, 0.0f, 1.0f },
-	};
+	displayMatrix[0][0] = 2.0f / io.DisplaySize.x;
+	displayMatrix[1][1] = 2.0f / -io.DisplaySize.y;
+	projectOutputMatrix[0][0] = 2.0f / project->width;
+	projectOutputMatrix[1][1] = 2.0f / -project->height;
 
-	for (int i = 0; i < materialsImGui->Count(); i++)
-		materialsImGui->Get(i)->Begin(orthoProjectionImGui, vaoHandle);
-	for (int i = 0; i < materialsPlayer->Count(); i++)
-		materialsPlayer->Get(i)->Begin(orthoProjectionPlayer, vaoHandle);
+	for (int i = 0; i < materials->Count(); i++)
+		materials->Get(i)->Begin(vaoHandle);
 
 	for (int n = 0; n < drawData->CmdListsCount; n++)
 	{
@@ -316,16 +287,15 @@ void SeqRenderer::Shutdown()
 
 void SeqRenderer::RemoveMaterialInstance(SeqMaterialInstance *materialInstance)
 {
-	materialsImGui->Remove(materialInstance);
-	materialsPlayer->Remove(materialInstance);
+	materials->Remove(materialInstance);
 	deleteMaterials->Add(materialInstance);
 }
 
 SeqMaterialInstance* SeqRenderer::CreateVideoMaterialInstance()
 {
 	SeqMaterialInstance *videoMaterialInstance = new SeqMaterialInstance(&videoMaterial);
-	videoMaterialInstance->Init();
-	materialsPlayer->Add(videoMaterialInstance);
+	videoMaterialInstance->Init(&projectOutputMatrix[0][0]);
+	materials->Add(videoMaterialInstance);
 	return videoMaterialInstance;
 }
 
@@ -333,8 +303,8 @@ void SeqRenderer::CreateFontsMaterialInstance()
 {
 	// Create material instance
 	SeqMaterialInstance *fontMaterialInstance = new SeqMaterialInstance(&fontMaterial);
-	fontMaterialInstance->Init();
-	materialsImGui->Add(fontMaterialInstance);
+	fontMaterialInstance->Init(&displayMatrix[0][0]);
+	materials->Add(fontMaterialInstance);
 
 	// Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
@@ -367,8 +337,8 @@ SeqMaterialInstance* SeqRenderer::CreatePlayerMaterialInstance()
 
 	// Create material instance
 	SeqMaterialInstance *playerMaterialInstance = new SeqMaterialInstance(&playerMaterial);
-	playerMaterialInstance->Init();
-	materialsImGui->Add(playerMaterialInstance);
+	playerMaterialInstance->Init(&displayMatrix[0][0]);
+	materials->Add(playerMaterialInstance);
 
 	// Store current state
 	GLint lastTexture;
@@ -378,7 +348,6 @@ SeqMaterialInstance* SeqRenderer::CreatePlayerMaterialInstance()
 	glBindTexture(GL_TEXTURE_2D, playerMaterialInstance->textureHandles[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, project->width, project->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
 	// Restore state
@@ -446,7 +415,7 @@ void SeqRenderer::BindFramebuffer(const ImDrawList* drawList, const ImDrawCmd* c
 	else
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle);
-		framebufferOutput->BindTextures();
+		framebufferOutput->BindTexture(0);
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, framebufferOutput->textureHandles[0], 0);
 		SetPlayerViewport();
 	}
@@ -458,7 +427,7 @@ void SeqRenderer::SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd*
 	SeqMaterialInstance *framebufferOutput = (SeqMaterialInstance *)command->UserCallbackData;
 
 	// copy the previous frame buffer to the new output frame buffer
-	framebufferOutput->BindTextures();
+	framebufferOutput->BindTexture(0);
 	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, project->width, project->height, 0);
 	
 	// bind the new output to the framebuffer
@@ -468,15 +437,14 @@ void SeqRenderer::SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd*
 void SeqRenderer::SetImGuiViewport()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	framebufferWidth = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
+	int width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
 	framebufferHeight = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
-	glViewport(0, 0, framebufferWidth, framebufferHeight);
+	glViewport(0, 0, width, framebufferHeight);
 }
 
 void SeqRenderer::SetPlayerViewport()
 {
 	SeqProject *project = Sequentia::GetProject();
-	framebufferWidth = project->width;
 	framebufferHeight = project->height;
-	glViewport(0, 0, framebufferWidth, framebufferHeight);
+	glViewport(0, 0, project->width, framebufferHeight);
 }

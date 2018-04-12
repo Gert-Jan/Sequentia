@@ -12,8 +12,10 @@ SeqMaterialInstance::~SeqMaterialInstance()
 {
 }
 
-void SeqMaterialInstance::Init()
+void SeqMaterialInstance::Init(float *projectionMatrix)
 {
+	this->projectionMatrix = projectionMatrix;
+
 	glGenTextures(material->textureCount, &textureHandles[0]);
 
 	programHandle = glCreateProgram();
@@ -43,14 +45,14 @@ void SeqMaterialInstance::Init()
 	}
 }
 
-void SeqMaterialInstance::Begin(const float projMat[4][4], unsigned int g_VaoHandle)
+void SeqMaterialInstance::Begin(unsigned int g_VaoHandle)
 {
 	glUseProgram(programHandle);
 
 	for (int i = 0; i < material->textureCount; i++)
 		glUniform1i(textureAttribLoc[i], i);
 
-	glUniformMatrix4fv(projMatAttribLoc, 1, GL_FALSE, &projMat[0][0]);
+	glUniformMatrix4fv(projMatAttribLoc, 1, GL_FALSE, projectionMatrix);
 	glBindVertexArray(g_VaoHandle);
 }
 
@@ -62,6 +64,13 @@ void SeqMaterialInstance::BindTextures()
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, textureHandles[i]);
 	}
+}
+
+void SeqMaterialInstance::BindTexture(int index)
+{
+	glUseProgram(programHandle);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureHandles[index]);
 }
 
 void SeqMaterialInstance::Dispose()

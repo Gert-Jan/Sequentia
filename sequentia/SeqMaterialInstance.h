@@ -8,9 +8,10 @@ struct SeqMaterialInstance
 public:
 	SeqMaterialInstance(SeqMaterial *material);
 	~SeqMaterialInstance();
-	void Init();
-	void Begin(const float projMat[4][4], unsigned int g_VaoHandle);
+	void Init(float *projectionMatrix);
+	void Begin(unsigned int g_VaoHandle);
 	void BindTextures();
+	void BindTexture(int index);
 	void Dispose();
 
 public:
@@ -19,4 +20,5 @@ public:
 	GLuint textureHandles[3];
 	GLint textureAttribLoc[3];
 	GLint projMatAttribLoc;
+	float *projectionMatrix;
 };
