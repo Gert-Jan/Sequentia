@@ -75,6 +75,12 @@ void SeqMaterial::Init(const GLchar *vertShaderSource, const GLchar *fragShaderS
 			SeqString::Temp->Format("Texture%d", i);
 			textureAttribLoc[i] = glGetUniformLocation(programHandle, SeqString::Temp->Buffer);
 		}
+
+		glUseProgram(programHandle);
+		for (int i = 0; i < textureCount; i++)
+		{
+			glUniform1i(textureAttribLoc[i], i);
+		}
 	}
 }
 
