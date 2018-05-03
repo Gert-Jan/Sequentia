@@ -335,7 +335,7 @@ void SeqPlayer::UpdateClipPlayers(bool *canPlay)
 								frame->linesize[0] > clipPlayer->videoPlayer.maxLineSize)
 							{
 								clipPlayer->videoPlayer.maxLineSize = frame->linesize[0];
-								SeqRenderer::CreateVideoTextures(frame, clipPlayer->videoPlayer.material->textureHandles);
+								SeqRenderer::CreateVideoTextures(frame, clipPlayer->videoPlayer.material);
 							}
 							else
 							{
