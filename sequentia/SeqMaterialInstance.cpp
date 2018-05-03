@@ -15,50 +15,29 @@ SeqMaterialInstance::~SeqMaterialInstance()
 void SeqMaterialInstance::Init(float *projectionMatrix)
 {
 	this->projectionMatrix = projectionMatrix;
-
 	glGenTextures(material->textureCount, &textureHandles[0]);
-
-	programHandle = glCreateProgram();
-	glAttachShader(programHandle, material->vertShaderHandle);
-	glAttachShader(programHandle, material->fragShaderHandle);
-	glLinkProgram(programHandle);
-
-	projMatAttribLoc = glGetUniformLocation(programHandle, "ProjMtx");
-	GLint positionAttribLoc = glGetAttribLocation(programHandle, "Position");
-	GLint uvAttribLoc = glGetAttribLocation(programHandle, "UV");
-	GLint colorAttribLoc = glGetAttribLocation(programHandle, "Color");
-
-	glEnableVertexAttribArray(positionAttribLoc);
-	glEnableVertexAttribArray(uvAttribLoc);
-	glEnableVertexAttribArray(colorAttribLoc);
-
-#define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
-	glVertexAttribPointer(positionAttribLoc, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, pos));
-	glVertexAttribPointer(uvAttribLoc, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, uv));
-	glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col));
-#undef OFFSETOF
-
-	for (int i = 0; i < material->textureCount; i++)
-	{
-		SeqString::Temp->Format("Texture%d", i);
-		textureAttribLoc[i] = glGetUniformLocation(programHandle, SeqString::Temp->Buffer);
-	}
 }
 
-void SeqMaterialInstance::Begin(unsigned int g_VaoHandle)
+void SeqMaterialInstance::CreateTexture(int index, GLint width, GLint height, GLint format, const GLvoid *pixels)
 {
-	glUseProgram(programHandle);
+	glBindTexture(GL_TEXTURE_2D, textureHandles[index]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
+}
 
-	for (int i = 0; i < material->textureCount; i++)
-		glUniform1i(textureAttribLoc[i], i);
-
-	glUniformMatrix4fv(projMatAttribLoc, 1, GL_FALSE, projectionMatrix);
-	glBindVertexArray(g_VaoHandle);
+void SeqMaterialInstance::Begin()
+{
+	if (material->programHandle > 0)
+	{
+		glUseProgram(material->programHandle);
+		glUniformMatrix4fv(material->projMatAttribLoc, 1, GL_FALSE, projectionMatrix);
+	}
 }
 
 void SeqMaterialInstance::BindTextures()
 {
-	glUseProgram(programHandle);
+	material->Begin();
 	for (int i = 0; i < material->textureCount; i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);
@@ -68,22 +47,12 @@ void SeqMaterialInstance::BindTextures()
 
 void SeqMaterialInstance::BindTexture(int index)
 {
-	glUseProgram(programHandle);
-	glActiveTexture(GL_TEXTURE0);
+	material->Begin();
+	glActiveTexture(GL_TEXTURE0 + index);
 	glBindTexture(GL_TEXTURE_2D, textureHandles[index]);
 }
 
 void SeqMaterialInstance::Dispose()
 {
-	if (programHandle)
-	{
-		if (material->vertShaderHandle) glDetachShader(programHandle, material->vertShaderHandle);
-		if (material->fragShaderHandle) glDetachShader(programHandle, material->fragShaderHandle);
-		glDeleteProgram(programHandle);
-		programHandle = 0;
-	}
-	if (material->textureCount > 0)
-	{
-		glDeleteTextures(material->textureCount, &textureHandles[0]);
-	}
+	glDeleteTextures(material->textureCount, &textureHandles[0]);
 }

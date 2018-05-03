@@ -15,28 +15,31 @@ class SeqRenderer
 {
 public:
 	static void InitGL();
+	static void MessageCallbackGL(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
 	static void RefreshDeviceObjects();
 	static void CreateDeviceObjects();
 	static void InvalidateDeviceObjects();
 	static void Render();
 	static void Shutdown();
 	static void RemoveMaterialInstance(SeqMaterialInstance *materialInstance);
-	static SeqMaterialInstance* CreateVideoMaterialInstance();
 	static void CreateFontsMaterialInstance();
+	static SeqMaterialInstance* CreateVideoMaterialInstance();
 	static SeqMaterialInstance* CreatePlayerMaterialInstance();
-	static void CreateVideoTextures(AVFrame* frame, GLuint texId[3]);
+	static SeqMaterialInstance* CreateMaterialInstance(SeqMaterial *material, float *projectionMatrix);
+	static void CreateVideoTextures(AVFrame* frame, SeqMaterialInstance* instance);
 	static void OverwriteVideoTextures(AVFrame* frame, GLuint texId[3]);
 	static void BindFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command);
 	static void SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command);
 
 private:
+	static void FillDefaultProjectionMatrix(float *target);
+	static void SetProjectionMatrixDimensions(float *target, float width, float height);
 	static void SetImGuiViewport();
-	static void SetPlayerViewport();
+	static void SetViewport(ImVec4 rect);
 
 private:
 	static ImVec4 clearColor;
 	static unsigned int vboHandle;
-	static unsigned int vaoHandle;
 	static unsigned int elementsHandle;
 	static unsigned int frameBufferHandle;
 

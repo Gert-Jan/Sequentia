@@ -9,16 +9,14 @@ public:
 	SeqMaterialInstance(SeqMaterial *material);
 	~SeqMaterialInstance();
 	void Init(float *projectionMatrix);
-	void Begin(unsigned int g_VaoHandle);
+	void Begin();
+	void CreateTexture(int index, GLint width, GLint height, GLint format, const GLvoid *pixels);
 	void BindTextures();
 	void BindTexture(int index);
 	void Dispose();
 
 public:
 	SeqMaterial *material;
-	GLuint programHandle;
 	GLuint textureHandles[3];
-	GLint textureAttribLoc[3];
-	GLint projMatAttribLoc;
 	float *projectionMatrix;
 };
