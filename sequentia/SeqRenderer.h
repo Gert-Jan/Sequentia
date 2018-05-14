@@ -30,12 +30,17 @@ public:
 	static void OverwriteVideoTextures(AVFrame* frame, GLuint texId[3]);
 	static void BindFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command);
 	static void SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd* command);
-
-private:
+	static void DownloadTexture(const ImDrawList* drawList, const ImDrawCmd* command);
 	static void FillDefaultProjectionMatrix(float *target);
 	static void SetProjectionMatrixDimensions(float *target, float width, float height);
 	static void SetImGuiViewport();
 	static void SetViewport(ImVec4 rect);
+
+public:
+	static SeqMaterial exportYMaterial;
+	static SeqMaterial exportUMaterial;
+	static SeqMaterial exportVMaterial;
+	static SeqMaterial onlyTextureMaterial;
 
 private:
 	static ImVec4 clearColor;

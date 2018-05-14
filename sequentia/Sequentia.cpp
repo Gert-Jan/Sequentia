@@ -1,10 +1,13 @@
 #include "Sequentia.h"
 #include "SeqRenderer.h"
 #include "SeqProjectHeaders.h"
+#include "SeqExporter.h"
 #include "SeqPlayer.h"
 #include "SeqActionFactory.h"
 #include "SeqWorkerManager.h"
 #include "SeqUISequencer.h"
+#include "SeqString.h"
+#include "SeqPath.h"
 #include "imgui.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -14,6 +17,7 @@ SeqDragMode Sequentia::DragMode = SeqDragMode::None;
 bool Sequentia::done = false;
 SDL_Window* Sequentia::window = nullptr;
 SeqProject* Sequentia::project = nullptr;
+SeqExporter* Sequentia::exporter = nullptr;
 double Sequentia::time = 0.0;
 bool Sequentia::mousePressed[3] = { false, false, false };
 float Sequentia::mouseWheel = 0.0f;
@@ -31,6 +35,9 @@ int Sequentia::Run(const char *openProject)
 		printf("Error: %s\n", SDL_GetError());
 		return -1;
 	}
+
+	// Setup exporter
+	exporter = new SeqExporter();
 
 	// Setup window
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -75,8 +82,10 @@ int Sequentia::Run(const char *openProject)
 		HandleShortcuts();
 		HandleMainMenuBar();
 		SeqWorkerManager::Instance()->Update();
+		exporter->Update();
 		project->Update();
 		project->Draw();
+		exporter->Export();
 		HandleDragging();
 
 		if (showImGuiDemo)
@@ -255,7 +264,7 @@ void Sequentia::ImGuiSetClipboardText(void*, const char* text)
 void Sequentia::HandleShortcuts()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	if (io.KeyCtrl)
+	if (io.KeyCtrl && !exporter->IsExporting())
 	{
 		if (ImGui::IsKeyPressed(SDLK_n, false)) { project->New(); }
 		if (ImGui::IsKeyPressed(SDLK_o, false)) { project->OpenFrom(); }
@@ -276,6 +285,17 @@ void Sequentia::HandleMainMenuBar()
 			ImGui::Separator();
 			if (ImGui::MenuItem("Save", "Ctrl+S")) { project->Save(); }
 			if (ImGui::MenuItem("Save As", "")) { project->SaveAs(); }
+			ImGui::Separator();
+			if (ImGui::MenuItem("Export", ""))
+			{
+				char* projectDir = SeqPath::GetDir(project->GetPath());
+				SeqString::Temp->Clear();
+				SeqString::Temp->Append(projectDir);
+				SeqString::Temp->Append("export/");
+				SeqPath::CreateDir(SeqString::Temp->Buffer);
+				SeqString::Temp->Format("%s%d.avi", SeqString::Temp->Buffer, SDL_GetTicks());
+				exporter->AddTask(SeqString::Temp->Copy(), project->GetScene(1));
+			}
 			ImGui::Separator();
 			if (ImGui::MenuItem("Exit", "")) { done = true; }
 			ImGui::EndMenu();
@@ -312,6 +332,11 @@ SeqProject* Sequentia::GetProject()
 SeqLibrary* Sequentia::GetLibrary()
 {
 	return project->GetLibrary();
+}
+
+SeqExporter* Sequentia::GetExporter()
+{
+	return exporter;
 }
 
 void Sequentia::HandleDragging()

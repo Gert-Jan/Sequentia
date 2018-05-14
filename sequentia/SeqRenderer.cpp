@@ -1,6 +1,7 @@
 #include "SeqRenderer.h"
 #include "Sequentia.h"
 #include "SeqProject.h"
+#include "SeqExporter.h"
 #include "SeqMaterialInstance.h"
 #include "SeqList.h"
 #include "imgui.h"
@@ -33,6 +34,10 @@ SeqList<SeqMaterialInstance*>* SeqRenderer::deleteMaterials = new SeqList<SeqMat
 SeqMaterial SeqRenderer::fontMaterial = SeqMaterial(1);
 SeqMaterial SeqRenderer::videoMaterial = SeqMaterial(3);
 SeqMaterial SeqRenderer::playerMaterial = SeqMaterial(1);
+SeqMaterial SeqRenderer::exportYMaterial = SeqMaterial(1);
+SeqMaterial SeqRenderer::exportUMaterial = SeqMaterial(1);
+SeqMaterial SeqRenderer::exportVMaterial = SeqMaterial(1);
+SeqMaterial SeqRenderer::onlyTextureMaterial = SeqMaterial(1);
 
 void SeqRenderer::InitGL()
 {
@@ -130,8 +135,66 @@ void SeqRenderer::CreateDeviceObjects()
 		"	rgba.w = 1.0;\n"
 		"	Out_Color = Frag_Color * rgba;\n"
 		"}\n";
+
+	const GLchar *fragmentShaderExportYUV =
+		"#version 330\n"
+		"uniform sampler2D Texture0;\n"
+		"in vec2 Frag_UV;\n"
+		"in vec4 Frag_Color;\n"
+		"out vec3 Out_Color;\n"
+		"void main()\n"
+		"{\n"
+		"	const vec3 offset = vec3(0.0625, 0.5, 0.5);\n"
+		"	const vec3 Ycoeff = vec3( 0.257,  0.504, 0.098);\n"
+		"	const vec3 Ucoeff = vec3(-0.148, -0.291, 0.439);\n"
+		"	const vec3 Vcoeff = vec3( 0.439, -0.368, 0.071);\n"
+		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
+		"	vec3 yuv;\n;"
+		"	yuv.x = dot(rgb, Ycoeff);\n"
+		"	yuv.y = dot(rgb, Ucoeff);\n"
+		"	yuv.z = dot(rgb, Vcoeff);\n"
+		"	yuv += offset;\n"
+		"	Out_Color = Frag_Color * yuv;\n"
 		"}\n";
 
+	const GLchar *fragmentShaderExportY =
+		"#version 330\n"
+		"uniform sampler2D Texture0;\n"
+		"in vec2 Frag_UV;\n"
+		"out vec4 Out_Color;\n"
+		"void main()\n"
+		"{\n"
+		"	const vec3 Ycoeff = vec3( 0.257,  0.504, 0.098);\n"
+		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
+		"   float y = dot(rgb, Ycoeff) + 0.0625;\n"
+		"	Out_Color = vec4(y, 0.0, 0.0, 1.0);\n"
+		"}\n";
+
+	const GLchar *fragmentShaderExportU =
+		"#version 330\n"
+		"uniform sampler2D Texture0;\n"
+		"in vec2 Frag_UV;\n"
+		"out vec4 Out_Color;\n"
+		"void main()\n"
+		"{\n"
+		"	const vec3 Ucoeff = vec3(-0.148, -0.291, 0.439);\n"
+		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
+		"	float u = dot(rgb, Ucoeff) + 0.5;\n"
+		"	Out_Color = vec4(u, 0.0, 0.0, 1.0);\n"
+		"}\n";
+
+	const GLchar *fragmentShaderExportV =
+		"#version 330\n"
+		"uniform sampler2D Texture0;\n"
+		"in vec2 Frag_UV;\n"
+		"out vec4 Out_Color;\n"
+		"void main()\n"
+		"{\n"
+		"	const vec3 Vcoeff = vec3( 0.439, -0.368, 0.071);\n"
+		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
+		"	float v = dot(rgb, Vcoeff) + 0.5;\n"
+		"	Out_Color = vec4(v, 0.0, 0.0, 1.0);\n"
+		"}\n";
 	glGenBuffers(1, &vboHandle);
 	glGenBuffers(1, &elementsHandle);
 	glGenFramebuffers(1, &frameBufferHandle);
@@ -139,7 +202,11 @@ void SeqRenderer::CreateDeviceObjects()
 	fontMaterial.Init(vertexShader, fragmentShaderDefault, vboHandle, elementsHandle);
 	videoMaterial.Init(vertexShader, fragmentShaderVideo, vboHandle, elementsHandle);
 	playerMaterial.Init(vertexShader, fragmentShaderDefault, vboHandle, elementsHandle);
+	exportYMaterial.Init(vertexShader, fragmentShaderExportY, vboHandle, elementsHandle);
+	exportUMaterial.Init(vertexShader, fragmentShaderExportU, vboHandle, elementsHandle);
+	exportVMaterial.Init(vertexShader, fragmentShaderExportV, vboHandle, elementsHandle);
 	CreateFontsMaterialInstance();
+	Sequentia::GetExporter()->RefreshMaterials();
 }
 
 void SeqRenderer::InvalidateDeviceObjects()
@@ -156,6 +223,9 @@ void SeqRenderer::InvalidateDeviceObjects()
 		materials->Get(i)->Dispose();
 	videoMaterial.Dispose();
 	playerMaterial.Dispose();
+	exportYMaterial.Dispose();
+	exportUMaterial.Dispose();
+	exportVMaterial.Dispose();
 }
 
 void SeqRenderer::Render()
@@ -379,6 +449,13 @@ void SeqRenderer::SwitchFramebuffer(const ImDrawList* drawList, const ImDrawCmd*
 	
 	// bind the new output to the framebuffer
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, framebufferOutput->textureHandles[0], 0);
+}
+
+void SeqRenderer::DownloadTexture(const ImDrawList* drawList, const ImDrawCmd* command)
+{
+	SeqDownloadTextureTarget *dtt = (SeqDownloadTextureTarget *)command->UserCallbackData;
+	dtt->source->BindTexture(0);
+	glReadnPixelsARB(0, 0, dtt->width, dtt->height, dtt->format, GL_UNSIGNED_BYTE, dtt->width * dtt->height, dtt->destination);
 }
 
 void SeqRenderer::SetImGuiViewport()

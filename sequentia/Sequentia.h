@@ -6,6 +6,7 @@ struct SDL_Window;
 typedef union SDL_Event SDL_Event;
 
 class SeqProject;
+class SeqExporter;
 class SeqScene;
 class SeqLibrary;
 class SeqRenderer;
@@ -26,6 +27,7 @@ public:
 	static int Run(const char *openProject);
 	static SeqProject* GetProject();
 	static SeqLibrary* GetLibrary();
+	static SeqExporter* GetExporter();
 	static bool IsDragging();
 	static SeqSelection* GetDragClipSelection();
 	static void SetDragClipNew(SeqLibraryLink *link, int steamIndex);
@@ -49,6 +51,7 @@ private:
 	static bool done;
 	static SDL_Window *window;
 	static SeqProject *project;
+	static SeqExporter *exporter;
 	static double time;
 	static bool mousePressed[3];
 	static float mouseWheel;

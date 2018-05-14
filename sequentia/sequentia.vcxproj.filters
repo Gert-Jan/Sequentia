@@ -99,6 +99,18 @@
     <ClCompile Include="SeqSelection.cpp">
       <Filter>data</Filter>
     </ClCompile>
+    <ClCompile Include="SeqEncoder.cpp">
+      <Filter>sys\video</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqTaskEncodeVideo.cpp">
+      <Filter>sys\task</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqExporter.cpp">
+      <Filter>sys\export</Filter>
+    </ClCompile>
+    <ClCompile Include="SeqImGui.cpp">
+      <Filter>sys\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -231,6 +243,21 @@
     <ClInclude Include="SeqSelection.h">
       <Filter>data</Filter>
     </ClInclude>
+    <ClInclude Include="SeqEncoder.h">
+      <Filter>sys\video</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqTaskEncodeVideo.h">
+      <Filter>sys\task</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqExporter.h">
+      <Filter>sys\export</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqImGui.h">
+      <Filter>sys\util</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqDownloadTextureTarget.h">
+      <Filter>sys\render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.txt" />
@@ -280,6 +307,9 @@
     </Filter>
     <Filter Include="libs\sfh">
       <UniqueIdentifier>{aa4f22e4-e382-420b-8666-d2336430a01d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys\export">
+      <UniqueIdentifier>{0a701352-f1e1-4361-a3c2-40a8e78c2150}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

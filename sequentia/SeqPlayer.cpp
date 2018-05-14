@@ -11,6 +11,7 @@
 #include "SeqMaterialInstance.h"
 #include "SeqList.h"
 #include "SeqTime.h"
+#include "SeqImGui.h"
 
 ImU32 SeqPlayer::LOADING_FRAME_COLOR = ImGui::ColorConvertFloat4ToU32(ImVec4(0, 1, 0, 1));
 
@@ -38,6 +39,14 @@ SeqPlayer::~SeqPlayer()
 		DisposeClipPlayerAt(i);
 	}
 	delete clipPlayers;
+	// remove viewers and rendertargets
+	for (int i = 0; i < viewers->Count(); i++)
+	{
+		// this also implicits cleaning up renderTargets
+		RemoveViewer(viewers->Get(i));
+	}
+	delete viewers;
+	delete renderTargets;
 }
 
 SeqMaterialInstance* SeqPlayer::AddViewer(int untilChannel)
@@ -405,14 +414,7 @@ void SeqPlayer::Render()
 	if (renderTargets->Count() == 0)
 		return;
 	SeqProject* project = Sequentia::GetProject();
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(project->width, project->height), ImGuiSetCond_Always);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-	// this is kind of ugly, but with alpha == 0 the window gets deactivated automatically in ImGui::Begin...
-	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.00001);
-	ImGui::Begin("PlayerRenderer", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs);
-	ImGui::PushClipRect(ImVec2(0, 0), ImVec2(project->width, project->height), false);
+	SeqImGui::BeginRender(ImVec2(project->width, project->height));
 	int fromChannelIndex = scene->ChannelCount() - 1;
 	for (int i = 0; i < renderTargets->Count(); i++)
 	{
@@ -427,10 +429,7 @@ void SeqPlayer::Render()
 	}
 	// unbind frame buffer
 	ImGui::GetWindowDrawList()->AddCallback(SeqRenderer::BindFramebuffer, nullptr);
-	ImGui::PopClipRect();
-	ImGui::End();
-	ImGui::PopStyleVar(1);
-	ImGui::PopStyleVar(2);
+	SeqImGui::EndRender();
 }
 
 void SeqPlayer::Render(const int fromChannelIndex, const int toChannelIndex)
