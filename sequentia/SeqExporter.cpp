@@ -119,24 +119,27 @@ void SeqExporter::Update()
 			// reset state
 			renderFrame = false;
 			exportFrame = false;
+			// dimensions
+			int width = task->width;
+			int height = task->height;
+			int halfWidth = width / 2;
+			int halfHeight = height / 2;
 			// setup matrices
 			// for now the hardcoded format is YUV 4:2:0
-			SeqRenderer::SetProjectionMatrixDimensions(&convertMatrices[0][0][0], task->width, -task->height);
-			SeqRenderer::SetProjectionMatrixDimensions(&convertMatrices[1][0][0], task->width / 2, -task->height / 2);
-			SeqRenderer::SetProjectionMatrixDimensions(&convertMatrices[2][0][0], task->width / 2, -task->height / 2);
+			SeqRenderer::SetProjectionMatrixDimensions(&convertMatrices[0][0][0], width, -height);
+			SeqRenderer::SetProjectionMatrixDimensions(&convertMatrices[1][0][0], halfWidth, -halfHeight);
+			SeqRenderer::SetProjectionMatrixDimensions(&convertMatrices[2][0][0], halfWidth, -halfHeight);
 			// create texture object on the GPU
-			int halfWidth = task->width / 2;
-			int halfHeight = task->height / 2;
-			exportToMaterials[0]->CreateTexture(0, task->width, task->height, GL_RED, 0);
+			exportToMaterials[0]->CreateTexture(0, width, height, GL_RED, 0);
 			exportToMaterials[1]->CreateTexture(0, halfWidth, halfHeight, GL_RED, 0);
-			exportToMaterials[2]->CreateTexture(0, halfWidth, halfHeight / 2, GL_RED, 0);
+			exportToMaterials[2]->CreateTexture(0, halfWidth, halfHeight, GL_RED, 0);
 			// create buffers to write the converted YUV data to
-			char *buffer = new char[task->width * task->height];
-			exportToBuffer[0] = { exportToMaterials[0], task->width, task->height, GL_RED, buffer };
+			char *buffer = new char[width * height];
+			exportToBuffer[0] = { exportToMaterials[0], width, height, GL_RED, width * height, buffer };
 			buffer = new char[halfWidth * halfHeight];
-			exportToBuffer[1] = { exportToMaterials[1], halfWidth, halfHeight, GL_RED, buffer };
+			exportToBuffer[1] = { exportToMaterials[1], halfWidth, halfHeight, GL_RED,  halfWidth * halfHeight, buffer };
 			buffer = new char[halfWidth * halfHeight];
-			exportToBuffer[2] = { exportToMaterials[2], halfWidth, halfHeight, GL_RED, buffer };
+			exportToBuffer[2] = { exportToMaterials[2], halfWidth, halfHeight, GL_RED, halfWidth * halfHeight, buffer };
 			// create material SeqPlayer renders to
 			task->material = player->AddViewer(0);
 			convertMaterials[0]->textureHandles[0] = task->material->textureHandles[0];

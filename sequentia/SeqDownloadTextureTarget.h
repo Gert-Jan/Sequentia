@@ -9,5 +9,6 @@ struct SeqDownloadTextureTarget
 	GLsizei width;
 	GLsizei height;
 	GLenum format;
+	GLsizei destinationSize;
 	GLvoid *destination;
 };

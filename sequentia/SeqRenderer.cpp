@@ -455,7 +455,7 @@ void SeqRenderer::DownloadTexture(const ImDrawList* drawList, const ImDrawCmd* c
 {
 	SeqDownloadTextureTarget *dtt = (SeqDownloadTextureTarget *)command->UserCallbackData;
 	dtt->source->BindTexture(0);
-	glReadnPixelsARB(0, 0, dtt->width, dtt->height, dtt->format, GL_UNSIGNED_BYTE, dtt->width * dtt->height, dtt->destination);
+	glReadnPixelsARB(0, 0, dtt->width, dtt->height, dtt->format, GL_UNSIGNED_BYTE, dtt->destinationSize, dtt->destination);
 }
 
 void SeqRenderer::SetImGuiViewport()
