@@ -134,9 +134,9 @@ void SeqUIVideo::Draw()
 			ImGui::BeginTooltip();
 			float focusSize = 64.0f;
 			float focusX = ImGui::GetMousePos().x - textureScreenPosition.x - focusSize * 0.5f; if (focusX < 0.0f) focusX = 0.0f; else if (focusX > videoWidth - focusSize) focusX = videoWidth - focusSize;
-			float focusY = ImGui::GetMousePos().y - textureScreenPosition.y - focusSize * 0.5f; if (focusY < 0.0f) focusY = 0.0f; else if (focusY > videoHeight - focusSize) focusY = videoHeight - focusSize;
-			ImVec2 uv0 = ImVec2((focusX) /videoWidth, (focusY) / videoHeight);
-			ImVec2 uv1 = ImVec2((focusX + focusSize) / videoWidth, (focusY + focusSize) / videoHeight);
+			float focusY = (videoHeight - (ImGui::GetMousePos().y - textureScreenPosition.y)) - focusSize * 0.5f; if (focusY < 0.0f) focusY = 0.0f; else if (focusY > videoHeight - focusSize) focusY = videoHeight - focusSize;
+			ImVec2 uv0 = ImVec2(focusX / videoWidth, (focusY + focusSize) / videoHeight);
+			ImVec2 uv1 = ImVec2((focusX + focusSize) / videoWidth, focusY / videoHeight);
 			ImGui::Image(texId, ImVec2(256, 256), uv0, uv1, ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
 			ImGui::EndTooltip();
 		}
