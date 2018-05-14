@@ -142,7 +142,14 @@ void SeqExporter::Update()
 			exportToBuffer[2] = { exportToMaterials[2], halfWidth, halfHeight, GL_RED, halfWidth * halfHeight, buffer };
 			// create material SeqPlayer renders to
 			task->material = player->AddViewer(0);
+			// we don't need the textures in the convertMaterials
+			convertMaterials[0]->Dispose();
+			convertMaterials[1]->Dispose();
+			convertMaterials[2]->Dispose();
+			// use the player's output texture to convert to YUV
 			convertMaterials[0]->textureHandles[0] = task->material->textureHandles[0];
+			convertMaterials[1]->textureHandles[0] = task->material->textureHandles[0];
+			convertMaterials[2]->textureHandles[0] = task->material->textureHandles[0];
 			// spin up an encoder task
 			task->encodeTask = new SeqTaskEncodeVideo();
 			SeqWorkerManager::Instance()->PerformTask(task->encodeTask);
