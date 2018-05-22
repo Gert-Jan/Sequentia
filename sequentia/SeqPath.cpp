@@ -37,3 +37,19 @@ bool SeqPath::IsDir(const char *normalizedPath)
 {
 	return normalizedPath[strlen(normalizedPath)] == '/';
 }
+
+char* SeqPath::GetDir(const char *path)
+{
+	char* normalizedPath = Normalize(path);
+	if (!IsDir(normalizedPath))
+	{
+		size_t pos = SeqString::FindReverse(normalizedPath, "/");
+		SeqString::Temp->Set(path);
+		SeqString::Temp->Buffer[pos + 1] = 0;
+		return SeqString::Temp->Copy();
+	}
+	else
+	{
+		return normalizedPath;
+	}
+}
