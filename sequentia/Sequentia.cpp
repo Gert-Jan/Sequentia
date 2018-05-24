@@ -293,7 +293,7 @@ void Sequentia::HandleMainMenuBar()
 				SeqString::Temp->Append(projectDir);
 				SeqString::Temp->Append("export/");
 				SeqPath::CreateDir(SeqString::Temp->Buffer);
-				SeqString::Temp->Format("%s%d.avi", SeqString::Temp->Buffer, SDL_GetTicks());
+				SeqString::Temp->Format("%s%d.mpg", SeqString::Temp->Buffer, SDL_GetTicks());
 				exporter->AddTask(SeqString::Temp->Copy(), project->GetScene(1));
 			}
 			ImGui::Separator();

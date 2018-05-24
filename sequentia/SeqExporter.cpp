@@ -1,3 +1,5 @@
+#include <SDL.h>
+
 #include "SeqExporter.h"
 #include "SeqWorkerManager.h"
 #include "SeqRenderer.h"
@@ -95,10 +97,14 @@ void SeqExporter::AddTask(char* fullPath, SeqScene *scene)
 	task.fullPath = fullPath;
 	task.scene = scene;
 	task.startTime = 0;
-	task.endTime = scene->GetLength();
+	// TODO: replace this task.endTime test code
+	task.endTime = SEQ_TIME(2);
+	//task.endTime = scene->GetLength();
 	task.frameTime = SEQ_TIME_BASE / 24.0;
 	task.width = 1920;
 	task.height = 1080;
+	task.codecId = AV_CODEC_ID_MPEG1VIDEO;
+	task.bitRate = 400000;
 
 	task.currentFrame = 0;
 	task.isInitialized = false;
@@ -154,8 +160,9 @@ void SeqExporter::Update()
 			task->encodeTask = new SeqTaskEncodeVideo();
 			SeqWorkerManager::Instance()->PerformTask(task->encodeTask);
 
-			// TODO: specifify encoder format context
-			
+			// TODO: Move context creating to SeqEncoder
+			int result = CreateContext(task);
+
 			// rewind the player and add the exporter as viewer
 			player->Stop();
 			//task->material = player->AddViewer(0);
@@ -186,7 +193,8 @@ void SeqExporter::Export()
 		{
 			exportFrame = false;
 
-			// TODO: send frame data to encoder
+			// TODO: Move Encoding to SeqEncoder
+			Encode(task);
 
 			// prepare next frame
 			if (!player->IsSeeking())
@@ -202,7 +210,9 @@ void SeqExporter::Export()
 				else
 				{
 					// this was the last frame, we're done encoding
-					// TODO: finalize encoding, we're done here
+					// TODO: Move finalizing encodeing to SeqEncoder
+					FinalizeEncoding(task);
+
 					// delete buffers
 					delete[] exportToBuffer[0].destination;
 					delete[] exportToBuffer[1].destination;
@@ -258,4 +268,159 @@ void SeqExporter::Export()
 			// TODO: research if we can find in the video packet data what the frame type is and if we better just play instead of seek ahead.
 		}
 	}
+}
+
+int SeqExporter::CreateContext(SeqExportTask *task)
+{
+	// specifify encoder format context
+	AVCodec *codec;
+
+	// find encoder
+	codec = avcodec_find_encoder(task->codecId);
+	if (!codec) {
+		fprintf(stderr, "Codec not found\n");
+		return -1;
+	}
+
+	AVCodecContext *context;
+	context = avcodec_alloc_context3(codec);
+	if (!context) {
+		fprintf(stderr, "Could not allocate video codec context\n");
+		return -1;
+	}
+
+	task->packet = av_packet_alloc();
+	if (!task->packet)
+	{
+		fprintf(stderr, "Could not allocate packet\n");
+		return -1;
+	}
+
+	// put sample parameters
+	context->bit_rate = task->bitRate;
+	// resolution must be a multiple of two
+	context->width = task->width;
+	context->height = task->height;
+	// frames per second
+	context->time_base = av_d2q(SEQ_TIME_IN_SECONDS(task->frameTime), 10000);
+	context->framerate = av_inv_q(context->time_base);
+	/* emit one intra frame every ten frames
+	* check frame pict_type before passing frame
+	* to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
+	* then gop_size is ignored and the output of encoder
+	* will always be I frame irrespective to gop_size
+	*/
+	context->gop_size = 10;
+	context->max_b_frames = 1;
+	context->pix_fmt = AV_PIX_FMT_YUV420P;
+	task->context = context;
+
+	if (codec->id == AV_CODEC_ID_H264)
+		av_opt_set(context->priv_data, "preset", "slow", 0);
+
+	// open the context
+	if (avcodec_open2(context, codec, NULL) < 0) {
+		fprintf(stderr, "Could not open codec\n");
+		return -1;
+	}
+
+	task->file = SDL_RWFromFile(task->fullPath, "wb");
+	if (!task->file) {
+		fprintf(stderr, "Could not open %s\n", task->fullPath);
+		return -1;
+	}
+
+	AVFrame *frame;
+	frame = av_frame_alloc();
+	if (!frame) {
+		fprintf(stderr, "Could not allocate video frame\n");
+		return -1;
+	}
+	frame->format = context->pix_fmt;
+	frame->width = context->width;
+	frame->height = context->height;
+	task->frame = frame;
+
+	int ret = av_frame_get_buffer(frame, 32);
+	if (ret < 0) {
+		fprintf(stderr, "Could not allocate the video frame data\n");
+		return ret;
+	}
+
+	task->frameCount = 0;
+	
+	return 0;
+}
+
+int SeqExporter::Encode(SeqExportTask *task)
+{
+	// make sure the frame data is writable 
+	int ret = av_frame_make_writable(task->frame);
+	if (ret < 0)
+	{
+		fprintf(stderr, "Could not make frame writable.\n");
+		return ret;
+	}
+	// set data on frame
+	task->frame->data[0] = (uint8_t*)exportToBuffer[0].destination;
+	task->frame->data[1] = (uint8_t*)exportToBuffer[1].destination;
+	task->frame->data[2] = (uint8_t*)exportToBuffer[2].destination;
+	task->frame->pts = task->frameCount++;
+
+	// encode and write to file
+	return Encode(task->context, task->frame, task->packet, task->file);
+}
+
+int SeqExporter::Encode(AVCodecContext *context, AVFrame *frame, AVPacket *packet, SDL_RWops *file)
+{
+	// send the frame to the encoder
+	int ret = avcodec_send_frame(context, frame);
+	if (ret < 0)
+	{
+		fprintf(stderr, "Error sending a frame for encoding\n");
+		return ret;
+	}
+
+	while (ret >= 0)
+	{
+		ret = avcodec_receive_packet(context, packet);
+		if (ret == AVERROR(EAGAIN))
+		{
+			// needs more data to write the packet.
+			return ret;
+		}
+		else if (ret == AVERROR_EOF)
+		{
+			fprintf(stderr, "Error during encoding: EOF\n");
+			return ret;
+		}
+		else if (ret < 0)
+		{
+			fprintf(stderr, "Error during encoding\n");
+			return ret;
+		}
+
+		printf("Write frame %d (size=%5d)\n", packet->pts, packet->size);
+
+		file->write(file, packet->data, 1, packet->size);
+
+		av_packet_unref(packet);
+	}
+
+	return 0;
+}
+
+void SeqExporter::FinalizeEncoding(SeqExportTask *task)
+{
+	// flush the encoder 
+	Encode(task->context, NULL, task->packet, task->file);
+
+	// add sequence end code to have a real MPEG file
+	uint8_t endcode[] = { 0, 0, 1, 0xb7 };
+	task->file->write(task->file, endcode, 1, sizeof(endcode));
+	SDL_RWclose(task->file);
+
+	avcodec_free_context(&task->context);
+	av_frame_free(&task->frame);
+	av_packet_free(&task->packet);
 }
