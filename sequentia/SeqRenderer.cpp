@@ -136,6 +136,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"	Out_Color = Frag_Color * rgba;\n"
 		"}\n";
 
+	// https://en.wikipedia.org/wiki/YUV Studio swing for BT.601
 	const GLchar *fragmentShaderExportYUV =
 		"#version 330\n"
 		"uniform sampler2D Texture0;\n"
@@ -145,9 +146,9 @@ void SeqRenderer::CreateDeviceObjects()
 		"void main()\n"
 		"{\n"
 		"	const vec3 offset = vec3(0.0625, 0.5, 0.5);\n"
-		"	const vec3 Ycoeff = vec3( 0.257,  0.504, 0.098);\n"
-		"	const vec3 Ucoeff = vec3(-0.148, -0.291, 0.439);\n"
-		"	const vec3 Vcoeff = vec3( 0.439, -0.368, 0.071);\n"
+		"	const vec3 Ycoeff = vec3( 0.25882,  0.50588,  0.09804);\n"
+		"	const vec3 Ucoeff = vec3(-0.14902, -0.29020,  0.43922);\n"
+		"	const vec3 Vcoeff = vec3( 0.43922, -0.36863, -0.07059);\n"
 		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
 		"	vec3 yuv;\n;"
 		"	yuv.x = dot(rgb, Ycoeff);\n"
@@ -164,11 +165,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"out vec4 Out_Color;\n"
 		"void main()\n"
 		"{\n"
-		//"	const vec3 Ycoeff = vec3( 0.257,  0.504, 0.098);\n" // 0 - bad, white is pink
-		//"	const vec3 Ycoeff = vec3( 0.299,  0.587, 0.114);\n" // 1 - pretty close but between 0 and 40 off on one channel for extreme colors - https://en.wikipedia.org/wiki/YUV SDTV with BT.602
-		//"	const vec3 Ycoeff = vec3( 0.2126,  0.7152, 0.0722);\n" // 2 - off by 10-53 - https://en.wikipedia.org/wiki/YUV HDTV with BT.709
-		"	const vec3 Ycoeff = vec3( 0.25882,  0.50588, 0.09804);\n" // 3 - best so far, all colors off by 1 or so - https://en.wikipedia.org/wiki/YUV Studio swing for BT.601
-		//"	const vec3 Ycoeff = vec3( 0.30196,  0.58824, 0.11373);\n" // 4 - pretty good between 2-9 off (worse than 3), perfect whites and blacks (better than 3) - https://en.wikipedia.org/wiki/YUV Full swing for BT.601
+		"	const vec3 Ycoeff = vec3( 0.25882,  0.50588, 0.09804);\n" 
 		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
 		"   float y = dot(rgb, Ycoeff) + 0.0625;\n"
 		"	Out_Color = vec4(y, 0.0, 0.0, 1.0);\n"
@@ -181,11 +178,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"out vec4 Out_Color;\n"
 		"void main()\n"
 		"{\n"
-		//"	const vec3 Ucoeff = vec3(-0.148, -0.291, 0.439);\n" // 0
-		//"	const vec3 Ucoeff = vec3(-0.14713, -0.28886, 0.436);\n" // 1
-		//"	const vec3 Ucoeff = vec3(-0.09991, -0.33609, 0.436);\n" // 2
-		"	const vec3 Ucoeff = vec3(-0.14902, -0.29020, 0.43922);\n" // 3
-		//"	const vec3 Ucoeff = vec3(-0.16863, -0.32941, 0.49804);\n" // 4
+		"	const vec3 Ucoeff = vec3(-0.14902, -0.29020, 0.43922);\n"
 		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
 		"	float u = dot(rgb, Ucoeff) + 0.5;\n"
 		"	Out_Color = vec4(u, 0.0, 0.0, 1.0);\n"
@@ -198,11 +191,7 @@ void SeqRenderer::CreateDeviceObjects()
 		"out vec4 Out_Color;\n"
 		"void main()\n"
 		"{\n"
-		//"	const vec3 Vcoeff = vec3( 0.439, -0.368, 0.071);\n" // 0
-		//"	const vec3 Vcoeff = vec3( 0.615, -0.51499, -0.10001);\n" // 1
-		//"	const vec3 Vcoeff = vec3( 0.615, -0.55861, -0.05639);\n" // 2
-		"	const vec3 Vcoeff = vec3( 0.43922, -0.36863, -0.07059);\n" // 3
-		//"	const vec3 Vcoeff = vec3( 0.49804, -0.41569, -0.08235);\n" // 4
+		"	const vec3 Vcoeff = vec3(0.43922, -0.36863, -0.07059);\n"
 		"	vec3 rgb = texture(Texture0, Frag_UV.st).rgb;\n"
 		"	float v = dot(rgb, Vcoeff) + 0.5;\n"
 		"	Out_Color = vec4(v, 0.0, 0.0, 1.0);\n"
