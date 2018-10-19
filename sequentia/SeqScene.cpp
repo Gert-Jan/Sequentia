@@ -38,7 +38,7 @@ SeqScene::~SeqScene()
 	delete[] name;
 }
 
-void SeqScene::AddChannel(SeqChannelType type, const char *name)
+void SeqScene::AddChannel(SeqMediaType type, const char *name)
 {
 	SeqChannel *channel = new SeqChannel(this, name, type);
 	AddChannel(channel);

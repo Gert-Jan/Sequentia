@@ -3,6 +3,7 @@
 
 #include "Sequentia.h"
 #include "SeqProjectHeaders.h"
+#include "SeqMediaType.h"
 #include "SeqPlayer.h"
 #include "SeqWindow.h"
 #include "SeqUILibrary.h"
@@ -73,16 +74,16 @@ void SeqProject::CreateDefault()
 {
 	// preview scene
 	SeqScene *previewScene = CreateScene("preview");
-	previewScene->AddChannel(SeqChannelType::Video, "video");
-	previewScene->AddChannel(SeqChannelType::Audio, "audio");
+	previewScene->AddChannel(SeqMediaType::Video, "video");
+	previewScene->AddChannel(SeqMediaType::Audio, "audio");
 	AddScene(previewScene);
 
 	// master scene
 	SeqScene *masterScene = CreateScene("master");
 	for (int i = 0; i < 5; i++)
 	{
-		masterScene->AddChannel(SeqChannelType::Video, "Video");
-		masterScene->AddChannel(SeqChannelType::Audio, "Audio");
+		masterScene->AddChannel(SeqMediaType::Video, "Video");
+		masterScene->AddChannel(SeqMediaType::Audio, "Audio");
 	}
 	AddScene(masterScene);
 

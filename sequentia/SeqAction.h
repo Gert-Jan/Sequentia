@@ -3,7 +3,7 @@
 #include "SDL_config.h"
 
 class SeqScene;
-enum class SeqChannelType;
+enum class SeqMediaType;
 class SeqClip;
 class SeqSelection;
 class SeqClipGroup;
@@ -44,9 +44,9 @@ public:
 struct SeqActionAddChannel
 {
 	int sceneId;
-	SeqChannelType type;
+	SeqMediaType type;
 	char *name;
-	SeqActionAddChannel(int sceneId, SeqChannelType type, const char *channelName);
+	SeqActionAddChannel(int sceneId, SeqMediaType type, const char *channelName);
 	~SeqActionAddChannel() { delete[] name; }
 };
 

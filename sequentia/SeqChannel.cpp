@@ -1,11 +1,12 @@
 #include "SeqChannel.h"
 #include "SeqClip.h"
+#include "SeqMediaType.h"
 #include "SeqSelection.h"
 #include "SeqSerializer.h"
 #include "SeqList.h"
 #include "SeqString.h"
 
-SeqChannel::SeqChannel(SeqScene *parent, const char *channelName, SeqChannelType type):
+SeqChannel::SeqChannel(SeqScene *parent, const char *channelName, SeqMediaType type):
 	scene(parent),
 	type(type),
 	actionId(-1),
@@ -265,7 +266,7 @@ void SeqChannel::Serialize(SeqSerializer *serializer)
 
 void SeqChannel::Deserialize(SeqSerializer *serializer)
 {
-	type = (SeqChannelType)serializer->ReadInt();
+	type = (SeqMediaType)serializer->ReadInt();
 	name = serializer->ReadString();
 	int count = serializer->ReadInt();
 	nextActionId = count;

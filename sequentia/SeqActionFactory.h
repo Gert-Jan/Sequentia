@@ -1,7 +1,7 @@
 #pragma once
 
 struct SeqAction;
-enum class SeqChannelType;
+enum class SeqMediaType;
 class SeqScene;
 class SeqChannel;
 class SeqClip;
@@ -11,7 +11,7 @@ class SeqClipGroup;
 class SeqActionFactory
 {
 public:
-	static SeqAction AddChannel(SeqScene *scene, SeqChannelType type, const char *name);
+	static SeqAction AddChannel(SeqScene *scene, SeqMediaType type, const char *name);
 	static SeqAction RemoveChannel(SeqScene *scene, SeqChannel* channel);
 	static SeqAction AddLibraryLink(const char *fullPath);
 	static SeqAction RemoveLibraryLink(const char *fullPath);

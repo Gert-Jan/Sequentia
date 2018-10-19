@@ -6,21 +6,15 @@ class SeqSerializer;
 template<class T>
 class SeqList;
 class SeqLibrary;
+enum class SeqMediaType;
 class SeqScene;
 class SeqClip;
 class SeqSelection;
 
-enum class SeqChannelType
-{
-	None,
-	Video,
-	Audio
-};
-
 class SeqChannel
 {
 public:
-	SeqChannel(SeqScene *parent, const char *channelName, SeqChannelType type);
+	SeqChannel(SeqScene *parent, const char *channelName, SeqMediaType type);
 	SeqChannel(SeqScene *parent, SeqSerializer *serializer);
 	~SeqChannel();
 
@@ -60,7 +54,7 @@ private:
 	void Deserialize(SeqSerializer *serializer);
 
 public:
-	SeqChannelType type;
+	SeqMediaType type;
 	char *name;
 	int actionId;
 private:

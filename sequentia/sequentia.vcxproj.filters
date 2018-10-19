@@ -111,6 +111,9 @@
     <ClCompile Include="SeqImGui.cpp">
       <Filter>sys\util</Filter>
     </ClCompile>
+    <ClCompile Include="SeqMediaType.h">
+      <Filter>data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imconfig.h">

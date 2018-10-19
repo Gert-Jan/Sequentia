@@ -1,7 +1,7 @@
 #pragma once
 
 class SeqChannel;
-enum class SeqChannelType;
+enum class SeqMediaType;
 class SeqClip;
 class SeqClipGroup;
 
@@ -17,7 +17,7 @@ public:
 	SeqScene(SeqSerializer *serializer);
 	~SeqScene();
 	 
-	void AddChannel(SeqChannelType type, const char *name);
+	void AddChannel(SeqMediaType type, const char *name);
 	void RemoveChannel(const int index);
 	int ChannelCount();
 	SeqChannel* GetChannel(const int index);

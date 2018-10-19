@@ -4,6 +4,7 @@
 #include "SeqClipLocation.h"
 
 class SeqChannel;
+enum class SeqMediaType;
 struct SeqLibraryLink;
 struct SeqStreamInfo;
 class SeqSerializer;
@@ -31,6 +32,7 @@ private:
 public:
 	int actionId;
 	bool isHidden;
+	SeqMediaType mediaType;
 	SeqClipLocation location;
 	int streamIndex;
 	SeqClipGroup *group;

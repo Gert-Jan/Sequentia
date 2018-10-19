@@ -1,9 +1,10 @@
 #include "SeqAction.h"
 #include "Sequentia.h"
 #include "SeqProjectHeaders.h"
+#include "SeqMediaType.h"
 #include "SeqString.h"
 
-SeqActionAddChannel::SeqActionAddChannel(int sceneId, SeqChannelType type, const char *channelName):
+SeqActionAddChannel::SeqActionAddChannel(int sceneId, SeqMediaType type, const char *channelName):
 	sceneId(sceneId),
 	type(type)
 {

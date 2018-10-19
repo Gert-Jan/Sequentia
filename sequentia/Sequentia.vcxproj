@@ -172,6 +172,7 @@
     <ClCompile Include="SeqEncoder.cpp" />
     <ClCompile Include="SeqExporter.cpp" />
     <ClCompile Include="SeqImGui.cpp" />
+    <ClCompile Include="SeqMediaType.h" />
     <ClCompile Include="SeqSelection.cpp" />
     <ClCompile Include="SeqDecoder.cpp" />
     <ClCompile Include="SeqDialogs.cpp" />
