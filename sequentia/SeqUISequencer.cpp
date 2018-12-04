@@ -382,7 +382,7 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 avai
 				isHovering = true;
 				if (dragClipSelection->GetParent() != channel)
 					dragClipSelection->SetParent(channel);
-				dragClipSelection->location.SetPosition((position + PixelsToTime(ImGui::GetMousePos().x - cursor.x)) - dragClipSelection->grip);
+				dragClipSelection->location.SetPosition((PixelsToTime(ImGui::GetMousePos().x - cursor.x)) - dragClipSelection->grip);
 			}
 			else
 			{
