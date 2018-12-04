@@ -26,7 +26,7 @@ public:
 	void PreExecuteAction(const SeqActionType type, const SeqActionExecution execution, const void *data);
 	SeqWindowType GetWindowType();
 	void Draw();
-	static void DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered = false);
+	static void DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered = false, const bool isError = false);
 	void Serialize(SeqSerializer *serializer);
 
 private:
@@ -46,6 +46,7 @@ private:
 	static ImU32 lineColor;
 	static ImU32 backgroundColor;
 	static ImU32 clipBackgroundColor;
+	static ImU32 errorColor;
 	const float pixelsPerSecond = 100;
 	const float minSettingsPanelWidth = 40;
 	const float maxSettingsPanelWidth = 300;

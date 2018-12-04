@@ -186,7 +186,8 @@ void Sequentia::BeginFrame()
 	else
 		io.MousePos = ImVec2(-1, -1);
 
-	io.MouseDown[0] = mousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;		// If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+	// If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+	io.MouseDown[0] = mousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
 	io.MouseDown[1] = mousePressed[1] || (mouseMask & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
 	io.MouseDown[2] = mousePressed[2] || (mouseMask & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
 	mousePressed[0] = mousePressed[1] = mousePressed[2] = false;
@@ -341,7 +342,7 @@ SeqExporter* Sequentia::GetExporter()
 
 void Sequentia::HandleDragging()
 {
-	if (DragMode == SeqDragMode::Selection)
+	if (DragMode == SeqDragMode::Clips)
 	{
 		const ImVec2 size = ImVec2(150, 50);
 		if (dragClipSelection->GetParent() == nullptr)
@@ -359,7 +360,6 @@ void Sequentia::HandleDragging()
 
 void Sequentia::SetDragClipNew(SeqLibraryLink* link, int streamIndex)
 {
-
 	SeqClip *clip = new SeqClip(link, streamIndex);
 	Sequentia::SetDragClip(clip);
 }
@@ -370,7 +370,7 @@ void Sequentia::SetDragClip(SeqClip *clip, const int64_t grip)
 	{
 		if (clip != nullptr)
 		{
-			DragMode = SeqDragMode::Selection;
+			DragMode = SeqDragMode::Clips;
 			project->DeactivateAllClipSelections();
 			dragClipSelection = project->NextClipSelection();
 			dragClipSelection->location.leftTime = clip->location.leftTime;

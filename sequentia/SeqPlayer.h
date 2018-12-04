@@ -86,7 +86,7 @@ private:
 	bool ClipsSyncable(SeqClip *clipA, SeqClip *clipB);
 	SeqPlayerSyncState ValidateSyncing(SeqClipPlayer *player);
 	void DisposeClipPlayerAt(const int index);
-	void SafeStopDecodingStream(SeqClipPlayer* palyer);
+	void SafeStopDecodingStream(SeqClipPlayer* player);
 	void UpdateClipPlayers(bool *canPlay);
 	void Render(const int fromChannelIndex, const int toChannelIndex);
 

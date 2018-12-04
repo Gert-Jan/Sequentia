@@ -3,6 +3,18 @@ BEFORE SHIPPING
 - Add a warning when creating a new project or opening a new project while there are unsaved changes in the current project.
 - Validate command arguments
 
+Selections
+- Make click selections work
+	- Mark a clip as selected for quick drawing
+	- Add a list of selected clips for quick drag context creation
+- Allow multi selections when holding Shift.
+	- Add a drag context
+	- Add relative clip locations (i.e. 2th audio channel from drag grip)
+
+Audio/Video Clips
+- Label clips either audio or video when dragged in the sequencer, for now video only.
+- Add audio clips to media that has audio.
+
 Project
 - The project has a width and height, which is used for all video/image position coordinates.
 	- Allow changing of the width and height
@@ -10,6 +22,7 @@ Project
 
 Export
 - Add video exporting
+- Add audio exporting
 - Allow for two export modes when having different export and project dimensions
 	- Rendering natively to the export resolution (export sized rendertarget)(default)
 	- Up/down scaled orginal project size (project sized rendertarget)
@@ -34,6 +47,7 @@ UI
 	- Add channel collapsing
 	- Add clearer channel selection color
 	- Allow for changing stream index on clips (for example, change audio channel to another language)
+	- Add rectangle multi select
 - Clip grouping
 	- Grouped clips should be connected in the Sequencer and should always have the same left time
 	- When dragging in a video clip from library to sequencer a ClipGroup should be made

@@ -17,6 +17,7 @@ struct SeqLibraryLink;
 enum class SeqDragMode
 {
 	None,
+	Clips,
 	Selection,
 	Ruler
 };

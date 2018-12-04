@@ -14,6 +14,7 @@
 ImU32 SeqUISequencer::clipBackgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_MenuBarBg]);
 ImU32 SeqUISequencer::lineColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_TextDisabled]);
 ImU32 SeqUISequencer::backgroundColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_::ImGuiCol_ComboBg]);
+ImU32 SeqUISequencer::errorColor = ImGui::ColorConvertFloat4ToU32(ImVec4(1, 0, 0, 1));
 
 SeqUISequencer::SeqUISequencer(SeqScene *scene):
 	scene(scene),
@@ -441,7 +442,8 @@ void SeqUISequencer::DrawChannel(SeqChannel *channel, ImVec2 cursor, ImVec2 avai
 		{
 			const ImVec2 clipPosition = ImVec2(cursor.x + TimeToPixels(left), cursor.y);
 			const ImVec2 clipSize = ImVec2(cursor.x + TimeToPixels(right) - clipPosition.x, height);
-			DrawClip(selection->GetClip(), clipPosition, clipSize, true);
+			bool isError = selection->GetClip()->mediaType != channel->type;
+			DrawClip(selection->GetClip(), clipPosition, clipSize, true, isError);
 		}
 	}
 }
@@ -486,17 +488,18 @@ bool SeqUISequencer::ClipInteraction(SeqClip *clip, const ImVec2 position, const
 	return clipExists;
 }
 
-void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered)
+void SeqUISequencer::DrawClip(SeqClip *clip, const ImVec2 position, const ImVec2 size, const bool isHovered, const bool isError)
 {
 	ImDrawList *drawList = ImGui::GetWindowDrawList();
 	const ImVec2 tl = ImVec2(position.x, position.y);
 	const ImVec2 br = ImVec2(position.x + size.x, position.y + size.y);
 	ImGui::ItemSize(size);
-	if (isHovered)
-		drawList->AddRectFilled(tl, br, lineColor);
+	if (isError)
+		drawList->AddRectFilled(tl, br, errorColor);
 	else
 		drawList->AddRectFilled(tl, br, clipBackgroundColor);
-	drawList->AddRect(tl, br, lineColor);
+	float lineThickness = isHovered ? 2.0f : 1.0f;
+	drawList->AddRect(tl, br, lineColor, 0.0f, -1, lineThickness);
 	ImGui::SetCursorScreenPos(position);
 	ImGui::Text("%s", clip->GetLabel());
 }
